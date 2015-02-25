@@ -6,6 +6,11 @@ import (
 	"io/ioutil"
 )
 
+type RoomName struct {
+	number int
+	name   string
+}
+
 type RoomIndex struct {
 	number int
 	offset []byte
@@ -31,8 +36,8 @@ func complementaryByte(in []byte) (out []byte) {
 	return in
 }
 
-func ParseRoomNames(data []byte) []string {
-	var names []string
+func ParseRoomNames(data []byte) []RoomName {
+	var out []RoomName
 	if string(data[0:4]) == "RNAM" {
 		currentIndex := 8
 		for currentIndex < len(data) {
@@ -41,11 +46,15 @@ func ParseRoomNames(data []byte) []string {
 				break
 			}
 			name := data[currentIndex+1 : currentIndex+10]
-			names = append(names, string(complementaryByte(name)))
+			roomName := RoomName{
+				roomNumber,
+				string(complementaryByte(name)),
+			}
+			out = append(out, roomName)
 			currentIndex += 10
 		}
 	}
-	return names
+	return out
 }
 
 func ParseRoomIndex(data []byte) (index []ScriptIndex) {

@@ -61,7 +61,12 @@ func main() {
 		if extension == ".001" {
 			mainScumm := new(scummatlas.MainScummData)
 			mainScumm.Data = data
-			fmt.Println(mainScumm.GetRoomsCount())
+			fmt.Println(mainScumm.GetRoomCount())
+			roomOffsets := mainScumm.GetRoomsOffset()
+			fmt.Println(roomOffsets)
+			room := mainScumm.ParseRoom(roomOffsets[30].Offset)
+			fmt.Println("Room:", room)
+
 		}
 		if extension == ".000" {
 			currIndex := 0
@@ -73,7 +78,8 @@ func main() {
 				fmt.Println("Block ", blockName, "\t", blockSize, "bytes")
 
 				currIndex += blockSize
-				continue
+				//TODO Remove
+				//continue
 				switch blockName {
 				case "RNAM":
 					fmt.Println("Parse Room Names")
