@@ -95,7 +95,7 @@ func main() {
 					fmt.Println(rooms)
 
 				case "DSCR":
-					//fmt.Println("Parse Directory of Scripts")
+					fmt.Println("Parse Directory of Scripts")
 					scripts := scummatlas.ParseScriptsIndex(currBlock)
 					fmt.Println(len(scripts), "scripts available")
 

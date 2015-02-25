@@ -58,13 +58,13 @@ func ParseRoomNames(data []byte) []RoomName {
 
 func ParseRoomIndex(data []byte) (index []ScriptIndex) {
 	var out []ScriptIndex
-	numEntries := LE16(data[8:10])
+	numEntries := LE16(data, 8)
 	fmt.Println("Num entries: ", numEntries)
 
 	currentIndex := 10
 	for currentIndex < len(data) {
 		roomNumber := int(data[currentIndex])
-		roomOffset := LE16(data[currentIndex+1 : currentIndex+4])
+		roomOffset := LE16(data, 1)
 		out = append(out, ScriptIndex{roomNumber, roomOffset})
 		currentIndex += 5
 	}
@@ -73,13 +73,13 @@ func ParseRoomIndex(data []byte) (index []ScriptIndex) {
 
 func ParseScriptsIndex(data []byte) (index []ScriptIndex) {
 	var out []ScriptIndex
-	numEntries := LE16(data[8:10])
+	numEntries := LE16(data, 8)
 	fmt.Println("Num entries: ", numEntries)
 
 	currentIndex := 10
 	for currentIndex < len(data) {
 		roomNumber := int(data[currentIndex])
-		roomOffset := LE16(data[currentIndex+1 : currentIndex+4])
+		roomOffset := LE16(data, 1)
 		out = append(out, ScriptIndex{roomNumber, roomOffset})
 		currentIndex += 5
 	}
