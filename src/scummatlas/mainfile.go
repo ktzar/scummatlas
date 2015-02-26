@@ -17,28 +17,6 @@ type RoomOffset struct {
 	Offset int
 }
 
-type Image bool
-type Script bool
-type Box bool
-type BoxMatrix bool
-
-type Room struct {
-	Width    int
-	Height   int
-	ObjCount int
-	//ColorCycle ColorCycle
-	//TranspColor TranspColor
-	//Palette Palette
-	Image         Image
-	ObjectImage   Image
-	ObjectScripts []Script
-	ExitScript    Script
-	EntryScript   Script
-	LocalScript   Script
-	BoxData       []Box
-	BoxMatrix     BoxMatrix
-}
-
 func (d *MainScummData) GetRoomCount() int {
 	blockName := d.fourChars(0)
 	blockSize := BE32(d.Data, 4)
@@ -74,19 +52,13 @@ func (d *MainScummData) GetRoomsOffset() (offsets []RoomOffset) {
 }
 
 func (d *MainScummData) ParseRoom(offset int) Room {
-	var out Room
 	blockName := d.fourChars(offset)
-	blockSize := BE32(d.Data, offset)
+	blockSize := BE32(d.Data, offset+4)
 	if blockName != "ROOM" {
 		panic("No room block found")
 	}
-	fmt.Println(blockSize)
-	if d.fourChars(offset+8) != "RMHD" {
-		panic("No room header found")
-	}
-	out.Height = BE16(d.Data, 15)
-	out.Width = BE16(d.Data, 17)
-	out.ObjCount = BE16(d.Data, 19)
+	fmt.Println("Room of size", blockSize)
 
-	return out
+	room := NewRoom(d.Data[offset : offset+blockSize])
+	return *room
 }

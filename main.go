@@ -64,8 +64,7 @@ func main() {
 			fmt.Println(mainScumm.GetRoomCount())
 			roomOffsets := mainScumm.GetRoomsOffset()
 			fmt.Println(roomOffsets)
-			room := mainScumm.ParseRoom(roomOffsets[0].Offset)
-			fmt.Println("Room:", room)
+			mainScumm.ParseRoom(roomOffsets[0].Offset)
 
 		}
 		if extension == ".000" {
@@ -73,31 +72,28 @@ func main() {
 			for currIndex < len(data) {
 				blockName := string(data[currIndex : currIndex+4])
 				blockSize := int(binary.BigEndian.Uint32(data[currIndex+4 : currIndex+8]))
-				currBlock := data[currIndex : currIndex+blockSize]
+				//currBlock := data[currIndex : currIndex+blockSize]
 
-				fmt.Println("Block ", blockName, "\t", blockSize, "bytes")
+				//fmt.Println("Block ", blockName, "\t", blockSize, "bytes")
 
 				currIndex += blockSize
 				//TODO Remove
 				//continue
 				switch blockName {
 				case "RNAM":
-					fmt.Println("Parse Room Names")
-					rooms := scummatlas.ParseRoomNames(currBlock)
-					fmt.Println(rooms)
+					//fmt.Println("Parse Room Names")
+					//fmt.Println(scummatlas.ParseRoomNames(currBlock))
 
 				case "MAXS":
 					//fmt.Println("Parse Maximum Values")
 
 				case "DROO":
-					fmt.Println("Parse Directory of Rooms")
-					rooms := scummatlas.ParseRoomIndex(currBlock)
-					fmt.Println(rooms)
+					//fmt.Println("Parse Directory of Rooms")
+					//fmt.Println(scummatlas.ParseRoomIndex(currBlock))
 
 				case "DSCR":
-					fmt.Println("Parse Directory of Scripts")
-					scripts := scummatlas.ParseScriptsIndex(currBlock)
-					fmt.Println(len(scripts), "scripts available")
+					//fmt.Println("Parse Directory of Scripts")
+					//fmt.Println(len(scummatlas.ParseScriptsIndex(currBlock)), "scripts available")
 
 				case "DSOU":
 					//fmt.Println("Parse Directory of Sounds")
