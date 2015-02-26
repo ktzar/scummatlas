@@ -6,7 +6,19 @@ import (
 
 type Image bool
 type Script bool
-type Box bool
+type Box struct {
+    ulx int
+    uly int
+    urx int
+    ury int
+    lrx int
+    lry int
+    llx int
+    lly int
+    mask byte
+    flags byte
+    scale int
+}
 type BoxMatrix bool
 
 type Room struct {
@@ -24,7 +36,7 @@ type Room struct {
 	ExitScript    Script
 	EntryScript   Script
 	LocalScript   Script
-	BoxData       []Box
+	Boxes       []Box
 	BoxMatrix     BoxMatrix
 }
 
@@ -49,6 +61,9 @@ func NewRoom(data []byte) *Room {
 		case "BOXD":
 			room.parseBOXD()
 		}
+		case "RMIM":
+			room.parseRMIM()
+		}
 
 		room.nextBlock()
 	}
@@ -59,7 +74,13 @@ func NewRoom(data []byte) *Room {
 }
 
 func (r *Room) parseBOXD() {
-	r.BoxData = append(r.BoxData, true)
+    boxCount := LE16(r.data, r.offset + 8)
+    var boxOffset int
+    for i := 0 ; i < boxCount ; i ++ {
+        boxOffset = 10 + i * 20
+        box := NewBox(r.data[boxOffset:boxOffset + 20])
+	    r.Boxes = append(r.Boxes, box)
+    }
 }
 
 func (r *Room) parseRMHD() {
@@ -72,6 +93,7 @@ func (r *Room) parseRMHD() {
 func (r Room) Print() {
 	fmt.Println("Size: ", r.Width, r.Height)
 	fmt.Println("Object count: ", r.ObjCount)
+	fmt.Println("Boxes: ", len(r.Boxes))
 }
 
 func (r Room) getBlockName() string {
@@ -81,4 +103,22 @@ func (r Room) getBlockName() string {
 func (r *Room) nextBlock() {
 	blockSize := BE32(r.data, r.offset+4)
 	r.offset += blockSize
+}
+
+func NewBox(data []byte) Box {
+    box := new(Box)
+    
+    box.ulx = LE16(data, 0)
+    box.uly = LE16(data, 2)
+    box.urx = LE16(data, 4)
+    box.ury = LE16(data, 6)
+    box.lrx = LE16(data, 8)
+    box.lry = LE16(data, 10)
+    box.llx = LE16(data, 12)
+    box.lly = LE16(data, 14)
+    box.mask = data[16]
+    box.flags = data[17]
+    box.scale = LE16(data, 18)
+
+    return *box
 }
