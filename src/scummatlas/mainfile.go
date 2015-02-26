@@ -8,6 +8,10 @@ type MainScummData struct {
 	Data []byte
 }
 
+func (d *MainScummData) fourChars(offset int) string {
+	return string(d.Data[offset : offset+4])
+}
+
 type RoomOffset struct {
 	Number int
 	Offset int
@@ -36,14 +40,15 @@ type Room struct {
 }
 
 func (d *MainScummData) GetRoomCount() int {
-	blockName := string(d.Data[0:4])
+	blockName := d.fourChars(0)
 	blockSize := BE32(d.Data, 4)
+	fmt.Println(blockName)
 	if blockName != "LECF" {
 		panic("No main container in the file")
 	}
 	fmt.Println(blockName, blockSize)
 
-	blockName = string(d.Data[8 : 8+4])
+	blockName = d.fourChars(8)
 	if blockName != "LOFF" {
 		panic("No room offset table in the file")
 	}
@@ -69,11 +74,19 @@ func (d *MainScummData) GetRoomsOffset() (offsets []RoomOffset) {
 }
 
 func (d *MainScummData) ParseRoom(offset int) Room {
-	blockName := string(d.Data[offset : offset+4])
-	//blockSize := string(d.Data[offset : offset+4])
+	var out Room
+	blockName := d.fourChars(offset)
+	blockSize := BE32(d.Data, offset)
 	if blockName != "ROOM" {
+		panic("No room block found")
+	}
+	fmt.Println(blockSize)
+	if d.fourChars(offset+8) != "RMHD" {
 		panic("No room header found")
 	}
+	out.Height = BE16(d.Data, 15)
+	out.Width = BE16(d.Data, 17)
+	out.ObjCount = BE16(d.Data, 19)
 
-	return Room{}
+	return out
 }

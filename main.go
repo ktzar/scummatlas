@@ -64,7 +64,7 @@ func main() {
 			fmt.Println(mainScumm.GetRoomCount())
 			roomOffsets := mainScumm.GetRoomsOffset()
 			fmt.Println(roomOffsets)
-			room := mainScumm.ParseRoom(roomOffsets[30].Offset)
+			room := mainScumm.ParseRoom(roomOffsets[0].Offset)
 			fmt.Println("Room:", room)
 
 		}
