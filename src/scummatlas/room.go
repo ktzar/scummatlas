@@ -89,6 +89,10 @@ func (r *Room) parseLSCR() {
 	r.LocalScripts = append(r.LocalScripts, script)
 }
 
+func (r *Room) parseRMIM() {
+	fmt.Println("parseRMIM not implemented yet")
+}
+
 func (r *Room) parseENCD() {
 	r.EntryScript = parseScriptBlock(r.data[r.offset : r.offset+r.getBlockSize()])
 }
