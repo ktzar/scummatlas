@@ -18,7 +18,7 @@ type Box struct {
 	flags byte
 	scale int
 }
-type Script string
+
 type BoxMatrix bool
 
 type Room struct {
@@ -78,27 +78,29 @@ func NewRoom(data []byte) *Room {
 	return room
 }
 
-func parseScriptBlock(data []byte) Script {
-	fmt.Println("Script size", BE32(data, 4))
-	return ""
+func (r *Room) parseLSCR() {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Recovered in ", r)
+		}
+	}()
+	scriptId := int(r.data[r.offset+8])
+	fmt.Println("Script ID", scriptId, "-", r.getBlockSize(), "bytes")
+	script := parseScriptBlock(
+		r.data[r.offset+9 : r.offset+r.getBlockSize()])
+	r.LocalScripts = append(r.LocalScripts, script)
 }
 
-func (r *Room) parseLSCR() {
-	script := parseScriptBlock(
-		r.data[r.offset : r.offset+r.getBlockSize()])
-	r.LocalScripts = append(r.LocalScripts, script)
+func (r *Room) parseENCD() {
+	//r.EntryScript = parseScriptBlock(r.data[r.offset+8 : r.offset+r.getBlockSize()])
+}
+
+func (r *Room) parseEXCD() {
+	r.EntryScript = parseScriptBlock(r.data[r.offset+8 : r.offset+r.getBlockSize()])
 }
 
 func (r *Room) parseRMIM() {
 	fmt.Println("parseRMIM not implemented yet")
-}
-
-func (r *Room) parseENCD() {
-	r.EntryScript = parseScriptBlock(r.data[r.offset : r.offset+r.getBlockSize()])
-}
-
-func (r *Room) parseEXCD() {
-	r.EntryScript = parseScriptBlock(r.data[r.offset : r.offset+r.getBlockSize()])
 }
 
 func (r *Room) parseBOXD() {
