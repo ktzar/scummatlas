@@ -17,39 +17,252 @@ type ScriptParser struct {
 }
 
 func (p *ScriptParser) parseNext() {
-	currOpcode := p.data[p.offset]
-	currOpcodeDef, ok := opCodesDefs[currOpcode]
+	opcode := p.data[p.offset]
+	opcodeName, ok := opCodesNames[opcode]
+
 	if !ok {
-		fmt.Printf("%x is not a known code\n", currOpcode)
+		fmt.Printf("%x is not a known code\n", opcode)
 		panic("Unknown code")
 	}
-	fmt.Println("Curr OpcodeDef: ", currOpcodeDef.name)
+	fmt.Printf("Opcode %x -> %v\n", opcode, opcodeName)
 
-	if currOpcodeDef.length == varLen {
+	var opCodeLength byte
+
+	switch opcodeName {
+	case "putActor":
+		opCodeLength = 6
+	case "startMusic":
+		opCodeLength = 2
+	case "getActorRoom":
+		opCodeLength = 4
+	case "isGreaterEqual":
+		opCodeLength = 7
+	case "drawObject":
+		opCodeLength = varLen
+	case "getActorElevation":
+		opCodeLength = 4
+	case "setState":
+		opCodeLength = 4
+	case "isNotEqual":
+		opCodeLength = 7
+	case "faceActor":
+		opCodeLength = 4
+	case "startScript":
+		opCodeLength = 2
+		for p.data[opCodeLength] != 0xff {
+			opCodeLength += 2
+		}
+		opCodeLength += 1
+	case "getVerbEntryPoint":
+		opCodeLength = 7
+	case "resourceRoutines":
+		subop := p.data[p.offset+1]
+		opCodeLength = 2
+		switch subop {
+		case 0x11:
+			opCodeLength = 1
+		case 0x14:
+			opCodeLength = 4
+		}
+	case "walkActorToActor":
+		opCodeLength = 4
+	case "putActorAtObject":
+		opCodeLength = 4
+	case "getObjectState":
+		opCodeLength = 5
+	case "getObjectOwner":
+		opCodeLength = 5
+	case "panCameraTo":
+		opCodeLength = 3
+	case "actorOps":
+		opCodeLength = varLen
+	case "print":
+		opCodeLength = varLen
+	case "actorFromPos":
+		opCodeLength = 5
+	case "getRandomNumber":
+		opCodeLength = 4
+	case "and":
+		opCodeLength = 5
+	case "jumpRelative":
+		opCodeLength = 3
+	case "doSentence":
+		opCodeLength = 6
+	case "move":
+		opCodeLength = 5
+	case "multiply":
+		opCodeLength = 5
+	case "startSound":
+		opCodeLength = 2
+	case "ifClassOfIs":
+		opCodeLength = varLen
+	case "walkActorTo":
+		opCodeLength = 6
+	case "isActorInBox":
+		opCodeLength = 5
+	case "stopMusic":
+		opCodeLength = 1
+	case "getAnimCounter":
+		opCodeLength = 4
+	case "getActorY":
+		opCodeLength = 5
+	case "loadRoomWithEgo":
+		opCodeLength = 8
+	case "pickupObject":
+		opCodeLength = 4
+	case "setVarRange":
+		opCodeLength = endsList
+	case "stringOps":
+		opCodeLength = varLen
+	case "equalZero":
+		opCodeLength = 5
+	case "setOwnerOf":
+		opCodeLength = 4
+	case "delayVariable":
+		opCodeLength = 3
+	case "cursorCommand":
+		opCodeLength = varLen
+	case "putActorInRoom":
+		opCodeLength = 3
+	case "delay":
+		opCodeLength = 4
+	case "ifNotState":
+		opCodeLength = 6
+	case "matrixOp":
+		opCodeLength = varLen
+	case "getInventoryCount":
+		opCodeLength = 4
+	case "setCameraAt":
+		opCodeLength = 3
+	case "roomOps":
+		opCodeLength = varLen
+	case "getDist":
+		opCodeLength = 7
+	case "findObject":
+		opCodeLength = 5
+	case "walkActorToObject":
+		opCodeLength = 4
+	case "startObject":
+		opCodeLength = endsList
+	case "lessOrEqual":
+		opCodeLength = 7
+	case "subtract":
+		opCodeLength = 5
+	case "getActorScale":
+		opCodeLength = 4
+	case "stopSound":
+		opCodeLength = 2
+	case "findInventory":
+		opCodeLength = 5
+	case "drawBox":
+		opCodeLength = 11
+	case "chainScript":
+		opCodeLength = endsList
+	case "getActorX":
+		opCodeLength = 5
+	case "isLess":
+		opCodeLength = 7
+	case "increment":
+		opCodeLength = 2
+	case "isEqual":
+		opCodeLength = 7
+	case "soundKludge":
+		opCodeLength = endsList
+	case "actorFollowCamera":
+		opCodeLength = 2
+	case "setObjectName":
+		opCodeLength = varLen
+	case "getActorMoving":
+		opCodeLength = 4
+	case "or":
+		opCodeLength = 5
+	case "override":
+		opCodeLength = varLen
+	case "add":
+		opCodeLength = 5
+	case "divide":
+		opCodeLength = 5
+	case "oldRoomEffect":
+		opCodeLength = 4
+	case "actorSetClass":
+		opCodeLength = endsList
+	case "freezeScripts":
+		opCodeLength = 2
+	case "stopScript":
+		opCodeLength = 2
+	case "getActorFacing":
+		opCodeLength = 4
+	case "getClosestObjActor":
+		opCodeLength = 5
+	case "getStringWidth":
+		opCodeLength = 3
+	case "getScriptRunning":
+		opCodeLength = 4
+	case "debug":
+		opCodeLength = 3
+	case "getActorWidth":
+		opCodeLength = 4
+	case "stopObjectScript":
+		opCodeLength = 2
+	case "lights":
+		opCodeLength = 4
+	case "getActorCostume":
+		opCodeLength = 4
+	case "loadRoom":
+		opCodeLength = 2
+	case "isGreater":
+		opCodeLength = 7
+	case "verbOps":
+		opCodeLength = varLen
+	case "getActorWalkBox":
+		opCodeLength = 4
+	case "isSoundRunning":
+		opCodeLength = 4
+	case "breakHere":
+		opCodeLength = 1
+	case "systemOps":
+		opCodeLength = 2
+	case "stopObjectCode":
+		opCodeLength = 1
+	case "dummy":
+		opCodeLength = 1
+	case "notEqualZero":
+		opCodeLength = 5
+	case "saveRestoreVerbs":
+		opCodeLength = 4
+	case "expression":
+		opCodeLength = varLen
+	case "wait":
+		opCodeLength = varLen
+	case "cutscene":
+		opCodeLength = 1
+		for p.data[opCodeLength] != 0xff {
+			opCodeLength += 2
+		}
+		opCodeLength += 1
+	case "endCutScene":
+		opCodeLength = 1
+	case "decrement":
+		opCodeLength = 2
+	case "pseudoRoom":
+		opCodeLength = varLen
+	case "printEgo":
+		opCodeLength = varLen
+	}
+
+	if opCodeLength == varLen {
 		panic("Variable length opcode, cannot proceed")
 	}
-	if currOpcodeDef.length == endsList {
-		for {
-			p.offset += 1
-			if p.data[p.offset] == 0xff {
-				p.offset += 1
-				return
-			}
-		}
-	}
-	if currOpcodeDef.length == multi {
-		currSubOpcode := p.data[p.offset+1]
-		currOpcodeDef, ok := subOpcodesDefs[currOpcode][currSubOpcode]
-		if !ok {
-			fmt.Printf("%x %x are not know code-subcode", currOpcode, currSubOpcode)
-			panic("unknown code")
-		}
-		fmt.Println("\t->subOpcode: ", currOpcodeDef.name)
-	}
-	p.offset += int(currOpcodeDef.length)
+
+	p.offset += int(opCodeLength)
 }
 
 func parseScriptBlock(data []byte) Script {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Recovered in ", r)
+		}
+	}()
 	parser := new(ScriptParser)
 	parser.data = data
 	parser.offset = 0
@@ -64,147 +277,144 @@ const varLen byte = 0xFE
 const multi byte = 0xFD
 const endsList byte = 0xFC
 
+type opHandler func([]byte) (int, string)
+
 type opDef struct {
-	length byte
-	name   string
+	name    string
+	handler opHandler
 }
 
-// varLen variable length
-// notDefined not processed yet
-var opCodesDefs = map[byte]opDef{
-	0x00: opDef{3, "stopObjectCode"},
-	0x01: opDef{6, "putActor"},
-	0x02: opDef{2, "startMusic"},
-	0x03: opDef{4, "getActorRoom"},
-	0x04: opDef{7, "isGreaterEqual"},
-	0x05: opDef{varLen, "drawObject"},
-	0x06: opDef{4, "getActorElevation"},
-	0x07: opDef{4, "setState"},
-	0x08: opDef{7, "isNotEqual"},
-	0x09: opDef{4, "faceActor"},
-	0x0A: opDef{endsList, "startScript"},
-	0x0B: opDef{7, "getVerbEntryPoint"},
-	0x0C: opDef{multi, "resourceRoutines"},
-	0x0D: opDef{4, "walkActorToActor"},
-	0x0E: opDef{4, "putActorAtObject"},
-	0x0F: opDef{5, "getObjectState"},
-	//0x0F: opDef{6, "ifState"}, //not in v5
-	0x10: opDef{5, "getObjectOwner"},
-	0x12: opDef{3, "panCameraTo"},
-	0x13: opDef{varLen, "actorOps"},
-	0x14: opDef{varLen, "print"},
-	0x15: opDef{5, "actorFromPos"},
-	0x16: opDef{4, "getRandomNumber"},
-	0x17: opDef{5, "and"},
-	0x18: opDef{3, "jumpRelative"},
-	0x19: opDef{6, "doSentence"},
-	0x1A: opDef{5, "move"},
-	0x1B: opDef{5, "multiply"},
-	0x1C: opDef{2, "startSound"},
-	0x1D: opDef{varLen, "ifClassOfIs"},
-	0x1E: opDef{6, "walkActorTo"},
-	0x1F: opDef{5, "isActorInBox"},
-	0x20: opDef{1, "stopMusic"},
-	0x22: opDef{4, "getAnimCounter"},
-	//0x22: opDef{notDefined, "saveLoadGame"}, //Not in V5
-	0x23: opDef{5, "getActorY"},
-	0x24: opDef{8, "loadRoomWithEgo"},
-	0x25: opDef{4, "pickupObject"},
-	0x26: opDef{endsList, "setVarRange"},
-	0x27: opDef{varLen, "stringOps"},
-	0x28: opDef{5, "equalZero"},
-	0x29: opDef{4, "setOwnerOf"},
-	0x2b: opDef{3, "delayVariable"},
-	0x2c: opDef{varLen, "cursorCommand"},
-	0x2D: opDef{3, "putActorInRoom"},
-	0x2e: opDef{4, "delay"},
-	0x2F: opDef{6, "ifNotState"},
-	0x30: opDef{varLen, "matrixOp"},
-	0x31: opDef{4, "getInventoryCount"},
-	0x32: opDef{3, "setCameraAt"},
-	0x33: opDef{varLen, "roomOps"},
-	0x34: opDef{7, "getDist"},
-	0x35: opDef{5, "findObject"},
-	0x36: opDef{4, "walkActorToObject"},
-	0x37: opDef{endsList, "startObject"},
-	0x38: opDef{7, "lessOrEqual"},
-	0x3A: opDef{5, "subtract"},
-	0x3B: opDef{4, "getActorScale"},
-	0x3C: opDef{2, "stopSound"},
-	0x3D: opDef{5, "findInventory"},
-	0x3F: opDef{11, "drawBox"},
-	0x40: opDef{endsList, "cutScene"},
-	0x42: opDef{endsList, "chainScript"},
-	0x43: opDef{5, "getActorX"},
-	0x44: opDef{7, "isLess"},
-	0x46: opDef{2, "increment"},
-	0x48: opDef{7, "isEqual"},
-	0x4C: opDef{endsList, "soundKludge"},
-	0x50: opDef{3, "pickupObject"},
-	0x52: opDef{2, "actorFollowCamera"},
-	0x54: opDef{varLen, "setObjectName"},
-	0x56: opDef{4, "getActorMoving"},
-	0x57: opDef{5, "or"},
-	0x58: opDef{varLen, "override"},
-	0x5a: opDef{5, "add"},
-	0x5B: opDef{5, "divide"},
-	0x5C: opDef{4, "oldRoomEffect"},
-	0x5d: opDef{endsList, "actorSetClass"},
-	0x60: opDef{2, "freezeScripts"},
-	0x62: opDef{2, "stopScript"},
-	0x63: opDef{4, "getActorFacing"},
-	0x66: opDef{5, "getClosestObjActor"},
-	0x67: opDef{3, "getStringWidth"},
-	0x68: opDef{4, "getScriptRunning"},
-	0x6B: opDef{3, "debug"},
-	0x6C: opDef{4, "getActorWidth"},
-	0x6E: opDef{2, "stopObjectScript"},
-	0x70: opDef{4, "lights"},
-	0x71: opDef{4, "getActorCostume"},
-	0x72: opDef{2, "loadRoom"},
-	0x78: opDef{7, "isGreater"},
-	0x7A: opDef{varLen, "verbOps"},
-	0x7B: opDef{4, "getActorWalkBox"},
-	0x7C: opDef{4, "isSoundRunning"},
-	0x80: opDef{1, "breakHere"},
-	0x98: opDef{2, "systemOps"},
-	0xA0: opDef{1, "stopObjectCode"},
-	0xA7: opDef{1, "dummy"},
-	//0xA7: opDef{notDefined, "saveLoadVars"}, //Not in V5
-	0xA8: opDef{5, "notEqualZero"},
-	0xAB: opDef{4, "saveRestoreVerbs"},
-	0xAC: opDef{varLen, "expression"},
-	0xAE: opDef{varLen, "wait"},
-	0xC0: opDef{1, "endCutScene"},
-	0xc6: opDef{2, "decrement"},
-	0xCC: opDef{varLen, "pseudoRoom"},
-	0xD8: opDef{varLen, "printEgo"},
+var opCodesNames = map[byte]string{
+	0x00: "stopObjectCode",
+	0x01: "putActor",
+	0x02: "startMusic",
+	0x03: "getActorRoom",
+	0x04: "isGreaterEqual",
+	0x05: "drawObject",
+	0x06: "getActorElevation",
+	0x07: "setState",
+	0x08: "isNotEqual",
+	0x09: "faceActor",
+	0x0A: "startScript",
+	0x0B: "getVerbEntryPoint",
+	0x0C: "resourceRoutines",
+	0x0D: "walkActorToActor",
+	0x0E: "putActorAtObject",
+	0x0F: "getObjectState",
+	0x10: "getObjectOwner",
+	0x12: "panCameraTo",
+	0x13: "actorOps",
+	0x14: "print",
+	0x15: "actorFromPos",
+	0x16: "getRandomNumber",
+	0x17: "and",
+	0x18: "jumpRelative",
+	0x19: "doSentence",
+	0x1A: "move",
+	0x1B: "multiply",
+	0x1C: "startSound",
+	0x1D: "ifClassOfIs",
+	0x1E: "walkActorTo",
+	0x1F: "isActorInBox",
+	0x20: "stopMusic",
+	0x22: "getAnimCounter",
+	0x23: "getActorY",
+	0x24: "loadRoomWithEgo",
+	0x25: "pickupObject",
+	0x26: "setVarRange",
+	0x27: "stringOps",
+	0x28: "equalZero",
+	0x29: "setOwnerOf",
+	0x2b: "delayVariable",
+	0x2c: "cursorCommand",
+	0x2D: "putActorInRoom",
+	0x2e: "delay",
+	0x2F: "ifNotState",
+	0x30: "matrixOp",
+	0x31: "getInventoryCount",
+	0x32: "setCameraAt",
+	0x33: "roomOps",
+	0x34: "getDist",
+	0x35: "findObject",
+	0x36: "walkActorToObject",
+	0x37: "startObject",
+	0x38: "lessOrEqual",
+	0x3A: "subtract",
+	0x3B: "getActorScale",
+	0x3C: "stopSound",
+	0x3D: "findInventory",
+	0x3F: "drawBox",
+	0x40: "cutscene",
+	0x42: "chainScript",
+	0x43: "getActorX",
+	0x44: "isLess",
+	0x46: "increment",
+	0x48: "isEqual",
+	0x4C: "soundKludge",
+	0x50: "pickupObject",
+	0x52: "actorFollowCamera",
+	0x54: "setObjectName",
+	0x56: "getActorMoving",
+	0x57: "or",
+	0x58: "override",
+	0x5a: "add",
+	0x5B: "divide",
+	0x5C: "oldRoomEffect",
+	0x5d: "actorSetClass",
+	0x60: "freezeScripts",
+	0x62: "stopScript",
+	0x63: "getActorFacing",
+	0x66: "getClosestObjActor",
+	0x67: "getStringWidth",
+	0x68: "getScriptRunning",
+	0x6B: "debug",
+	0x6C: "getActorWidth",
+	0x6E: "stopObjectScript",
+	0x70: "lights",
+	0x71: "getActorCostume",
+	0x72: "loadRoom",
+	0x78: "isGreater",
+	0x7A: "verbOps",
+	0x7B: "getActorWalkBox",
+	0x7C: "isSoundRunning",
+	0x80: "breakHere",
+	0x98: "systemOps",
+	0xA0: "stopObjectCode",
+	0xA7: "dummy",
+	0xA8: "notEqualZero",
+	0xAB: "saveRestoreVerbs",
+	0xAC: "expression",
+	0xAE: "wait",
+	0xC0: "endCutScene",
+	0xc6: "decrement",
+	0xCC: "pseudoRoom",
+	0xD8: "printEgo",
 }
 
-var subOpcodesDefs = map[byte]map[byte]opDef{
+/*
 	0x0c: {
-		0x01: opDef{3, "load_script"},
-		0x02: opDef{3, "load_sound"},
-		0x03: opDef{3, "load_costume"},
-		0x04: opDef{3, "load_room"},
-		0x05: opDef{3, "nuke_script"},
-		0x06: opDef{3, "nuke_sound"},
-		0x07: opDef{3, "nuke_costume"},
-		0x08: opDef{3, "nuke_room"},
-		0x09: opDef{3, "lock_script"},
-		0x0a: opDef{3, "lock_sound"},
-		0x0b: opDef{3, "lock_costume"},
-		0x0c: opDef{3, "lock_room"},
-		0x0d: opDef{3, "unlock_script"},
-		0x0e: opDef{3, "unlock_sound"},
-		0x0f: opDef{3, "unlock_costume"},
-		0x10: opDef{3, "unlock_room"},
-		0x11: opDef{3, "clear_heap"},
-		0x12: opDef{3, "load_charset"},
-		0x13: opDef{3, "nuke_charset"},
-		0x14: opDef{3, "load_object"},
+		0x01: "load_script", 2 
+		0x02: "load_sound", 2 
+		0x03: "load_costume", 2 
+		0x04: "load_room", 2 
+		0x05: "nuke_script", 2 
+		0x06: "nuke_sound", 2 
+		0x07: "nuke_costume", 2 
+		0x08: "nuke_room", 2 
+		0x09: "lock_script", 2 
+		0x0a: "lock_sound", 2 
+		0x0b: "lock_costume", 2 
+		0x0c: "lock_room", 2 
+		0x0d: "unlock_script", 2 
+		0x0e: "unlock_sound", 2 
+		0x0f: "unlock_costume", 2 
+		0x10: "unlock_room", 2 
+		0x11: "clear_heap", 3 
+		0x12: "load_charset", 3 
+		0x13: "nuke_charset", 3 
+		0x14: "load_object", 3 
 	},
-}
+*/
 
 var varNames = map[byte]string{
 	0:  "KEYPRESS",

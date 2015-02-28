@@ -92,7 +92,7 @@ func (r *Room) parseLSCR() {
 }
 
 func (r *Room) parseENCD() {
-	//r.EntryScript = parseScriptBlock(r.data[r.offset+8 : r.offset+r.getBlockSize()])
+	r.EntryScript = parseScriptBlock(r.data[r.offset+8 : r.offset+r.getBlockSize()])
 }
 
 func (r *Room) parseEXCD() {
