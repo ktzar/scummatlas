@@ -18,6 +18,7 @@ type ScriptParser struct {
 
 func (p *ScriptParser) parseNext() {
 	opcode := p.data[p.offset]
+	subopcode := p.data[p.offset+1]
 	opcodeName, ok := opCodesNames[opcode]
 
 	if !ok {
@@ -49,16 +50,15 @@ func (p *ScriptParser) parseNext() {
 		opCodeLength = 4
 	case "startScript":
 		opCodeLength = 2
-		for p.data[opCodeLength] != 0xff {
+		for p.data[p.offset+int(opCodeLength)] != 0xff {
 			opCodeLength += 2
 		}
-		opCodeLength += 1
+		opCodeLength++
 	case "getVerbEntryPoint":
 		opCodeLength = 7
 	case "resourceRoutines":
-		subop := p.data[p.offset+1]
 		opCodeLength = 2
-		switch subop {
+		switch subopcode {
 		case 0x11:
 			opCodeLength = 1
 		case 0x14:
@@ -75,8 +75,6 @@ func (p *ScriptParser) parseNext() {
 	case "panCameraTo":
 		opCodeLength = 3
 	case "actorOps":
-		opCodeLength = varLen
-	case "print":
 		opCodeLength = varLen
 	case "actorFromPos":
 		opCodeLength = 5
@@ -113,7 +111,13 @@ func (p *ScriptParser) parseNext() {
 	case "setVarRange":
 		opCodeLength = endsList
 	case "stringOps":
+		fmt.Printf("subopcode: %x\n", subopcode)
 		opCodeLength = varLen
+		if subopcode == 0x02 || subopcode == 0x05 {
+			opCodeLength = 5
+		} else if subopcode == 0x04 {
+			opCodeLength = 7
+		}
 	case "equalZero":
 		opCodeLength = 5
 	case "setOwnerOf":
@@ -233,21 +237,62 @@ func (p *ScriptParser) parseNext() {
 	case "expression":
 		opCodeLength = varLen
 	case "wait":
-		opCodeLength = varLen
-	case "cutscene":
 		opCodeLength = 1
-		for p.data[opCodeLength] != 0xff {
-			opCodeLength += 2
+		if subopcode == 0x01 {
+			opCodeLength = 3
 		}
-		opCodeLength += 1
+	case "cutscene":
+		opCodeLength = 2
+		for p.data[p.offset+int(opCodeLength)] != 0xff {
+			opCodeLength++
+		}
+		opCodeLength++
 	case "endCutScene":
 		opCodeLength = 1
 	case "decrement":
 		opCodeLength = 2
 	case "pseudoRoom":
 		opCodeLength = varLen
-	case "printEgo":
+	case "print", "printEgo":
 		opCodeLength = varLen
+		switch subopcode {
+		case 0x0F:
+			opCodeLength = 2
+			say := ""
+			for {
+				currChar := p.data[p.offset+int(opCodeLength)]
+				if currChar == 0xff {
+					escapeChar := p.data[p.offset+int(opCodeLength+1)]
+					switch {
+					case 0x01 <= escapeChar && escapeChar <= 0x03:
+						opCodeLength += 2
+					case 0x04 <= escapeChar && escapeChar <= 0x0e:
+						opCodeLength += 4
+					}
+				} else if currChar >= 0x20 && currChar <= 0x7e { //printable ascii char
+					opCodeLength++
+					say += string(currChar)
+				} else if currChar >= 0x00 {
+					opCodeLength++
+					break
+				} else {
+					panic("Invalid character in print")
+				}
+				if opCodeLength > 200 {
+					break
+				}
+			}
+			if opCodeLength > 200 {
+				panic("print too long")
+			}
+			fmt.Printf("\tSay \"%v\"\n", say)
+		case 0x01, 0x02:
+			opCodeLength = 4
+		case 0x00, 0x03, 0x08:
+			opCodeLength = 6
+		case 0x04, 0x06, 0x07:
+			opCodeLength = 2
+		}
 	}
 
 	if opCodeLength == varLen {
@@ -389,6 +434,16 @@ var opCodesNames = map[byte]string{
 	0xc6: "decrement",
 	0xCC: "pseudoRoom",
 	0xD8: "printEgo",
+
+	//from ScummVM sourcecode
+	0xc8: "isEqual",
+	0xa3: "getActorY",
+	0xc3: "getActorX",
+	0xd6: "getActorMoving",
+	0xe1: "putActor",
+	0x6a: "startScript",
+	0x91: "getActorCostume",
+	0xff: "drawBox",
 }
 
 /*

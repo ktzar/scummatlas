@@ -24,16 +24,16 @@ func (d *MainScummData) GetRoomCount() int {
 	if blockName != "LECF" {
 		panic("No main container in the file")
 	}
-	fmt.Println(blockName, blockSize)
+	fmt.Printf("%v (%v bytes)\t", blockName, blockSize)
 
 	blockName = d.fourChars(8)
 	if blockName != "LOFF" {
 		panic("No room offset table in the file")
 	}
 	blockSize = BE32(d.Data, 12)
-	fmt.Println(blockName, blockSize)
 	roomCount := int(d.Data[16])
-	fmt.Println("roomCount", roomCount)
+	fmt.Printf("%v (%v bytes)\t", blockName, blockSize)
+	fmt.Printf("roomCount: %v\n", roomCount)
 	return roomCount
 }
 

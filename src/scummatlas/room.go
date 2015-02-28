@@ -51,9 +51,10 @@ func NewRoom(data []byte) *Room {
 	}
 
 	room.offset = 8
+	fmt.Printf("Block Name\tBlock Size\n=============\n")
 	for room.offset < len(data) {
 		blockName := room.getBlockName()
-		fmt.Println("Parsing", blockName)
+		fmt.Printf("%v\t%v bytes\n", blockName, room.getBlockSize())
 
 		switch blockName {
 		case "RMHD":
@@ -69,7 +70,6 @@ func NewRoom(data []byte) *Room {
 		case "RMIM":
 			room.parseRMIM()
 		}
-
 		room.nextBlock()
 	}
 
@@ -79,13 +79,8 @@ func NewRoom(data []byte) *Room {
 }
 
 func (r *Room) parseLSCR() {
-	defer func() {
-		if r := recover(); r != nil {
-			fmt.Println("Recovered in ", r)
-		}
-	}()
 	scriptId := int(r.data[r.offset+8])
-	fmt.Println("Script ID", scriptId, "-", r.getBlockSize(), "bytes")
+	fmt.Println("ScriptID", scriptId)
 	script := parseScriptBlock(
 		r.data[r.offset+9 : r.offset+r.getBlockSize()])
 	r.LocalScripts = append(r.LocalScripts, script)
