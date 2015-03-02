@@ -30,24 +30,26 @@ func (p *ScriptParser) parseNext() {
 	var opCodeLength byte
 
 	switch opcodeName {
+	case "animateActor":
+		opCodeLength = 5
 	case "putActor":
-		opCodeLength = 6
+		opCodeLength = 7
 	case "startMusic":
-		opCodeLength = 2
+		opCodeLength = 3
 	case "getActorRoom":
-		opCodeLength = 4
+		opCodeLength = 5
 	case "isGreaterEqual":
 		opCodeLength = 7
 	case "drawObject":
 		opCodeLength = varLen
 	case "getActorElevation":
-		opCodeLength = 4
+		opCodeLength = 5
 	case "setState":
-		opCodeLength = 4
+		opCodeLength = 5
 	case "isNotEqual":
 		opCodeLength = 7
 	case "faceActor":
-		opCodeLength = 4
+		opCodeLength = 5
 	case "startScript":
 		opCodeLength = 2
 		for p.data[p.offset+int(opCodeLength)] != 0xff {
@@ -65,9 +67,9 @@ func (p *ScriptParser) parseNext() {
 			opCodeLength = 4
 		}
 	case "walkActorToActor":
-		opCodeLength = 4
+		opCodeLength = 6
 	case "putActorAtObject":
-		opCodeLength = 4
+		opCodeLength = 5
 	case "getObjectState":
 		opCodeLength = 5
 	case "getObjectOwner":
@@ -79,35 +81,35 @@ func (p *ScriptParser) parseNext() {
 	case "actorFromPos":
 		opCodeLength = 5
 	case "getRandomNumber":
-		opCodeLength = 4
+		opCodeLength = 5
 	case "and":
 		opCodeLength = 5
 	case "jumpRelative":
 		opCodeLength = 3
 	case "doSentence":
-		opCodeLength = 6
+		opCodeLength = 7
 	case "move":
 		opCodeLength = 5
 	case "multiply":
 		opCodeLength = 5
 	case "startSound":
-		opCodeLength = 2
+		opCodeLength = 3
 	case "ifClassOfIs":
 		opCodeLength = varLen
 	case "walkActorTo":
-		opCodeLength = 6
+		opCodeLength = 7
 	case "isActorInBox":
-		opCodeLength = 5
+		opCodeLength = 7
 	case "stopMusic":
 		opCodeLength = 1
 	case "getAnimCounter":
-		opCodeLength = 4
+		opCodeLength = 5
 	case "getActorY":
 		opCodeLength = 5
 	case "loadRoomWithEgo":
-		opCodeLength = 8
+		opCodeLength = 9
 	case "pickupObject":
-		opCodeLength = 4
+		opCodeLength = 5
 	case "setVarRange":
 		opCodeLength = endsList
 	case "stringOps":
@@ -121,29 +123,34 @@ func (p *ScriptParser) parseNext() {
 	case "equalZero":
 		opCodeLength = 5
 	case "setOwnerOf":
-		opCodeLength = 4
+		opCodeLength = 5
 	case "delayVariable":
 		opCodeLength = 3
 	case "cursorCommand":
 		opCodeLength = varLen
 	case "putActorInRoom":
-		opCodeLength = 3
+		opCodeLength = 5
 	case "delay":
-		opCodeLength = 4
+		opCodeLength = 6
 	case "ifNotState":
 		opCodeLength = 6
 	case "matrixOp":
-		opCodeLength = varLen
+		if subopcode == 0x04 {
+			opCodeLength = 2
+		} else {
+			opCodeLength = 6
+		}
 	case "getInventoryCount":
-		opCodeLength = 4
+		opCodeLength = 5
 	case "setCameraAt":
 		opCodeLength = 3
 	case "roomOps":
+		fmt.Printf(" subops %x\n", subopcode)
 		opCodeLength = varLen
 	case "getDist":
 		opCodeLength = 7
 	case "findObject":
-		opCodeLength = 5
+		opCodeLength = 7
 	case "walkActorToObject":
 		opCodeLength = 4
 	case "startObject":
@@ -153,13 +160,13 @@ func (p *ScriptParser) parseNext() {
 	case "subtract":
 		opCodeLength = 5
 	case "getActorScale":
-		opCodeLength = 4
-	case "stopSound":
-		opCodeLength = 2
-	case "findInventory":
 		opCodeLength = 5
+	case "stopSound":
+		opCodeLength = 3
+	case "findInventory":
+		opCodeLength = 7
 	case "drawBox":
-		opCodeLength = 11
+		opCodeLength = 12
 	case "chainScript":
 		opCodeLength = endsList
 	case "getActorX":
@@ -173,11 +180,11 @@ func (p *ScriptParser) parseNext() {
 	case "soundKludge":
 		opCodeLength = endsList
 	case "actorFollowCamera":
-		opCodeLength = 2
+		opCodeLength = 3
 	case "setObjectName":
 		opCodeLength = varLen
 	case "getActorMoving":
-		opCodeLength = 4
+		opCodeLength = 5
 	case "or":
 		opCodeLength = 5
 	case "override":
@@ -191,37 +198,37 @@ func (p *ScriptParser) parseNext() {
 	case "actorSetClass":
 		opCodeLength = endsList
 	case "freezeScripts":
-		opCodeLength = 2
+		opCodeLength = 3
 	case "stopScript":
-		opCodeLength = 2
+		opCodeLength = 3
 	case "getActorFacing":
-		opCodeLength = 4
+		opCodeLength = 5
 	case "getClosestObjActor":
 		opCodeLength = 5
 	case "getStringWidth":
-		opCodeLength = 3
+		opCodeLength = 5
 	case "getScriptRunning":
-		opCodeLength = 4
+		opCodeLength = 5
 	case "debug":
 		opCodeLength = 3
 	case "getActorWidth":
-		opCodeLength = 4
+		opCodeLength = 5
 	case "stopObjectScript":
 		opCodeLength = 2
 	case "lights":
-		opCodeLength = 4
+		opCodeLength = 5
 	case "getActorCostume":
-		opCodeLength = 4
+		opCodeLength = 5
 	case "loadRoom":
-		opCodeLength = 2
+		opCodeLength = 3
 	case "isGreater":
 		opCodeLength = 7
 	case "verbOps":
 		opCodeLength = varLen
 	case "getActorWalkBox":
-		opCodeLength = 4
+		opCodeLength = 5
 	case "isSoundRunning":
-		opCodeLength = 4
+		opCodeLength = 5
 	case "breakHere":
 		opCodeLength = 1
 	case "systemOps":
@@ -237,9 +244,9 @@ func (p *ScriptParser) parseNext() {
 	case "expression":
 		opCodeLength = varLen
 	case "wait":
-		opCodeLength = 1
+		opCodeLength = 2
 		if subopcode == 0x01 {
-			opCodeLength = 3
+			opCodeLength = 4
 		}
 	case "cutscene":
 		opCodeLength = 2
@@ -311,7 +318,7 @@ func parseScriptBlock(data []byte) Script {
 	parser := new(ScriptParser)
 	parser.data = data
 	parser.offset = 0
-	for parser.offset < len(data) {
+	for parser.offset+1 < len(data) {
 		parser.parseNext()
 	}
 	return parser.script
@@ -340,13 +347,14 @@ var opCodesNames = map[byte]string{
 	0x07: "setState",
 	0x08: "isNotEqual",
 	0x09: "faceActor",
-	0x0A: "startScript",
-	0x0B: "getVerbEntryPoint",
-	0x0C: "resourceRoutines",
-	0x0D: "walkActorToActor",
-	0x0E: "putActorAtObject",
-	0x0F: "getObjectState",
+	0x0a: "startScript",
+	0x0b: "getVerbEntryPoint",
+	0x0c: "resourceRoutines",
+	0x0d: "walkActorToActor",
+	0x0e: "putActorAtObject",
+	0x0f: "getObjectState",
 	0x10: "getObjectOwner",
+	0x11: "animateActor",
 	0x12: "panCameraTo",
 	0x13: "actorOps",
 	0x14: "print",
@@ -355,12 +363,12 @@ var opCodesNames = map[byte]string{
 	0x17: "and",
 	0x18: "jumpRelative",
 	0x19: "doSentence",
-	0x1A: "move",
-	0x1B: "multiply",
-	0x1C: "startSound",
-	0x1D: "ifClassOfIs",
-	0x1E: "walkActorTo",
-	0x1F: "isActorInBox",
+	0x1a: "move",
+	0x1b: "multiply",
+	0x1c: "startSound",
+	0x1d: "ifClassOfIs",
+	0x1e: "walkActorTo",
+	0x1f: "isActorInBox",
 	0x20: "stopMusic",
 	0x22: "getAnimCounter",
 	0x23: "getActorY",
@@ -372,9 +380,9 @@ var opCodesNames = map[byte]string{
 	0x29: "setOwnerOf",
 	0x2b: "delayVariable",
 	0x2c: "cursorCommand",
-	0x2D: "putActorInRoom",
+	0x2d: "putActorInRoom",
 	0x2e: "delay",
-	0x2F: "ifNotState",
+	0x2f: "ifNotState",
 	0x30: "matrixOp",
 	0x31: "getInventoryCount",
 	0x32: "setCameraAt",
@@ -384,18 +392,18 @@ var opCodesNames = map[byte]string{
 	0x36: "walkActorToObject",
 	0x37: "startObject",
 	0x38: "lessOrEqual",
-	0x3A: "subtract",
-	0x3B: "getActorScale",
-	0x3C: "stopSound",
-	0x3D: "findInventory",
-	0x3F: "drawBox",
+	0x3a: "subtract",
+	0x3b: "getActorScale",
+	0x3c: "stopSound",
+	0x3d: "findInventory",
+	0x3f: "drawBox",
 	0x40: "cutscene",
 	0x42: "chainScript",
 	0x43: "getActorX",
 	0x44: "isLess",
 	0x46: "increment",
 	0x48: "isEqual",
-	0x4C: "soundKludge",
+	0x4c: "soundKludge",
 	0x50: "pickupObject",
 	0x52: "actorFollowCamera",
 	0x54: "setObjectName",
@@ -403,8 +411,8 @@ var opCodesNames = map[byte]string{
 	0x57: "or",
 	0x58: "override",
 	0x5a: "add",
-	0x5B: "divide",
-	0x5C: "oldRoomEffect",
+	0x5b: "divide",
+	0x5c: "oldRoomEffect",
 	0x5d: "actorSetClass",
 	0x60: "freezeScripts",
 	0x62: "stopScript",
@@ -412,28 +420,28 @@ var opCodesNames = map[byte]string{
 	0x66: "getClosestObjActor",
 	0x67: "getStringWidth",
 	0x68: "getScriptRunning",
-	0x6B: "debug",
-	0x6C: "getActorWidth",
-	0x6E: "stopObjectScript",
+	0x6b: "debug",
+	0x6c: "getActorWidth",
+	0x6e: "stopObjectScript",
 	0x70: "lights",
 	0x71: "getActorCostume",
 	0x72: "loadRoom",
 	0x78: "isGreater",
-	0x7A: "verbOps",
-	0x7B: "getActorWalkBox",
-	0x7C: "isSoundRunning",
+	0x7a: "verbOps",
+	0x7b: "getActorWalkBox",
+	0x7c: "isSoundRunning",
 	0x80: "breakHere",
 	0x98: "systemOps",
-	0xA0: "stopObjectCode",
-	0xA7: "dummy",
-	0xA8: "notEqualZero",
-	0xAB: "saveRestoreVerbs",
-	0xAC: "expression",
-	0xAE: "wait",
-	0xC0: "endCutScene",
+	0xa0: "stopObjectCode",
+	0xa7: "dummy",
+	0xa8: "notEqualZero",
+	0xab: "saveRestoreVerbs",
+	0xac: "expression",
+	0xae: "wait",
+	0xc0: "endCutScene",
 	0xc6: "decrement",
-	0xCC: "pseudoRoom",
-	0xD8: "printEgo",
+	0xcc: "pseudoRoom",
+	0xd8: "printEgo",
 
 	//from ScummVM sourcecode
 	0xc8: "isEqual",
@@ -442,34 +450,10 @@ var opCodesNames = map[byte]string{
 	0xd6: "getActorMoving",
 	0xe1: "putActor",
 	0x6a: "startScript",
-	0x91: "getActorCostume",
+	0x91: "animateActor",
+	0x93: "getInventoryCount",
 	0xff: "drawBox",
 }
-
-/*
-	0x0c: {
-		0x01: "load_script", 2 
-		0x02: "load_sound", 2 
-		0x03: "load_costume", 2 
-		0x04: "load_room", 2 
-		0x05: "nuke_script", 2 
-		0x06: "nuke_sound", 2 
-		0x07: "nuke_costume", 2 
-		0x08: "nuke_room", 2 
-		0x09: "lock_script", 2 
-		0x0a: "lock_sound", 2 
-		0x0b: "lock_costume", 2 
-		0x0c: "lock_room", 2 
-		0x0d: "unlock_script", 2 
-		0x0e: "unlock_sound", 2 
-		0x0f: "unlock_costume", 2 
-		0x10: "unlock_room", 2 
-		0x11: "clear_heap", 3 
-		0x12: "load_charset", 3 
-		0x13: "nuke_charset", 3 
-		0x14: "load_object", 3 
-	},
-*/
 
 var varNames = map[byte]string{
 	0:  "KEYPRESS",
