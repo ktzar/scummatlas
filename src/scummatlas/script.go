@@ -316,6 +316,8 @@ func parseScriptBlock(data []byte) Script {
 		}
 	}()
 	parser := new(ScriptParser)
+	//TODO remove line
+	return parser.script
 	parser.data = data
 	parser.offset = 0
 	for parser.offset+1 < len(data) {

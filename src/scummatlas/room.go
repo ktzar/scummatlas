@@ -4,7 +4,6 @@ import (
 	"fmt"
 )
 
-type Image bool
 type Box struct {
 	ulx   int
 	uly   int
@@ -95,7 +94,22 @@ func (r *Room) parseEXCD() {
 }
 
 func (r *Room) parseRMIM() {
-	fmt.Println("parseRMIM not implemented yet")
+	if string(r.data[r.offset+8:r.offset+12]) != "RMIH" {
+		panic("Not room image header")
+	}
+	headerSize := BE32(r.data, r.offset+12)
+	zBuffers := LE16(r.data, r.offset+16)
+	fmt.Println("headerSize", headerSize)
+	fmt.Println("zBuffers", zBuffers)
+
+	if FourCharString(r.data, r.offset+18) != "IM00" {
+		panic("Not room image found")
+	}
+	imageOffset := r.offset + 18
+	imageSize := BE32(r.data, imageOffset+4)
+	fmt.Println(FourCharString(r.data, imageOffset), imageSize)
+
+	r.Image = parseImage(r.data[imageOffset:imageOffset+4+imageSize], zBuffers, r.Width, r.Height)
 }
 
 func (r *Room) parseBOXD() {
