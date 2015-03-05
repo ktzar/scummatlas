@@ -16,14 +16,17 @@ func parseImage(data []byte, zBuffers int, width int, height int) Image {
 	fmt.Println("SmapSize", smapSize)
 
 	fmt.Println("There should be ", stripeCount, "stripes")
-	offsets := map[int]int{}
-	for i := 0; i < width/8; i++ {
+	offsets := make([]int, 0, stripeCount)
+	for i := 0; i < stripeCount; i++ {
 		stripeOffset := LE32(data, 16+4*i)
-		fmt.Printf("\nOffsets of %v is %v", i, stripeOffset)
-		offsets[i] = stripeOffset
+		offsets = append(offsets, stripeOffset)
 	}
 
-	fmt.Println(offsets)
+	for i := 0; i < stripeCount; i++ {
+		fmt.Printf("\nOffsets of %v is %x", i, offsets[i])
+		fmt.Print("\tHeader ", data[offsets[i]+8])
+		fmt.Print("\tCode ", int(data[offsets[i]+8])%10)
+	}
 
 	os.Exit(255)
 	return false

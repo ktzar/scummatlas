@@ -2,6 +2,7 @@ package scummatlas
 
 import (
 	"fmt"
+	"image/color"
 )
 
 type Box struct {
@@ -20,6 +21,8 @@ type Box struct {
 
 type BoxMatrix bool
 
+type Palette []Color
+
 type Room struct {
 	data     []byte
 	offset   int
@@ -28,7 +31,7 @@ type Room struct {
 	ObjCount int
 	//ColorCycle ColorCycle
 	//TranspColor TranspColor
-	//Palette Palette
+	Palette       Palette
 	Image         Image
 	ObjectImage   Image
 	ObjectScripts []Script
@@ -63,6 +66,8 @@ func NewRoom(data []byte) *Room {
 		case "EXCD":
 			room.parseEXCD()
 		case "ENCD":
+			room.parseENCD()
+		case "EPAL":
 			room.parseENCD()
 		case "LSCR":
 			room.parseLSCR()
