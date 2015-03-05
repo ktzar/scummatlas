@@ -2,15 +2,29 @@ package scummatlas
 
 import "fmt"
 import "os"
+import "image/color"
+import "image"
 
-type Image bool
+func parsePalette(data []byte) color.Palette {
+	var palette = make(color.Palette, 0, 256)
+	for i := 0; i < len(data)/3; i += 3 {
+		color := color.RGBA{
+			data[i*3],
+			data[i*3+1],
+			data[i*3+2],
+			1,
+		}
+		palette = append(palette, color)
+	}
 
-func parseImage(data []byte, zBuffers int, width int, height int) Image {
-	fmt.Println("PARSE ROOM IMG")
+	return palette
+}
 
+func parseImage(data []byte, zBuffers int, width int, height int, pal color.Palette) *image.Paletted {
 	if string(data[8:12]) != "SMAP" {
 		panic("No stripe table found")
 	}
+
 	smapSize := BE32(data, 12)
 	stripeCount := width / 8
 	fmt.Println("SmapSize", smapSize)
@@ -28,6 +42,9 @@ func parseImage(data []byte, zBuffers int, width int, height int) Image {
 		fmt.Print("\tCode ", int(data[offsets[i]+8])%10)
 	}
 
+	image := image.NewPaletted(image.Rect(0, 0, width, height), pal)
+
 	os.Exit(255)
-	return false
+	return image
+
 }

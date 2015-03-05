@@ -2,6 +2,7 @@ package scummatlas
 
 import (
 	"fmt"
+	"image"
 	"image/color"
 )
 
@@ -21,8 +22,6 @@ type Box struct {
 
 type BoxMatrix bool
 
-type Palette []Color
-
 type Room struct {
 	data     []byte
 	offset   int
@@ -31,9 +30,9 @@ type Room struct {
 	ObjCount int
 	//ColorCycle ColorCycle
 	//TranspColor TranspColor
-	Palette       Palette
-	Image         Image
-	ObjectImage   Image
+	Palette       color.Palette
+	Image         image.Paletted
+	ObjectImage   image.Paletted
 	ObjectScripts []Script
 	ExitScript    Script
 	EntryScript   Script
@@ -68,7 +67,7 @@ func NewRoom(data []byte) *Room {
 		case "ENCD":
 			room.parseENCD()
 		case "EPAL":
-			room.parseENCD()
+			room.parseEPAL()
 		case "LSCR":
 			room.parseLSCR()
 		case "RMIM":
@@ -94,6 +93,16 @@ func (r *Room) parseENCD() {
 	r.EntryScript = parseScriptBlock(r.data[r.offset+8 : r.offset+r.getBlockSize()])
 }
 
+func (r *Room) parseEPAL() {
+	paletteData := r.data[r.offset+8 : r.offset+r.getBlockSize()]
+	fmt.Println("Palette data size ", len(paletteData))
+
+	r.Palette = parsePalette(r.data[r.offset+8 : r.offset+8+3*256])
+	fmt.Println("Palette length", len(r.Palette))
+	fmt.Println(r.Palette)
+
+}
+
 func (r *Room) parseEXCD() {
 	r.EntryScript = parseScriptBlock(r.data[r.offset+8 : r.offset+r.getBlockSize()])
 }
@@ -114,7 +123,7 @@ func (r *Room) parseRMIM() {
 	imageSize := BE32(r.data, imageOffset+4)
 	fmt.Println(FourCharString(r.data, imageOffset), imageSize)
 
-	r.Image = parseImage(r.data[imageOffset:imageOffset+4+imageSize], zBuffers, r.Width, r.Height)
+	//r.Image = parseImage(r.data[imageOffset:imageOffset+4+imageSize], zBuffers, r.Width, r.Height, r.Palette)
 }
 
 func (r *Room) parseBOXD() {
