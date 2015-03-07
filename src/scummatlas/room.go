@@ -1,9 +1,12 @@
 package scummatlas
 
 import (
+	_ "bufio"
 	"fmt"
 	"image"
 	"image/color"
+	_ "image/png"
+	_ "os"
 )
 
 type Box struct {
@@ -31,7 +34,7 @@ type Room struct {
 	//ColorCycle ColorCycle
 	//TranspColor TranspColor
 	Palette       color.Palette
-	Image         image.Paletted
+	Image         *image.RGBA
 	ObjectImage   image.Paletted
 	ObjectScripts []Script
 	ExitScript    Script
@@ -68,6 +71,8 @@ func NewRoom(data []byte) *Room {
 			room.parseENCD()
 		case "EPAL":
 			room.parseEPAL()
+		case "CLUT":
+			room.parseCLUT()
 		case "LSCR":
 			room.parseLSCR()
 		case "RMIM":
@@ -94,6 +99,19 @@ func (r *Room) parseENCD() {
 }
 
 func (r *Room) parseEPAL() {
+	fmt.Println("EGA palette, not used")
+	/*
+		paletteData := r.data[r.offset+8 : r.offset+r.getBlockSize()]
+		fmt.Println("Palette data size ", len(paletteData))
+
+		r.Palette = parsePalette(r.data[r.offset+8 : r.offset+8+3*256])
+		fmt.Println("Palette length", len(r.Palette))
+		fmt.Println(r.Palette)
+	*/
+
+}
+
+func (r *Room) parseCLUT() {
 	paletteData := r.data[r.offset+8 : r.offset+r.getBlockSize()]
 	fmt.Println("Palette data size ", len(paletteData))
 
@@ -123,7 +141,19 @@ func (r *Room) parseRMIM() {
 	imageSize := BE32(r.data, imageOffset+4)
 	fmt.Println(FourCharString(r.data, imageOffset), imageSize)
 
-	//r.Image = parseImage(r.data[imageOffset:imageOffset+4+imageSize], zBuffers, r.Width, r.Height, r.Palette)
+	image := parseImage(r.data[imageOffset:imageOffset+4+imageSize], zBuffers, r.Width, r.Height, r.Palette)
+
+	/*
+		f, err := os.Create("image.png")
+		if err != nil {
+			panic("Error creating image.png")
+		}
+		w := bufio.NewWriter(f)
+		png.Encode(w, image)
+		w.Flush()
+	*/
+
+	r.Image = image
 }
 
 func (r *Room) parseBOXD() {
