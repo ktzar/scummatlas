@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	_ "image/png"
-	_ "os"
 )
 
 type Box struct {
@@ -32,7 +30,7 @@ type Room struct {
 	Height   int
 	ObjCount int
 	//ColorCycle ColorCycle
-	//TranspColor TranspColor
+	TranspIndex   int
 	Palette       color.Palette
 	Image         *image.RGBA
 	ObjectImage   image.Paletted
@@ -77,6 +75,8 @@ func NewRoom(data []byte) *Room {
 			room.parseLSCR()
 		case "RMIM":
 			room.parseRMIM()
+		case "TRNS":
+			room.parseTRNS()
 		}
 		room.nextBlock()
 	}
@@ -92,6 +92,11 @@ func (r *Room) parseLSCR() {
 	script := parseScriptBlock(
 		r.data[r.offset+9 : r.offset+r.getBlockSize()])
 	r.LocalScripts = append(r.LocalScripts, script)
+}
+
+func (r *Room) parseTRNS() {
+	r.TranspIndex = int(r.data[r.offset+8])
+	fmt.Println("Transparent index", r.TranspIndex)
 }
 
 func (r *Room) parseENCD() {
@@ -147,19 +152,14 @@ func (r *Room) parseRMIM() {
 	imageSize := BE32(r.data, imageOffset+4)
 	fmt.Println(FourCharString(r.data, imageOffset), imageSize)
 
-	image := parseImage(r.data[imageOffset:imageOffset+4+imageSize], zBuffers, r.Width, r.Height, r.Palette)
+	r.Image = parseImage(
+		r.data[imageOffset:imageOffset+4+imageSize],
+		zBuffers,
+		r.Width,
+		r.Height,
+		r.Palette,
+		uint8(r.TranspIndex))
 
-	/*
-		f, err := os.Create("image.png")
-		if err != nil {
-			panic("Error creating image.png")
-		}
-		w := bufio.NewWriter(f)
-		png.Encode(w, image)
-		w.Flush()
-	*/
-
-	r.Image = image
 }
 
 func (r *Room) parseBOXD() {

@@ -5,9 +5,18 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"image/jpeg"
-	"image/png"
-	"os"
+)
+
+const (
+	_ = iota
+	METHOD_UNKNOWN
+	METHOD_UNCOMPRESSED
+	METHOD_ONE
+	METHOD_TWO
+	HORIZONTAL
+	VERTICAL
+	TRANSP
+	NO_TRANSP
 )
 
 func parsePalette(data []byte) color.Palette {
@@ -17,7 +26,7 @@ func parsePalette(data []byte) color.Palette {
 			data[i],
 			data[i+1],
 			data[i+2],
-			1,
+			255,
 		}
 		palette = append(palette, color)
 	}
@@ -25,14 +34,13 @@ func parsePalette(data []byte) color.Palette {
 	return palette
 }
 
-func parseImage(data []byte, zBuffers int, width int, height int, pal color.Palette) *image.RGBA {
+func parseImage(data []byte, zBuffers int, width int, height int, pal color.Palette, transpIndex uint8) *image.RGBA {
 	if string(data[8:12]) != "SMAP" {
 		panic("No stripe table found")
 	}
 
-	smapSize := BE32(data, 12)
 	stripeCount := width / 8
-	fmt.Println("SmapSize", smapSize)
+	fmt.Println("SmapSize", BE32(data, 12))
 
 	fmt.Println("There should be ", stripeCount, "stripes")
 	offsets := make([]int, 0, stripeCount)
@@ -46,45 +54,100 @@ func parseImage(data []byte, zBuffers int, width int, height int, pal color.Pale
 
 	fmt.Println("Decoding image")
 	fmt.Println("Stripes information")
-	fmt.Println("#ID\tCode\tMethod\tTransp\tDirect\tPalInSz")
+	fmt.Println("#ID\tCode\tMethod\tDirect\tPalInSz\tTransp")
 	for i := 0; i < stripeCount; i++ {
 		offset := offsets[i]
 		size := len(data) - offset
 		if i < stripeCount-1 {
 			size = offsets[i+1] - offsets[i]
 		}
-		drawStripe(img, i, data[8+offset:8+offset+size], pal)
+		drawStripe(img, i, data[8+offset:8+offset+size], pal, transpIndex)
 	}
 	fmt.Println("image decoded")
-
-	jpegFile, err := os.Create("./image.jpg")
-	if err != nil {
-		panic("Error creating image.jpg")
-	}
-	pngFile, err := os.Create("./image.png")
-	if err != nil {
-		panic("Error creating image.png")
-	}
-	var options jpeg.Options
-	options.Quality = 100
-	jpeg.Encode(jpegFile, img, &options)
-	png.Encode(pngFile, img)
-	os.Exit(1)
-
 	return img
 }
 
-const (
-	_ = iota
-	METHOD_UNKNOWN
-	METHOD_UNCOMPRESSED
-	METHOD_ONE
-	METHOD_TWO
-	HORIZONTAL
-	VERTICAL
-	TRANSP
-	NO_TRANSP
-)
+func drawStripe(img *image.RGBA, stripNumber int, data []byte, pal color.Palette, transpIndex uint8) {
+
+	fmt.Printf("%v\t0x%X\t", stripNumber, data[0])
+	method, direction, transparent, paletteLength := getCompressionMethod(data[0])
+
+	height := img.Rect.Size().Y
+	totalPixels := 8 * height
+	currentPixel := 0
+
+	curPal := uint8(data[1])
+	curSubs := uint8(1)
+
+	setColor := func() {
+		var x, y int
+		if direction == HORIZONTAL {
+			x = currentPixel % 8
+			y = (currentPixel + 1) / 8
+		} else {
+			y = currentPixel % height
+			x = currentPixel / height
+		}
+		if x == 7 {
+			x = -1
+		}
+		x += 8 * stripNumber
+		if curPal >= 0 {
+			if transparent == TRANSP && curPal == transpIndex {
+				fmt.Println("TRANSPARENT")
+				img.Set(x, y, color.RGBA{0, 0, 0, 0})
+			} else {
+				img.Set(x, y, pal[curPal])
+			}
+		} else {
+			panic("Out of palette")
+		}
+		currentPixel++
+	}
+
+	bs := binaryutils.NewBitStream(data[2:])
+
+	if method == METHOD_TWO {
+		for currentPixel < totalPixels {
+			if bs.GetBit() == 1 {
+				if bs.GetBit() == 1 {
+					palShift := bs.GetBits(3) - 4
+					if palShift == 0 {
+						length := int(bs.GetBits(8))
+						for i := 0; i < length; i++ {
+							setColor()
+						}
+					} else {
+						curPal += palShift
+						setColor()
+					}
+				} else { // 10 Read new palette index
+					curPal = bs.GetBits(paletteLength)
+					setColor()
+				}
+			} else { // 0 Draw next pixel with current palette index
+				setColor()
+			}
+		}
+	} else {
+		for currentPixel < totalPixels {
+			if bs.GetBit() == 1 {
+				if bs.GetBit() == 1 {
+					if bs.GetBit() == 1 {
+						//Negate the subtraction variable. Subtract it from the palette index, and draw the next pixel.
+						curSubs = -curSubs
+					}
+					//Subtract the subtraction variable from the palette index, and draw the next pixel.
+					curPal -= curSubs
+				} else { //10, read new palette index
+					curPal = bs.GetBits(paletteLength)
+				}
+			} else { // 0, draw next pixel with current palette index
+			}
+			setColor()
+		}
+	}
+}
 
 func getCompressionMethod(code byte) (
 	method int,
@@ -132,14 +195,9 @@ func getCompressionMethod(code byte) (
 		substraction = 0x78
 	}
 	if method == METHOD_ONE {
-		fmt.Print("1")
+		fmt.Print("   1")
 	} else if method == METHOD_TWO {
-		fmt.Print("2")
-	}
-	if transparent == TRANSP {
-		fmt.Print("\tYes")
-	} else {
-		fmt.Print("\tNo")
+		fmt.Print("   2")
 	}
 	if direction == VERTICAL {
 		fmt.Print("\tVert")
@@ -147,81 +205,11 @@ func getCompressionMethod(code byte) (
 		fmt.Print("\tHoriz")
 	}
 	fmt.Print("\t", code-substraction)
-	fmt.Print("\n")
-	return method, direction, transparent, code - substraction
-}
-
-func drawStripe(img *image.RGBA, stripNumber int, data []byte, pal color.Palette) {
-
-	fmt.Printf("%v\t0x%X\t", stripNumber, data[0])
-	method, direction, _, paletteLength := getCompressionMethod(data[0])
-
-	height := img.Rect.Size().Y
-	totalPixels := 8 * height
-	currentPixel := 0
-
-	curPal := uint8(data[1])
-	curSubs := uint8(1)
-
-	setColor := func() {
-		var x, y int
-		if direction == HORIZONTAL {
-			x = 8*stripNumber + currentPixel%8
-			y = (currentPixel + 1) / 8
-		} else {
-			y = currentPixel % height
-			x = 8*stripNumber + currentPixel/height
-		}
-		if curPal >= 0 {
-			img.Set(x, y, pal[curPal])
-		} else {
-			panic("Out of palette")
-		}
-		currentPixel++
-	}
-
-	bs := binaryutils.NewBitStream(data[2:])
-
-	if method == METHOD_TWO {
-		for currentPixel < totalPixels {
-			if bs.GetBit() == 1 {
-				if bs.GetBit() == 1 {
-					palShift := 4 - bs.GetBits(3)
-					if palShift == 0 {
-						length := int(bs.GetBits(8))
-						for i := 0; i < length; i++ {
-							setColor()
-						}
-					} else {
-						curPal += palShift
-						setColor()
-					}
-				} else { //10
-					//Read new palette index
-					curPal = bs.GetBits(paletteLength)
-					setColor()
-				}
-			} else {
-				//Draw next pixel with current palette index
-				setColor()
-			}
-		}
+	if transparent == TRANSP {
+		fmt.Print("\tYes")
 	} else {
-		for currentPixel < totalPixels {
-			if bs.GetBit() == 1 {
-				if bs.GetBit() == 1 {
-					if bs.GetBit() == 1 {
-						//Negate the subtraction variable. Subtract it from the palette index, and draw the next pixel.
-						curSubs = -curSubs
-					}
-					//Subtract the subtraction variable from the palette index, and draw the next pixel.
-					curPal -= curSubs
-				} else { //10, read new palette index
-					curPal = bs.GetBits(paletteLength)
-				}
-			} else { // 0, draw next pixel with current palette index
-			}
-			setColor()
-		}
+		fmt.Print("\tNo")
 	}
+	fmt.Println()
+	return method, direction, transparent, code - substraction
 }

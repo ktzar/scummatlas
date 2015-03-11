@@ -4,6 +4,7 @@ import (
 	"fmt"
 	//"bytes"
 	"encoding/binary"
+	"image/png"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -54,9 +55,9 @@ func main() {
 				helpAndDie("Can't read index file")
 			}
 
-			f, _ := os.Create(outputdir + "/" + file.Name() + ".decoded")
-			defer f.Close()
-			f.Write(data)
+			//f, _ := os.Create(outputdir + "/" + file.Name() + ".decoded")
+			//defer f.Close()
+			//f.Write(data)
 		}
 		if extension == ".001" {
 			mainScumm := new(scummatlas.MainScummData)
@@ -64,7 +65,18 @@ func main() {
 			fmt.Println(mainScumm.GetRoomCount())
 			roomOffsets := mainScumm.GetRoomsOffset()
 			fmt.Println(roomOffsets)
-			mainScumm.ParseRoom(roomOffsets[39].Offset)
+			for i := 0; i < mainScumm.GetRoomCount(); i++ {
+				backgroundFile := fmt.Sprintf("%v/room%02d_bg.png", outputdir, i)
+				fmt.Printf("\nParsing room %v, file %v", i, backgroundFile)
+				jpegFile, err := os.Create(backgroundFile)
+				if err != nil {
+					panic("Error creating " + backgroundFile)
+				}
+
+				room := mainScumm.ParseRoom(roomOffsets[i].Offset)
+				png.Encode(jpegFile, room.Image)
+			}
+
 		}
 		if extension == ".000" {
 			currIndex := 0
@@ -107,7 +119,6 @@ func main() {
 					//fmt.Println("Parse Directory of Objects")
 
 				}
-
 			}
 		}
 	}
