@@ -117,7 +117,13 @@ func (r *Room) parseCLUT() {
 
 	r.Palette = parsePalette(r.data[r.offset+8 : r.offset+8+3*256])
 	fmt.Println("Palette length", len(r.Palette))
-	fmt.Println(r.Palette)
+
+	for _, color := range r.Palette {
+		r, g, b, _ := color.RGBA()
+		r8, g8, b8 := uint8(r), uint8(g), uint8(b)
+		fmt.Printf(" %x%x%x", r8, g8, b8)
+	}
+	fmt.Println()
 
 }
 
@@ -171,6 +177,7 @@ func (r *Room) parseRMHD() {
 	r.Width = LE16(r.data, r.offset+8)
 	r.Height = LE16(r.data, r.offset+10)
 	r.ObjCount = LE16(r.data, r.offset+12)
+	fmt.Printf("Room size %vx%v\n", r.Width, r.Height)
 }
 
 func (r Room) Print() {

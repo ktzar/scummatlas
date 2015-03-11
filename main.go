@@ -64,15 +64,14 @@ func main() {
 			fmt.Println(mainScumm.GetRoomCount())
 			roomOffsets := mainScumm.GetRoomsOffset()
 			fmt.Println(roomOffsets)
-			mainScumm.ParseRoom(roomOffsets[0].Offset)
-
+			mainScumm.ParseRoom(roomOffsets[39].Offset)
 		}
 		if extension == ".000" {
 			currIndex := 0
 			for currIndex < len(data) {
 				blockName := string(data[currIndex : currIndex+4])
 				blockSize := int(binary.BigEndian.Uint32(data[currIndex+4 : currIndex+8]))
-				//currBlock := data[currIndex : currIndex+blockSize]
+				currBlock := data[currIndex : currIndex+blockSize]
 
 				//fmt.Println("Block ", blockName, "\t", blockSize, "bytes")
 
@@ -81,8 +80,8 @@ func main() {
 				//continue
 				switch blockName {
 				case "RNAM":
-					//fmt.Println("Parse Room Names")
-					//fmt.Println(scummatlas.ParseRoomNames(currBlock))
+					fmt.Println("Parse Room Names")
+					fmt.Println(scummatlas.ParseRoomNames(currBlock))
 
 				case "MAXS":
 					//fmt.Println("Parse Maximum Values")
