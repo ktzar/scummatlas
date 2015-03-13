@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"scummatlas"
+	"scummatlas/templates"
 	"strings"
 )
 
@@ -60,12 +61,14 @@ func main() {
 			//f.Write(data)
 		}
 		if extension == ".001" {
+			continue
 			mainScumm := new(scummatlas.MainScummData)
 			mainScumm.Data = data
 			fmt.Println(mainScumm.GetRoomCount())
 			roomOffsets := mainScumm.GetRoomsOffset()
 			fmt.Println(roomOffsets)
 			for i := 0; i < mainScumm.GetRoomCount(); i++ {
+				i = 53
 				backgroundFile := fmt.Sprintf("%v/room%02d_bg.png", outputdir, i)
 				fmt.Printf("\nParsing room %v, file %v", i, backgroundFile)
 				jpegFile, err := os.Create(backgroundFile)
@@ -75,8 +78,9 @@ func main() {
 
 				room := mainScumm.ParseRoom(roomOffsets[i].Offset)
 				png.Encode(jpegFile, room.Image)
+				os.Exit(1)
 			}
-
+			os.Exit(1)
 		}
 		if extension == ".000" {
 			currIndex := 0
@@ -93,7 +97,8 @@ func main() {
 				switch blockName {
 				case "RNAM":
 					fmt.Println("Parse Room Names")
-					fmt.Println(scummatlas.ParseRoomNames(currBlock))
+					roomNames := scummatlas.ParseRoomNames(currBlock)
+					templates.WriteIndex(roomNames, outputdir)
 
 				case "MAXS":
 					//fmt.Println("Parse Maximum Values")
@@ -119,6 +124,7 @@ func main() {
 					//fmt.Println("Parse Directory of Objects")
 
 				}
+
 			}
 		}
 	}

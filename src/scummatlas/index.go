@@ -6,8 +6,12 @@ import (
 )
 
 type RoomName struct {
-	number int
-	name   string
+	Number int
+	Name   string
+}
+
+func (self RoomName) IndexNumber() string {
+	return fmt.Sprintf("%02d", self.Number)
 }
 
 type RoomIndex struct {
@@ -28,11 +32,15 @@ func ReadXoredFile(fileName string, code byte) (out []byte, err error) {
 	return out, err
 }
 
-func complementaryByte(in []byte) (out []byte) {
+func complementaryString(in []byte) string {
+	var out string
 	for i, _ := range in {
 		in[i] = in[i] ^ 0xFF
+		if in[i] > 0x40 && in[i] < 0x80 {
+			out = out + string(in[i])
+		}
 	}
-	return in
+	return out
 }
 
 func ParseRoomNames(data []byte) []RoomName {
@@ -47,7 +55,7 @@ func ParseRoomNames(data []byte) []RoomName {
 			name := data[currentIndex+1 : currentIndex+10]
 			roomName := RoomName{
 				roomNumber,
-				string(complementaryByte(name)),
+				fmt.Sprintf("%v", complementaryString(name)),
 			}
 			out = append(out, roomName)
 			currentIndex += 10
