@@ -1,7 +1,6 @@
 package templates
 
 import (
-	"fmt"
 	"html/template"
 	_ "ioutil"
 	"os"
@@ -24,9 +23,11 @@ const indexTpl = `
 	<ul>
     {{range .Rooms}}
 		<li>
-			<span class="roomnumber">{{.Number}}</span>
-			<span class="roomname">{{.Name}}</span>
-			<img src="room{{.IndexNumber}}_bg.png"/>
+			<a href="./room{{.IndexNumber}}.html">
+				<span class="roomnumber">{{.Number}}</span>
+				<span class="roomname">{{.Name}}</span>
+				<img src="room{{.IndexNumber}}_bg.png"/>
+			</a>
 		</li>{{end}}
 	</ul>
     </body>
@@ -45,6 +46,4 @@ func WriteIndex(roomNames []scummatlas.RoomName, outdir string) {
 	}
 
 	t.Execute(file, data)
-	t.Execute(os.Stdout, data)
-	fmt.Println(file)
 }
