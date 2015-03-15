@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"io/ioutil"
+	"log"
+	"os"
 )
 
 type Box struct {
@@ -70,6 +73,7 @@ func NewRoom(data []byte) *Room {
 		case "EPAL":
 			room.parseEPAL()
 		case "CLUT":
+			log.SetOutput(ioutil.Discard)
 			room.parseCLUT()
 		case "LSCR":
 			room.parseLSCR()
@@ -78,6 +82,7 @@ func NewRoom(data []byte) *Room {
 		case "TRNS":
 			room.parseTRNS()
 		}
+		log.SetOutput(os.Stdout)
 		room.nextBlock()
 	}
 
@@ -118,18 +123,17 @@ func (r *Room) parseEPAL() {
 
 func (r *Room) parseCLUT() {
 	paletteData := r.data[r.offset+8 : r.offset+r.getBlockSize()]
-	fmt.Println("Palette data size ", len(paletteData))
+	log.Println("Palette data size ", len(paletteData))
 
 	r.Palette = parsePalette(r.data[r.offset+8 : r.offset+8+3*256])
-	fmt.Println("Palette length", len(r.Palette))
+	log.Println("Palette length", len(r.Palette))
 
 	for _, color := range r.Palette {
 		r, g, b, _ := color.RGBA()
 		r8, g8, b8 := uint8(r), uint8(g), uint8(b)
-		fmt.Printf(" %x%x%x", r8, g8, b8)
+		log.Printf(" %x%x%x", r8, g8, b8)
 	}
-	fmt.Println()
-
+	log.Println()
 }
 
 func (r *Room) parseEXCD() {

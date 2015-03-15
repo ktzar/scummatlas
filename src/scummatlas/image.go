@@ -5,7 +5,12 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"io/ioutil"
+	"log"
+	"os"
 )
+
+const debugImage = false
 
 const (
 	_ = iota
@@ -35,14 +40,18 @@ func parsePalette(data []byte) color.Palette {
 }
 
 func parseImage(data []byte, zBuffers int, width int, height int, pal color.Palette, transpIndex uint8) *image.RGBA {
+	// DISABLE LOGGING
+	log.SetOutput(os.Stdout)
+	log.SetOutput(ioutil.Discard)
+
 	if string(data[8:12]) != "SMAP" {
 		panic("No stripe table found")
 	}
 
 	stripeCount := width / 8
-	fmt.Println("SmapSize", BE32(data, 12))
+	log.Println("SmapSize", BE32(data, 12))
 
-	fmt.Println("There should be ", stripeCount, "stripes")
+	log.Println("There should be ", stripeCount, "stripes")
 	offsets := make([]int, 0, stripeCount)
 	stripeOffset := 0
 	for i := 0; i < stripeCount; i++ {
@@ -52,9 +61,9 @@ func parseImage(data []byte, zBuffers int, width int, height int, pal color.Pale
 
 	img := image.NewRGBA(image.Rect(0, 0, width, height))
 
-	fmt.Println("Decoding image")
-	fmt.Println("Stripes information")
-	fmt.Println("#ID\tCode\tMethod\tDirect\tPalInSz\tTransp")
+	log.Println("Decoding image")
+	log.Println("Stripes information")
+	log.Println("\n#ID\tCode\tMethod\tDirect\tPalInSz\tTransp")
 	for i := 0; i < stripeCount; i++ {
 		offset := offsets[i]
 		size := len(data) - offset
@@ -63,14 +72,14 @@ func parseImage(data []byte, zBuffers int, width int, height int, pal color.Pale
 		}
 		drawStripe(img, i, data[8+offset:8+offset+size], pal, transpIndex)
 	}
-	fmt.Println("image decoded")
+	log.Println("image decoded")
+	log.SetOutput(os.Stdout)
 	return img
 }
 
 func drawStripe(img *image.RGBA, stripNumber int, data []byte, pal color.Palette, transpIndex uint8) {
 
-	fmt.Printf("%v\t0x%X\t", stripNumber, data[0])
-	method, direction, transparent, paletteLength := getCompressionMethod(data[0])
+	method, direction, transparent, paletteLength := getCompressionMethod(stripNumber, data[0])
 
 	height := img.Rect.Size().Y
 	totalPixels := 8 * height
@@ -94,7 +103,7 @@ func drawStripe(img *image.RGBA, stripNumber int, data []byte, pal color.Palette
 		x += 8 * stripNumber
 		if curPal >= 0 {
 			if transparent == TRANSP && curPal == transpIndex {
-				fmt.Println("TRANSPARENT")
+				log.Println("TRANSPARENT")
 				img.Set(x, y, color.RGBA{0, 0, 0, 0})
 			} else {
 				img.Set(x, y, pal[curPal])
@@ -149,7 +158,7 @@ func drawStripe(img *image.RGBA, stripNumber int, data []byte, pal color.Palette
 	}
 }
 
-func getCompressionMethod(code byte) (
+func getCompressionMethod(stripNumber int, code byte) (
 	method int,
 	direction int,
 	transparent int,
@@ -194,22 +203,23 @@ func getCompressionMethod(code byte) (
 		method = METHOD_TWO
 		substraction = 0x78
 	}
+	out := fmt.Sprintf("%v\t0x%X\t", stripNumber, code)
 	if method == METHOD_ONE {
-		fmt.Print("   1")
+		out += "   1"
 	} else if method == METHOD_TWO {
-		fmt.Print("   2")
+		out += "   2"
 	}
 	if direction == VERTICAL {
-		fmt.Print("\tVert")
+		out += "\tVert"
 	} else {
-		fmt.Print("\tHoriz")
+		out += "\tHoriz"
 	}
-	fmt.Print("\t", code-substraction)
+	out += "\t" + string(code-substraction)
 	if transparent == TRANSP {
-		fmt.Print("\tYes")
+		out += "\tYes"
 	} else {
-		fmt.Print("\tNo")
+		out += "\tNo"
 	}
-	fmt.Println()
+	log.Println(out)
 	return method, direction, transparent, code - substraction
 }

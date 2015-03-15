@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"image/png"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"scummatlas"
@@ -26,6 +27,7 @@ func main() {
 	}
 	gamedir := os.Args[1]
 	outputdir := os.Args[2]
+	log.SetFlags(0)
 
 	fmt.Println("Gamedir: ", gamedir)
 	fmt.Println("Outputdir: ", outputdir)
@@ -61,26 +63,24 @@ func main() {
 			//f.Write(data)
 		}
 		if extension == ".001" {
-			continue
 			mainScumm := new(scummatlas.MainScummData)
 			mainScumm.Data = data
 			fmt.Println(mainScumm.GetRoomCount())
 			roomOffsets := mainScumm.GetRoomsOffset()
 			fmt.Println(roomOffsets)
-			for i := 0; i < mainScumm.GetRoomCount(); i++ {
-				i = 53
+			for i := 8; i < 9; i++ {
 				backgroundFile := fmt.Sprintf("%v/room%02d_bg.png", outputdir, i)
 				fmt.Printf("\nParsing room %v, file %v", i, backgroundFile)
-				jpegFile, err := os.Create(backgroundFile)
+				pngFile, err := os.Create(backgroundFile)
 				if err != nil {
 					panic("Error creating " + backgroundFile)
 				}
 
-				room := mainScumm.ParseRoom(roomOffsets[i].Offset)
-				png.Encode(jpegFile, room.Image)
-				os.Exit(1)
+				room := mainScumm.ParseRoom(roomOffsets[i-1].Offset)
+				templates.WriteRoom(room, i, outputdir)
+				png.Encode(pngFile, room.Image)
 			}
-			os.Exit(1)
+			//os.Exit(1)
 		}
 		if extension == ".000" {
 			currIndex := 0

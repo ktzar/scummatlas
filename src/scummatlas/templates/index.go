@@ -2,7 +2,7 @@ package templates
 
 import (
 	"html/template"
-	_ "ioutil"
+	_ "io/ioutil"
 	"os"
 	"scummatlas"
 )
@@ -20,16 +20,15 @@ const indexTpl = `
     <body>
 	<h1>{{.Title}}</h1>
     <h2>List of rooms</h2>
-	<ul>
+	<ol>
     {{range .Rooms}}
 		<li>
+			<h4 class="roomname">{{.Name}}</h4>
 			<a href="./room{{.IndexNumber}}.html">
-				<span class="roomnumber">{{.Number}}</span>
-				<span class="roomname">{{.Name}}</span>
 				<img src="room{{.IndexNumber}}_bg.png"/>
 			</a>
 		</li>{{end}}
-	</ul>
+	</ol>
     </body>
 </html>`
 
