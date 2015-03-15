@@ -16,8 +16,10 @@ const indexTpl = `
 <html>
     <head>
         <title>Room Index</title>
+		<link href="./static/style.css"/>
+		<script src="./static/script.js"></script>
     </head>
-    <body>
+    <body id="index-page">
 	<h1>{{.Title}}</h1>
     <h2>List of rooms</h2>
 	<ol>

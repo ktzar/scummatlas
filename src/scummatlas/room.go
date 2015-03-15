@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 )
 
 type Box struct {
@@ -49,6 +50,7 @@ type Room struct {
 	TranspIndex   int
 	Palette       color.Palette
 	Image         *image.RGBA
+	Objects       []Object
 	ObjectImage   image.Paletted
 	ObjectScripts []Script
 	ExitScript    Script
@@ -56,6 +58,20 @@ type Room struct {
 	Boxes         []Box
 	LocalScripts  []Script
 	BoxMatrix     BoxMatrix
+}
+
+type Object struct {
+	Image  *image.RGBA
+	Script Script
+	Name   string
+	Id     int
+	X      int
+	Y      int
+	Width  int
+	Height int
+	//TODO Direction uint8
+	Flags  uint8
+	Parent uint8
 }
 
 func NewRoom(data []byte) *Room {
@@ -90,6 +106,8 @@ func NewRoom(data []byte) *Room {
 			room.parseCLUT()
 		case "LSCR":
 			room.parseLSCR()
+		case "OBCD":
+			room.parseOBCD()
 		case "RMIM":
 			room.parseRMIM()
 		case "TRNS":
@@ -115,6 +133,41 @@ func (r *Room) parseLSCR() {
 func (r *Room) parseTRNS() {
 	r.TranspIndex = int(r.data[r.offset+8])
 	fmt.Println("Transparent index", r.TranspIndex)
+}
+
+func (r *Room) parseOBCD() {
+	var obj Object
+	headerOffset := r.offset + 8
+	if FourCharString(r.data, headerOffset) != "CDHD" {
+		panic("NOOO")
+	}
+	headerSize := BE32(r.data, headerOffset+4)
+	fmt.Println("Header size", headerSize)
+	obj.Id = LE16(r.data, headerOffset+8)
+	obj.X = LE16(r.data, headerOffset+10)
+	obj.Y = LE16(r.data, headerOffset+12)
+	obj.Width = LE16(r.data, headerOffset+14)
+	obj.Height = LE16(r.data, headerOffset+16)
+	obj.Flags = r.data[headerOffset+18]
+	obj.Parent = r.data[headerOffset+19]
+
+	verbOffset := headerOffset + headerSize
+	if FourCharString(r.data, verbOffset) != "VERB" {
+		panic("Object with no verbs")
+	}
+	verbSize := BE32(r.data, verbOffset+4)
+	objNameOffset := verbOffset + verbSize
+	if FourCharString(r.data, objNameOffset) != "OBNA" {
+		panic("Object with no name")
+	}
+	objNameSize := BE32(r.data, objNameOffset+4)
+	obj.Name = strings.Trim(
+		strings.Replace(
+			string(r.data[objNameOffset+4:objNameOffset+objNameSize]),
+			"@", "", -1),
+		"@ ï¿½")
+
+	r.Objects = append(r.Objects, obj)
 }
 
 func (r *Room) parseENCD() {

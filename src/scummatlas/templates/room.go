@@ -20,25 +20,32 @@ const roomTpl = `
 <html>
     <head>
         <title>Room {{.Index}}</title>
+		<link href="./style.css"/>
+		<script src="./static/script.js"></script>
     </head>
-    <body>
+    <body id="room-page">
 		<h1>{{.Title}}</h1>
 		<h2>Background</h2>
 		<img width="100%" src="{{.Background}}"/>
 		<h2>Walking boxes</h2>
-		<svg width="{{.Width}}" width="{{.Height}}">
-
+		<svg width="{{.Width}}" height="{{.Height}}" viewport="0 0 {{.Width}} {{.Height}}">
 		{{range .Boxes}}
 		  <polygon points="
 		  {{range .}}{{.X}},{{.Y}} {{end}}
 		  " style="fill:#ccc;stroke:black;stroke-width:1" />
 		{{end}}
+		</svg>
 
-		    Sorry, your browser does not support inline SVG.
-			</svg>
-
-		<h2>Scripts</h2>
 		<h2>Objects</h2>
+		<ul>
+		{{range .Objects}}
+		<li>{{.Name}}</li>
+		{{end}}
+		</ul>
+		<h2>Scripts</h2>
+		<h3>Enter script</h3>
+		<h3>Exit script</h3>
+		<h3>Local scripts</h3>
 		<h2>Palette</h2>
     </body>
 </html>`
