@@ -24,6 +24,19 @@ type Box struct {
 	scale int
 }
 
+type Point struct {
+	X int `json:"x"`
+	Y int `json:"y"`
+}
+
+func (self Box) Corners() [4]Point {
+	ll := Point{self.llx, self.lly}
+	ul := Point{self.ulx, self.uly}
+	lr := Point{self.lrx, self.lry}
+	ur := Point{self.urx, self.ury}
+	return [4]Point{ul, ll, lr, ur}
+}
+
 type BoxMatrix bool
 
 type Room struct {
@@ -169,8 +182,9 @@ func (r *Room) parseRMIM() {
 func (r *Room) parseBOXD() {
 	boxCount := LE16(r.data, r.offset+8)
 	var boxOffset int
+	fmt.Println("BOXCOUNT", boxCount)
 	for i := 0; i < boxCount; i++ {
-		boxOffset = 10 + i*20
+		boxOffset = r.offset + 10 + i*20
 		box := NewBox(r.data[boxOffset : boxOffset+20])
 		r.Boxes = append(r.Boxes, box)
 	}

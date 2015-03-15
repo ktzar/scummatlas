@@ -12,6 +12,7 @@ type RoomData struct {
 	Index      int
 	Title      string
 	Background string
+	Boxes      [][4]scummatlas.Point
 	scummatlas.Room
 }
 
@@ -25,6 +26,17 @@ const roomTpl = `
 		<h2>Background</h2>
 		<img width="100%" src="{{.Background}}"/>
 		<h2>Walking boxes</h2>
+		<svg width="{{.Width}}" width="{{.Height}}">
+
+		{{range .Boxes}}
+		  <polygon points="
+		  {{range .}}{{.X}},{{.Y}} {{end}}
+		  " style="fill:#ccc;stroke:black;stroke-width:1" />
+		{{end}}
+
+		    Sorry, your browser does not support inline SVG.
+			</svg>
+
 		<h2>Scripts</h2>
 		<h2>Objects</h2>
 		<h2>Palette</h2>
@@ -42,12 +54,19 @@ func WriteRoom(room scummatlas.Room, index int, outputdir string) {
 		panic("Can't create room file")
 	}
 
+	var boxes [][4]scummatlas.Point
+
+	for _, v := range room.Boxes {
+		fmt.Println(v.Corners())
+		boxes = append(boxes, v.Corners())
+	}
+
 	data := RoomData{
 		index,
 		"A room",
 		bgPath,
+		boxes,
 		room,
 	}
-	fmt.Println(room.Boxes)
 	t.Execute(file, data)
 }

@@ -58,9 +58,9 @@ func main() {
 				helpAndDie("Can't read index file")
 			}
 
-			//f, _ := os.Create(outputdir + "/" + file.Name() + ".decoded")
-			//defer f.Close()
-			//f.Write(data)
+			f, _ := os.Create(outputdir + "/" + file.Name() + ".decoded")
+			defer f.Close()
+			f.Write(data)
 		}
 		if extension == ".001" {
 			mainScumm := new(scummatlas.MainScummData)
@@ -68,7 +68,7 @@ func main() {
 			fmt.Println(mainScumm.GetRoomCount())
 			roomOffsets := mainScumm.GetRoomsOffset()
 			fmt.Println(roomOffsets)
-			for i := 8; i < 9; i++ {
+			for i := 1; i < 79; i++ {
 				backgroundFile := fmt.Sprintf("%v/room%02d_bg.png", outputdir, i)
 				fmt.Printf("\nParsing room %v, file %v", i, backgroundFile)
 				pngFile, err := os.Create(backgroundFile)
