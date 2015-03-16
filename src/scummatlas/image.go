@@ -158,14 +158,14 @@ func drawStripe(img *image.RGBA, stripNumber int, data []byte, pal color.Palette
 	}
 }
 
-func GetCompressionMethod(stripNumber int, code byte) (
+func getCompressionMethod(stripNumber int, code byte) (
 	method int,
 	direction int,
 	transparent int,
 	paletteLength uint8) {
 	var substraction byte
 
-	direction = VERTICAL
+	direction = HORIZONTAL
 	method = METHOD_UNKNOWN
 	transparent = NO_TRANSP
 	substraction = 0x00
