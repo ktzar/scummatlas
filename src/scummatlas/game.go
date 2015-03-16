@@ -102,7 +102,6 @@ func NewGame(gamedir string, outputdir string) *Game {
 				room := mainScumm.ParseRoom(roomOffsets[i-1].Offset)
 				game.Rooms = append(game.Rooms, room)
 			}
-			//os.Exit(1)
 		}
 	}
 

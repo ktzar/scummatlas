@@ -2,15 +2,12 @@ package main
 
 import (
 	"fmt"
-	//"bytes"
-	"encoding/binary"
 	"image/png"
 	"io/ioutil"
 	"log"
 	"os"
-	"path/filepath"
 	"scummatlas"
-	"strings"
+	"scummatlas/templates"
 )
 
 func helpAndDie(msg string) {
@@ -38,7 +35,20 @@ func main() {
 		}
 	}
 
-	game := scummatlas.NewGame(gamedir)
+	game := scummatlas.NewGame(gamedir, outputdir)
 
+	templates.WriteIndex(game.RoomNames, outputdir)
+
+	for i, room := range game.Rooms {
+		backgroundFile := fmt.Sprintf("%v/room%02d_bg.png", outputdir, i)
+		fmt.Printf("\nParsing room %v, file %v", i, backgroundFile)
+		pngFile, err := os.Create(backgroundFile)
+		if err != nil {
+			panic("Error creating " + backgroundFile)
+		}
+		templates.WriteRoom(room, i, outputdir)
+		png.Encode(pngFile, room.Image)
+
+	}
 
 }
