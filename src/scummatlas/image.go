@@ -194,7 +194,7 @@ func getCompressionMethod(stripNumber int, code byte) (
 	case 0x54 <= code && code <= 0x58:
 		transparent = TRANSP
 		method = METHOD_TWO
-		substraction = 0x51
+		substraction = 0x50
 	case 0x68 <= code && code <= 0x6c:
 		transparent = TRANSP
 		method = METHOD_TWO
