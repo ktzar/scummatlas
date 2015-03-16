@@ -176,31 +176,26 @@ func getCompressionMethod(stripNumber int, code byte) (
 	} else if code >= 0x40 && code <= 0x80 {
 		method = METHOD_TWO
 	}
-	switch {
-	case code == 0x01:
-	case 0x0e <= code && code <= 0x12:
+
+	if (code >= 0x03 && code <= 0x12) ||
+		(code >= 0x22 && code <= 0x26) {
 		direction = VERTICAL
-		substraction = 0x0a
-	case 0x18 <= code && code <= 0x1c:
-		substraction = 0x14
-	case 0x22 <= code && code <= 0x26:
-		direction = VERTICAL
-		transparent = TRANSP
-		substraction = 0x1e
-	case 0x2c <= code && code <= 0x30:
-		transparent = TRANSP
-		substraction = 0x28
-	case 0x40 <= code && code <= 0x44:
-		substraction = 0x3c
-	case 0x54 <= code && code <= 0x58:
-		transparent = TRANSP
-		substraction = 0x50
-	case 0x68 <= code && code <= 0x6c:
-		transparent = TRANSP
-		substraction = 0x64
-	case 0x7c <= code && code <= 0x80:
-		substraction = 0x78
 	}
+
+	if (code >= 0x22 && code <= 0x30) ||
+		(code >= 0x54 && code <= 0x6c) {
+		transparent = TRANSP
+	}
+
+	codes := []uint8{0x0e, 0x18, 0x22, 0x2c, 0x40, 0x54, 0x68, 0x7c}
+
+	for _, v := range codes {
+		if code >= v && code <= v+4 {
+			substraction = v - 4
+			break
+		}
+	}
+
 	out := fmt.Sprintf("%v\t0x%X\t", stripNumber, code)
 	if method == METHOD_ONE {
 		out += "   1"
