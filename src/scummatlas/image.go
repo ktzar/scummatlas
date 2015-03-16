@@ -158,49 +158,52 @@ func drawStripe(img *image.RGBA, stripNumber int, data []byte, pal color.Palette
 	}
 }
 
-func getCompressionMethod(stripNumber int, code byte) (
+func GetCompressionMethod(stripNumber int, code byte) (
 	method int,
 	direction int,
 	transparent int,
 	paletteLength uint8) {
 	var substraction byte
 
-	direction = HORIZONTAL
+	direction = VERTICAL
 	method = METHOD_UNKNOWN
 	transparent = NO_TRANSP
 	substraction = 0x00
-	switch {
-	case code == 0x01:
+	if code == 0x01 {
 		method = METHOD_UNCOMPRESSED
-	case 0x0e <= code && code <= 0x12:
-		direction = VERTICAL
+	} else if code <= 0x40 {
 		method = METHOD_ONE
+	} else if code <= 0x80 {
+		method = METHOD_TWO
+	} else {
+		panic("Unknown method " + string(method) + " in stripe " + string(stripNumber))
+	}
+
+	if (code >= 0x22 && code <= 0x40) ||
+		(code >= 0x54 && code <= 0x6c) {
+		transparent = TRANSP
+	}
+
+	if (code >= 0x18 && code < 0x1c) || code >= 0x2c {
+		direction = HORIZONTAL
+	}
+
+	switch {
+	case 0x0e <= code && code <= 0x12:
 		substraction = 0x0a
 	case 0x18 <= code && code <= 0x1c:
-		method = METHOD_ONE
 		substraction = 0x14
 	case 0x22 <= code && code <= 0x26:
-		method = METHOD_ONE
-		direction = VERTICAL
-		transparent = TRANSP
 		substraction = 0x1e
 	case 0x2c <= code && code <= 0x30:
-		method = METHOD_ONE
-		transparent = TRANSP
 		substraction = 0x28
 	case 0x40 <= code && code <= 0x44:
-		method = METHOD_TWO
 		substraction = 0x3c
 	case 0x54 <= code && code <= 0x58:
-		transparent = TRANSP
-		method = METHOD_TWO
 		substraction = 0x51
 	case 0x68 <= code && code <= 0x6c:
-		transparent = TRANSP
-		method = METHOD_TWO
 		substraction = 0x64
 	case 0x7c <= code && code <= 0x80:
-		method = METHOD_TWO
 		substraction = 0x78
 	}
 	out := fmt.Sprintf("%v\t0x%X\t", stripNumber, code)
