@@ -163,12 +163,12 @@ func getCompressionMethod(stripNumber int, code byte) (
 	direction int,
 	transparent int,
 	paletteLength uint8) {
-	var substraction byte
 
 	direction = HORIZONTAL
 	method = METHOD_UNKNOWN
 	transparent = NO_TRANSP
-	substraction = 0x00
+	var substraction uint8
+
 	if code == 0x01 {
 		method = METHOD_UNCOMPRESSED
 	} else if code >= 0x0e && code <= 0x30 {
@@ -196,23 +196,28 @@ func getCompressionMethod(stripNumber int, code byte) (
 		}
 	}
 
-	out := fmt.Sprintf("%v\t0x%X\t", stripNumber, code)
-	if method == METHOD_ONE {
-		out += "   1"
-	} else if method == METHOD_TWO {
-		out += "   2"
+	paletteLength = code - substraction
+
+	debug := false
+	if debug {
+		out := fmt.Sprintf("%v\t0x%X\t", stripNumber, code)
+		if method == METHOD_ONE {
+			out += "   1"
+		} else if method == METHOD_TWO {
+			out += "   2"
+		}
+		if direction == VERTICAL {
+			out += "\tVert"
+		} else {
+			out += "\tHoriz"
+		}
+		out += "\t" + string(code-substraction)
+		if transparent == TRANSP {
+			out += "\tYes"
+		} else {
+			out += "\tNo"
+		}
+		log.Println(out)
 	}
-	if direction == VERTICAL {
-		out += "\tVert"
-	} else {
-		out += "\tHoriz"
-	}
-	out += "\t" + string(code-substraction)
-	if transparent == TRANSP {
-		out += "\tYes"
-	} else {
-		out += "\tNo"
-	}
-	log.Println(out)
-	return method, direction, transparent, code - substraction
+	return
 }
