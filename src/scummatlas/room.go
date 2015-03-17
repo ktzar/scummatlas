@@ -161,12 +161,15 @@ func (r *Room) parseOBCD() {
 		panic("Object with no name")
 	}
 	objNameSize := BE32(r.data, objNameOffset+4)
-	obj.Name = strings.Trim(
-		strings.Replace(
-			string(r.data[objNameOffset+4:objNameOffset+objNameSize]),
-			"@", "", -1),
-		"@ ï¿½")
-
+	obj.Name = ""
+	name := r.data[objNameOffset+4 : objNameOffset+objNameSize]
+	filtered := []byte{}
+	for _, v := range name {
+		if v != 0x40 && v != 0x00 && v != 0x0f {
+			filtered = append(filtered, v)
+		}
+	}
+	obj.Name = strings.TrimSpace(string(filtered))
 	r.Objects = append(r.Objects, obj)
 }
 
