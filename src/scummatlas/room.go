@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"strings"
 )
 
 type Box struct {
@@ -122,55 +121,13 @@ func (r *Room) parseTRNS() {
 
 func (r *Room) parseOBCD() {
 	blockSize := BE32(r.data, r.offset+4)
-	addOBCDToRoom(r.data[r.offset : r.offset+blockSize])
+	object := NewObjectFromOBCD(r.data[r.offset : r.offset+blockSize])
 
-	headerOffset := r.offset + 8
-	if FourCharString(r.data, headerOffset) != "CDHD" {
-		panic("No object header")
+	existingObject, ok := r.Objects[object.Id]
+	if ok {
+		object.Image = existingObject.Image
 	}
-	headerSize := BE32(r.data, headerOffset+4)
-	fmt.Println("Header size", headerSize)
-
-	objId := LE16(r.data, headerOffset+8)
-
-	_, ok := r.Objects[objId]
-	if !ok {
-		r.Objects[objId] = Object{}
-	}
-	obj := r.Objects[objId]
-
-	intInOffsetTimesEight := func(offset int) int {
-		return int(r.data[headerOffset+offset]) * 8
-	}
-
-	obj.X = intInOffsetTimesEight(10)
-	obj.Y = intInOffsetTimesEight(11)
-	obj.Width = intInOffsetTimesEight(12)
-	obj.Height = intInOffsetTimesEight(13)
-	obj.Flags = r.data[headerOffset+14]
-	obj.Parent = r.data[headerOffset+15]
-
-	verbOffset := headerOffset + headerSize
-	if FourCharString(r.data, verbOffset) != "VERB" {
-		panic("Object with no verbs")
-	}
-	verbSize := BE32(r.data, verbOffset+4)
-	objNameOffset := verbOffset + verbSize
-	if FourCharString(r.data, objNameOffset) != "OBNA" {
-		panic("Object with no name")
-	}
-	objNameSize := BE32(r.data, objNameOffset+4)
-	name := r.data[objNameOffset+4 : objNameOffset+objNameSize]
-	filtered := []byte{}
-	for _, v := range name {
-		if v != 0x40 && v != 0x00 && v != 0x0f {
-			filtered = append(filtered, v)
-		}
-	}
-	obj.Name = strings.TrimSpace(string(filtered))
-
-	//Assign it back
-	r.Objects[objId] = obj
+	r.Objects[object.Id] = object
 }
 
 func (r *Room) parseENCD() {
