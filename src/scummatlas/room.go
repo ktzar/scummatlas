@@ -47,41 +47,22 @@ type Room struct {
 	Height   int
 	ObjCount int
 	//ColorCycle ColorCycle
-	TranspIndex   int
-	Palette       color.Palette
-	Image         *image.RGBA
-	Objects       []Object
-	ObjectImage   image.Paletted
-	ObjectScripts []Script
-	ExitScript    Script
-	EntryScript   Script
-	Boxes         []Box
-	LocalScripts  []Script
-	BoxMatrix     BoxMatrix
-}
-
-type Object struct {
-	Image  *image.RGBA
-	Script Script
-	Name   string
-	Id     int
-	X      int
-	Y      int
-	Width  int
-	Height int
-	//TODO Direction uint8
-	Flags  uint8
-	Parent uint8
-}
-
-func (self Object) IdHex() string {
-	return fmt.Sprintf("%x", self.Id)
+	TranspIndex  int
+	Palette      color.Palette
+	Image        *image.RGBA
+	Objects      map[int]Object
+	ExitScript   Script
+	EntryScript  Script
+	Boxes        []Box
+	LocalScripts []Script
+	BoxMatrix    BoxMatrix
 }
 
 func NewRoom(data []byte) *Room {
 	room := new(Room)
 	room.data = data
 	room.offset = 0
+	room.Objects = make(map[int]Object)
 
 	blockName := room.getBlockName()
 	if blockName != "ROOM" {
@@ -140,18 +121,32 @@ func (r *Room) parseTRNS() {
 }
 
 func (r *Room) parseOBCD() {
-	var obj Object
+	blockSize := BE32(r.data, r.offset+4)
+	addOBCDToRoom(r.data[r.offset : r.offset+blockSize])
+
 	headerOffset := r.offset + 8
 	if FourCharString(r.data, headerOffset) != "CDHD" {
 		panic("No object header")
 	}
 	headerSize := BE32(r.data, headerOffset+4)
 	fmt.Println("Header size", headerSize)
-	obj.Id = LE16(r.data, headerOffset+8)
-	obj.X = int(r.data[headerOffset+10]) * 8
-	obj.Y = int(r.data[headerOffset+11]) * 8
-	obj.Width = int(r.data[headerOffset+12]) * 8
-	obj.Height = int(r.data[headerOffset+13]) * 8
+
+	objId := LE16(r.data, headerOffset+8)
+
+	_, ok := r.Objects[objId]
+	if !ok {
+		r.Objects[objId] = Object{}
+	}
+	obj := r.Objects[objId]
+
+	intInOffsetTimesEight := func(offset int) int {
+		return int(r.data[headerOffset+offset]) * 8
+	}
+
+	obj.X = intInOffsetTimesEight(10)
+	obj.Y = intInOffsetTimesEight(11)
+	obj.Width = intInOffsetTimesEight(12)
+	obj.Height = intInOffsetTimesEight(13)
 	obj.Flags = r.data[headerOffset+14]
 	obj.Parent = r.data[headerOffset+15]
 
@@ -165,7 +160,6 @@ func (r *Room) parseOBCD() {
 		panic("Object with no name")
 	}
 	objNameSize := BE32(r.data, objNameOffset+4)
-	obj.Name = ""
 	name := r.data[objNameOffset+4 : objNameOffset+objNameSize]
 	filtered := []byte{}
 	for _, v := range name {
@@ -174,7 +168,9 @@ func (r *Room) parseOBCD() {
 		}
 	}
 	obj.Name = strings.TrimSpace(string(filtered))
-	r.Objects = append(r.Objects, obj)
+
+	//Assign it back
+	r.Objects[objId] = obj
 }
 
 func (r *Room) parseENCD() {
