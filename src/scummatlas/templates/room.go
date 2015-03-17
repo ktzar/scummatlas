@@ -34,14 +34,24 @@ const roomTpl = `
 		  {{range .}}{{.X}},{{.Y}} {{end}}
 		  " style="fill:#ccc;stroke:black;stroke-width:1" />
 		{{end}}
+		{{range .Objects}}
+		  <rect id="{{.Id}}" x="{{.X}}" y="{{.Y}}" width="{{.Width}}" height="{{.Height}}" fill="rgba(255,0,0,0.5)" stroke="white" stroke-width="1"/>
+		  <text id="text_{{.Id}}" x="{{.X}}" y="{{.Y}}" font-size="1.1em" fill="black">{{.Name}}</text>
+		{{end}}
 		</svg>
 
 		<h2>Objects</h2>
-		<ul>
+		<table>
+			<tr>
+				<th>ID</th>
+				<th>Name</th>
+				<th>Position</th>
+				<th>Size</th>
+			</tr>
 		{{range .Objects}}
-		<li>{{.Name}}</li>
+		<tr><td>{{.Name}}</td><td>{{.IdHex}}</td><td>{{.X}},{{.Y}}</td><td>{{.Width}}x{{.Height}}</td></tr>
 		{{end}}
-		</ul>
+		</table>
 		<h2>Scripts</h2>
 		<h3>Enter script</h3>
 		<h3>Exit script</h3>

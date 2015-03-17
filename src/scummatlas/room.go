@@ -74,6 +74,10 @@ type Object struct {
 	Parent uint8
 }
 
+func (self Object) IdHex() string {
+	return fmt.Sprintf("%x", self.Id)
+}
+
 func NewRoom(data []byte) *Room {
 	room := new(Room)
 	room.data = data
@@ -139,17 +143,17 @@ func (r *Room) parseOBCD() {
 	var obj Object
 	headerOffset := r.offset + 8
 	if FourCharString(r.data, headerOffset) != "CDHD" {
-		panic("NOOO")
+		panic("No object header")
 	}
 	headerSize := BE32(r.data, headerOffset+4)
 	fmt.Println("Header size", headerSize)
 	obj.Id = LE16(r.data, headerOffset+8)
-	obj.X = LE16(r.data, headerOffset+10)
-	obj.Y = LE16(r.data, headerOffset+12)
-	obj.Width = LE16(r.data, headerOffset+14)
-	obj.Height = LE16(r.data, headerOffset+16)
-	obj.Flags = r.data[headerOffset+18]
-	obj.Parent = r.data[headerOffset+19]
+	obj.X = int(r.data[headerOffset+10]) * 8
+	obj.Y = int(r.data[headerOffset+11]) * 8
+	obj.Width = int(r.data[headerOffset+12]) * 8
+	obj.Height = int(r.data[headerOffset+13]) * 8
+	obj.Flags = r.data[headerOffset+14]
+	obj.Parent = r.data[headerOffset+15]
 
 	verbOffset := headerOffset + headerSize
 	if FourCharString(r.data, verbOffset) != "VERB" {
