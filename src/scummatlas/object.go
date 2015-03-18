@@ -35,7 +35,7 @@ func (self Object) IdHex() string {
 	return fmt.Sprintf("%x", self.Id)
 }
 
-func NewObjectFromOBIM(data []byte) Object {
+func NewObjectImageFromOBIM(data []byte) (objImg ObjectImage, id uint8) {
 	headerName := FourCharString(data, 8)
 	if headerName != "IMHD" {
 		panic("Image header not present")
@@ -43,7 +43,9 @@ func NewObjectFromOBIM(data []byte) Object {
 	headerSize := BE32(data, 12)
 	header := data[16 : 16+headerSize-8]
 
-	objImg := ObjectImage{
+	id = LE16(header, 0)
+
+	objImg = ObjectImage{
 		States: LE16(header, 2),
 		Planes: LE16(header, 4),
 		X:      LE16(header, 8),
@@ -52,22 +54,18 @@ func NewObjectFromOBIM(data []byte) Object {
 		Height: LE16(header, 14),
 	}
 
-	if States > 0 {
+	if objImg.States > 0 {
 		//TODO parse next block IM01
-		currentState = 1
-		imageOffset := 16 + headerSize
+		currentState := 1
+		imageOffset := 8 + headerSize
 		//TODO parse all states for currentState <= objImg.States {}
-		if FourCharString(data, imageOffset) != "IM0"+string(currentState) {
-			panic("Not image found!")
+		expectedHeader := fmt.Sprintf("IM%02d", currentState)
+		if FourCharString(data, imageOffset) != expectedHeader {
+			panic("Not " + expectedHeader + " found!, found " + FourCharString(data, imageOffset) + " instead")
 		}
 	}
 
-	obj := Object{
-		Id:    LE16(header, 0),
-		Image: objImg,
-	}
-
-	return obj
+	return
 }
 
 func NewObjectFromOBCD(data []byte) Object {

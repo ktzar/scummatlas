@@ -123,8 +123,8 @@ func (r *Room) parseTRNS() {
 
 func (r *Room) parseOBIM() {
 	blockSize := BE32(r.data, r.offset+4)
-	object := NewObjectFromOBIM(r.data[r.offset : r.offset+blockSize])
-	fmt.Printf("======================\n%+v\n", object)
+	objImg := NewObjectImageFromOBIM(r.data[r.offset : r.offset+blockSize])
+	fmt.Printf("======================\n%+v\n", objImg)
 }
 
 func (r *Room) parseOBCD() {
