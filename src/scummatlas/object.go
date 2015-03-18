@@ -7,21 +7,67 @@ import (
 )
 
 type Object struct {
-	Image  *image.RGBA
-	Script Script
-	Name   string
 	Id     int
+	Name   string
+	Flags  uint8
+	Parent uint8
+	Script Script
+	Image  ObjectImage
 	X      int
 	Y      int
 	Width  int
 	Height int
 	//TODO Direction uint8
-	Flags  uint8
-	Parent uint8
+}
+
+type ObjectImage struct {
+	X        int
+	Y        int
+	Width    int
+	Height   int
+	States   int
+	Planes   int
+	Hotspots int
+	Image    *image.RGBA
 }
 
 func (self Object) IdHex() string {
 	return fmt.Sprintf("%x", self.Id)
+}
+
+func NewObjectFromOBIM(data []byte) Object {
+	headerName := FourCharString(data, 8)
+	if headerName != "IMHD" {
+		panic("Image header not present")
+	}
+	headerSize := BE32(data, 12)
+	header := data[16 : 16+headerSize-8]
+
+	objImg := ObjectImage{
+		States: LE16(header, 2),
+		Planes: LE16(header, 4),
+		X:      LE16(header, 8),
+		Y:      LE16(header, 10),
+		Width:  LE16(header, 12),
+		Height: LE16(header, 14),
+	}
+
+	if States > 0 {
+		//TODO parse next block IM01
+		currentState = 1
+		imageOffset := 16 + headerSize
+		//TODO parse all states for currentState <= objImg.States {}
+		if FourCharString(data, imageOffset) != "IM0"+string(currentState) {
+			panic("Not image found!")
+		}
+	}
+
+	obj := Object{
+		Id:    LE16(header, 0),
+		Image: objImg,
+	}
+
+	return obj
 }
 
 func NewObjectFromOBCD(data []byte) Object {

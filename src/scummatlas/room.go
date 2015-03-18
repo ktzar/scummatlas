@@ -122,10 +122,9 @@ func (r *Room) parseTRNS() {
 }
 
 func (r *Room) parseOBIM() {
-	fmt.Println(string(r.data[r.offset+8 : r.offset+12]))
-	if string(r.data[r.offset+8:r.offset+12]) != "IMHD" {
-		panic("Obj image header not found")
-	}
+	blockSize := BE32(r.data, r.offset+4)
+	object := NewObjectFromOBIM(r.data[r.offset : r.offset+blockSize])
+	fmt.Printf("======================\n%+v\n", object)
 }
 
 func (r *Room) parseOBCD() {

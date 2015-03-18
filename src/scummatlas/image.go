@@ -70,7 +70,7 @@ func parseImage(data []byte, zBuffers int, width int, height int, pal color.Pale
 		if i < stripeCount-1 {
 			size = offsets[i+1] - offsets[i]
 		}
-		printStripeInfo(i, data[8+offset])
+		//printStripeInfo(i, data[8+offset])
 		drawStripe(img, i, data[8+offset:8+offset+size], pal, transpIndex)
 	}
 	log.Println("image decoded")

@@ -16,6 +16,18 @@ type RoomData struct {
 	scummatlas.Room
 }
 
+func (self RoomData) ViewBox() string {
+	return fmt.Sprintf("-10 -10 %v %v", self.Width+10, self.Height+10)
+}
+
+func (self RoomData) SvgWidth() int {
+	return self.Width * 2
+}
+
+func (self RoomData) SvgHeight() int {
+	return self.Height * 2
+}
+
 const roomTpl = `
 <html>
     <head>
@@ -28,15 +40,15 @@ const roomTpl = `
 		<h2>Background</h2>
 		<img width="100%" src="{{.Background}}"/>
 		<h2>Walking boxes</h2>
-		<svg width="{{.Width}}" height="{{.Height}}" viewport="0 0 {{.Width}} {{.Height}}">
+		<svg width="{{.SvgWidth}}" height="{{.SvgHeight}}" viewBox="{{.ViewBox}}">
+		{{range .Objects}}
+		  <rect id="{{.Id}}" x="{{.X}}" y="{{.Y}}" width="{{.Width}}" height="{{.Height}}" fill="rgba(255,0,0,0.5)" stroke="white" stroke-width="1"/>
+		  <text id="text_{{.Id}}" x="{{.X}}" y="{{.Y}}" font-size="0.8em" fill="black" font-family="monospace">{{.Name}}</text>
+		{{end}}
 		{{range .Boxes}}
 		  <polygon points="
 		  {{range .}}{{.X}},{{.Y}} {{end}}
-		  " style="fill:#ccc;stroke:black;stroke-width:1" />
-		{{end}}
-		{{range .Objects}}
-		  <rect id="{{.Id}}" x="{{.X}}" y="{{.Y}}" width="{{.Width}}" height="{{.Height}}" fill="rgba(255,0,0,0.5)" stroke="white" stroke-width="1"/>
-		  <text id="text_{{.Id}}" x="{{.X}}" y="{{.Y}}" font-size="1.1em" fill="black">{{.Name}}</text>
+		  " style="fill:rgba(128,128,128,0.5);stroke:black;stroke-width:1" />
 		{{end}}
 		</svg>
 
@@ -74,7 +86,6 @@ func WriteRoom(room scummatlas.Room, index int, outputdir string) {
 	var boxes [][4]scummatlas.Point
 
 	for _, v := range room.Boxes {
-		fmt.Println(v.Corners())
 		boxes = append(boxes, v.Corners())
 	}
 
