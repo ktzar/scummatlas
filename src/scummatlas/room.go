@@ -92,6 +92,8 @@ func NewRoom(data []byte) *Room {
 			room.parseLSCR()
 		case "OBCD":
 			room.parseOBCD()
+		case "OBIM":
+			room.parseOBIM()
 		case "RMIM":
 			room.parseRMIM()
 		case "TRNS":
@@ -117,6 +119,13 @@ func (r *Room) parseLSCR() {
 func (r *Room) parseTRNS() {
 	r.TranspIndex = int(r.data[r.offset+8])
 	fmt.Println("Transparent index", r.TranspIndex)
+}
+
+func (r *Room) parseOBIM() {
+	fmt.Println(string(r.data[r.offset+8 : r.offset+12]))
+	if string(r.data[r.offset+8:r.offset+12]) != "IMHD" {
+		panic("Obj image header not found")
+	}
 }
 
 func (r *Room) parseOBCD() {

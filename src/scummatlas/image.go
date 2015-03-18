@@ -70,6 +70,7 @@ func parseImage(data []byte, zBuffers int, width int, height int, pal color.Pale
 		if i < stripeCount-1 {
 			size = offsets[i+1] - offsets[i]
 		}
+		printStripeInfo(i, data[8+offset])
 		drawStripe(img, i, data[8+offset:8+offset+size], pal, transpIndex)
 	}
 	log.Println("image decoded")
@@ -197,27 +198,28 @@ func getCompressionMethod(stripNumber int, code byte) (
 	}
 
 	paletteLength = code - substraction
-
-	debug := false
-	if debug {
-		out := fmt.Sprintf("%v\t0x%X\t", stripNumber, code)
-		if method == METHOD_ONE {
-			out += "   1"
-		} else if method == METHOD_TWO {
-			out += "   2"
-		}
-		if direction == VERTICAL {
-			out += "\tVert"
-		} else {
-			out += "\tHoriz"
-		}
-		out += "\t" + string(code-substraction)
-		if transparent == TRANSP {
-			out += "\tYes"
-		} else {
-			out += "\tNo"
-		}
-		log.Println(out)
-	}
 	return
+}
+
+func printStripeInfo(stripNumber int, code byte) {
+	method, direction, transparent, paletteLength := getCompressionMethod(stripNumber, code)
+
+	out := fmt.Sprintf("%v\t0x%X\t", stripNumber, code)
+	if method == METHOD_ONE {
+		out += "   1"
+	} else if method == METHOD_TWO {
+		out += "   2"
+	}
+	if direction == VERTICAL {
+		out += "\tVert"
+	} else {
+		out += "\tHoriz"
+	}
+	out += "\t" + string(paletteLength)
+	if transparent == TRANSP {
+		out += "\tYes"
+	} else {
+		out += "\tNo"
+	}
+	log.Println(out)
 }
