@@ -46,7 +46,7 @@ type Room struct {
 	Height   int
 	ObjCount int
 	//ColorCycle ColorCycle
-	TranspIndex  int
+	TranspIndex  uint8
 	Palette      color.Palette
 	Image        *image.RGBA
 	Objects      map[int]Object
@@ -117,14 +117,21 @@ func (r *Room) parseLSCR() {
 }
 
 func (r *Room) parseTRNS() {
-	r.TranspIndex = int(r.data[r.offset+8])
+	r.TranspIndex = r.data[r.offset+8]
 	fmt.Println("Transparent index", r.TranspIndex)
 }
 
 func (r *Room) parseOBIM() {
 	blockSize := BE32(r.data, r.offset+4)
-	objImg := NewObjectImageFromOBIM(r.data[r.offset : r.offset+blockSize])
-	fmt.Printf("======================\n%+v\n", objImg)
+	objImg, id := NewObjectImageFromOBIM(r.data[r.offset:r.offset+blockSize], r)
+	fmt.Printf("======================\nObject with id 0x%02X\n%+v\n", id, objImg)
+
+	existing, ok := r.Objects[id]
+	if !ok {
+		existing = Object{Id: id}
+	}
+	existing.Image = objImg
+	r.Objects[id] = existing
 }
 
 func (r *Room) parseOBCD() {
@@ -196,7 +203,7 @@ func (r *Room) parseRMIM() {
 		r.Width,
 		r.Height,
 		r.Palette,
-		uint8(r.TranspIndex))
+		r.TranspIndex)
 
 }
 

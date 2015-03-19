@@ -40,15 +40,36 @@ func main() {
 	templates.WriteIndex(game.RoomNames, outputdir)
 
 	for i, room := range game.Rooms {
-		backgroundFile := fmt.Sprintf("%v/room%02d_bg.png", outputdir, i)
-		fmt.Printf("\nParsing room %v, file %v", i, backgroundFile)
-		pngFile, err := os.Create(backgroundFile)
-		if err != nil {
-			panic("Error creating " + backgroundFile)
-		}
 		templates.WriteRoom(room, i, outputdir)
-		png.Encode(pngFile, room.Image)
+		writeRoomBackground(i, room, outputdir)
+		createRoomObjectImages(i, room, outputdir)
 
 	}
 
+}
+
+func writeRoomBackground(id int, room scummatlas.Room, outputdir string) {
+	backgroundFile := fmt.Sprintf("%v/room%02d_bg.png", outputdir, id)
+	fmt.Printf("\nParsing room %v, file %v", id, backgroundFile)
+	pngFile, err := os.Create(backgroundFile)
+	if err != nil {
+		panic("Error creating " + backgroundFile)
+	}
+	png.Encode(pngFile, room.Image)
+}
+
+func createRoomObjectImages(id int, r scummatlas.Room, outputdir string) {
+	for _, object := range r.Objects {
+		if object.Image.Image != nil {
+			imagePath := fmt.Sprintf("%v/room%02d_obj_%02x.png", outputdir, id, object.Id)
+			pngFile, err := os.Create(imagePath)
+			if err != nil {
+				panic("Error creating " + imagePath)
+			}
+			png.Encode(pngFile, object.Image.Image)
+			fmt.Printf("Obj image %v created\n", imagePath)
+		} else {
+			//fmt.Printf("Obj %v does not have an image\n", object.Id)
+		}
+	}
 }

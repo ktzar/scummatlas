@@ -9,7 +9,7 @@ import (
 )
 
 type RoomData struct {
-	Index      int
+	Index      string
 	Title      string
 	Background string
 	Boxes      [][4]scummatlas.Point
@@ -57,11 +57,20 @@ const roomTpl = `
 			<tr>
 				<th>ID</th>
 				<th>Name</th>
+				<th>Image</th>
 				<th>Position</th>
 				<th>Size</th>
 			</tr>
 		{{range .Objects}}
-		<tr><td>{{.Name}}</td><td>{{.IdHex}}</td><td>{{.X}},{{.Y}}</td><td>{{.Width}}x{{.Height}}</td></tr>
+			<tr>
+				<td>{{.IdHex}}</td>
+				<td>{{.Name}}</td>
+				<td>
+	{{ if .Image.Image }}<img src="room{{$.Index}}_obj_{{.IdHex}}.png"/>
+	{{ else }}No image{{ end }}
+				</td>
+				<td>{{.X}},{{.Y}}</td>
+				<td>{{.Width}}x{{.Height}}</td></tr>
 		{{end}}
 		</table>
 		<h2>Scripts</h2>
@@ -90,7 +99,7 @@ func WriteRoom(room scummatlas.Room, index int, outputdir string) {
 	}
 
 	data := RoomData{
-		index,
+		fmt.Sprintf("%02d", index),
 		"A room",
 		bgPath,
 		boxes,

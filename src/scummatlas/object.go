@@ -35,7 +35,7 @@ func (self Object) IdHex() string {
 	return fmt.Sprintf("%x", self.Id)
 }
 
-func NewObjectImageFromOBIM(data []byte) (objImg ObjectImage, id uint8) {
+func NewObjectImageFromOBIM(data []byte, r *Room) (objImg ObjectImage, id int) {
 	headerName := FourCharString(data, 8)
 	if headerName != "IMHD" {
 		panic("Image header not present")
@@ -63,6 +63,10 @@ func NewObjectImageFromOBIM(data []byte) (objImg ObjectImage, id uint8) {
 		if FourCharString(data, imageOffset) != expectedHeader {
 			panic("Not " + expectedHeader + " found!, found " + FourCharString(data, imageOffset) + " instead")
 		}
+		imageSize := BE32(data, imageOffset+4)
+
+		img := parseImage(data[imageOffset:imageOffset+imageSize], objImg.Planes, objImg.Width, objImg.Height, r.Palette, r.TranspIndex)
+		objImg.Image = img
 	}
 
 	return
