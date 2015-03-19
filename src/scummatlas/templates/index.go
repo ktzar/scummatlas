@@ -2,7 +2,7 @@ package templates
 
 import (
 	"html/template"
-	_ "io/ioutil"
+	"io/ioutil"
 	"os"
 	"scummatlas"
 )
@@ -12,34 +12,18 @@ type IndexData struct {
 	Rooms []scummatlas.RoomName
 }
 
-const indexTpl = `
-<html>
-    <head>
-        <title>Room Index</title>
-		<link href="./static/style.css"/>
-		<script src="./static/script.js"></script>
-    </head>
-    <body id="index-page">
-	<h1>{{.Title}}</h1>
-    <h2>List of rooms</h2>
-	<ol>
-    {{range .Rooms}}
-		<li>
-			<h4 class="roomname">{{.Name}}</h4>
-			<a href="./room{{.IndexNumber}}.html">
-				<img src="room{{.IndexNumber}}_bg.png"/>
-			</a>
-		</li>{{end}}
-	</ol>
-    </body>
-</html>`
-
 func WriteIndex(roomNames []scummatlas.RoomName, outdir string) {
+
+	indexTpl, err := ioutil.ReadFile("./templates/index.html")
+	if err != nil {
+		panic("No index.html in the templates directory")
+	}
+
 	data := IndexData{
 		"A game",
 		roomNames,
 	}
-	t := template.Must(template.New("index").Parse(indexTpl))
+	t := template.Must(template.New("index").Parse(string(indexTpl)))
 
 	file, err := os.Create(outdir + "/index.html")
 	if err != nil {

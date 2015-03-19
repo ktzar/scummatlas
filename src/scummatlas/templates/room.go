@@ -3,12 +3,12 @@ package templates
 import (
 	"fmt"
 	"html/template"
-	_ "io/ioutil"
+	"io/ioutil"
 	"os"
 	"scummatlas"
 )
 
-type RoomData struct {
+type roomData struct {
 	Index      string
 	Title      string
 	Background string
@@ -16,74 +16,26 @@ type RoomData struct {
 	scummatlas.Room
 }
 
-func (self RoomData) ViewBox() string {
+func (self roomData) ViewBox() string {
 	return fmt.Sprintf("-10 -10 %v %v", self.Width+10, self.Height+10)
 }
 
-func (self RoomData) SvgWidth() int {
+func (self roomData) SvgWidth() int {
 	return self.Width * 2
 }
 
-func (self RoomData) SvgHeight() int {
+func (self roomData) SvgHeight() int {
 	return self.Height * 2
 }
 
-const roomTpl = `
-<html>
-    <head>
-        <title>Room {{.Index}}</title>
-		<link href="./style.css"/>
-		<script src="./static/script.js"></script>
-    </head>
-    <body id="room-page">
-		<h1>{{.Title}}</h1>
-		<h2>Background</h2>
-		<img width="100%" src="{{.Background}}"/>
-		<h2>Walking boxes</h2>
-		<svg width="{{.SvgWidth}}" height="{{.SvgHeight}}" viewBox="{{.ViewBox}}">
-		{{range .Objects}}
-		  <rect id="{{.Id}}" x="{{.X}}" y="{{.Y}}" width="{{.Width}}" height="{{.Height}}" fill="rgba(255,0,0,0.5)" stroke="white" stroke-width="1"/>
-		  <text id="text_{{.Id}}" x="{{.X}}" y="{{.Y}}" font-size="0.8em" fill="black" font-family="monospace">{{.Name}}</text>
-		{{end}}
-		{{range .Boxes}}
-		  <polygon points="
-		  {{range .}}{{.X}},{{.Y}} {{end}}
-		  " style="fill:rgba(128,128,128,0.5);stroke:black;stroke-width:1" />
-		{{end}}
-		</svg>
-
-		<h2>Objects</h2>
-		<table>
-			<tr>
-				<th>ID</th>
-				<th>Name</th>
-				<th>Image</th>
-				<th>Position</th>
-				<th>Size</th>
-			</tr>
-		{{range .Objects}}
-			<tr>
-				<td>{{.IdHex}}</td>
-				<td>{{.Name}}</td>
-				<td>
-	{{ if .Image.Image }}<img src="room{{$.Index}}_obj_{{.IdHex}}.png"/>
-	{{ else }}No image{{ end }}
-				</td>
-				<td>{{.X}},{{.Y}}</td>
-				<td>{{.Width}}x{{.Height}}</td></tr>
-		{{end}}
-		</table>
-		<h2>Scripts</h2>
-		<h3>Enter script</h3>
-		<h3>Exit script</h3>
-		<h3>Local scripts</h3>
-		<h2>Palette</h2>
-    </body>
-</html>`
-
 func WriteRoom(room scummatlas.Room, index int, outputdir string) {
 
-	t := template.Must(template.New("index").Parse(roomTpl))
+	roomTpl, err := ioutil.ReadFile("./templates/index.html")
+	if err != nil {
+		panic("No index.html in the templates directory")
+	}
+
+	t := template.Must(template.New("index").Parse(string(roomTpl)))
 
 	bgPath := fmt.Sprintf("./room%02d_bg.png", index)
 	htmlPath := fmt.Sprintf("%v/room%02d.html", outputdir, index)
@@ -98,7 +50,7 @@ func WriteRoom(room scummatlas.Room, index int, outputdir string) {
 		boxes = append(boxes, v.Corners())
 	}
 
-	data := RoomData{
+	data := roomData{
 		fmt.Sprintf("%02d", index),
 		"A room",
 		bgPath,
