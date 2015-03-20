@@ -3,6 +3,7 @@ package scummatlas
 import (
 	"fmt"
 	"io/ioutil"
+	b "scummatlas/binaryutils"
 )
 
 type RoomName struct {
@@ -66,13 +67,13 @@ func ParseRoomNames(data []byte) []RoomName {
 
 func ParseRoomIndex(data []byte) (index []ScriptIndex) {
 	var out []ScriptIndex
-	numEntries := LE16(data, 8)
+	numEntries := b.LE16(data, 8)
 	fmt.Println("Num entries: ", numEntries)
 
 	currentIndex := 10
 	for currentIndex < len(data) {
 		roomNumber := int(data[currentIndex])
-		roomOffset := LE16(data, 1)
+		roomOffset := b.LE16(data, 1)
 		out = append(out, ScriptIndex{roomNumber, roomOffset})
 		currentIndex += 5
 	}
@@ -81,13 +82,13 @@ func ParseRoomIndex(data []byte) (index []ScriptIndex) {
 
 func ParseScriptsIndex(data []byte) (index []ScriptIndex) {
 	var out []ScriptIndex
-	numEntries := LE16(data, 8)
+	numEntries := b.LE16(data, 8)
 	fmt.Println("Num entries: ", numEntries)
 
 	currentIndex := 10
 	for currentIndex < len(data) {
 		roomNumber := int(data[currentIndex])
-		roomOffset := LE16(data, 1)
+		roomOffset := b.LE16(data, 1)
 		out = append(out, ScriptIndex{roomNumber, roomOffset})
 		currentIndex += 5
 	}

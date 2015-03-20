@@ -1,4 +1,4 @@
-package scummatlas
+package binaryutils
 
 import (
 	"encoding/binary"

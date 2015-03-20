@@ -1,12 +1,12 @@
-package scummatlas
+package image
 
 import (
-	"binaryutils"
 	"fmt"
 	"image"
 	"image/color"
 	"log"
 	"os"
+	b "scummatlas/binaryutils"
 )
 
 const debugImage = false
@@ -23,7 +23,7 @@ const (
 	NO_TRANSP
 )
 
-func parsePalette(data []byte) color.Palette {
+func ParsePalette(data []byte) color.Palette {
 	var palette = make(color.Palette, 0, 256)
 	for i := 0; i < len(data); i += 3 {
 		color := color.RGBA{
@@ -38,19 +38,19 @@ func parsePalette(data []byte) color.Palette {
 	return palette
 }
 
-func parseImage(data []byte, zBuffers int, width int, height int, pal color.Palette, transpIndex uint8, debug bool) *image.RGBA {
+func ParseImage(data []byte, zBuffers int, width int, height int, pal color.Palette, transpIndex uint8, debug bool) *image.RGBA {
 	if string(data[8:12]) != "SMAP" {
 		panic("No stripe table found")
 	}
 
 	stripeCount := width / 8
-	log.Println("SmapSize", BE32(data, 12))
+	log.Println("SmapSize", b.BE32(data, 12))
 
 	log.Println("There should be ", stripeCount, "stripes")
 	offsets := make([]int, 0, stripeCount)
 	stripeOffset := 0
 	for i := 0; i < stripeCount; i++ {
-		stripeOffset = LE32(data, 16+4*i)
+		stripeOffset = b.LE32(data, 16+4*i)
 		offsets = append(offsets, stripeOffset)
 	}
 
@@ -110,7 +110,7 @@ func drawStripe(img *image.RGBA, stripNumber int, data []byte, pal color.Palette
 		currentPixel++
 	}
 
-	bs := binaryutils.NewBitStream(data[2:])
+	bs := b.NewBitStream(data[2:])
 
 	if method == METHOD_TWO {
 		for currentPixel < totalPixels {

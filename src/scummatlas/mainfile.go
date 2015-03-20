@@ -2,6 +2,7 @@ package scummatlas
 
 import (
 	"fmt"
+	b "scummatlas/binaryutils"
 )
 
 type MainScummData struct {
@@ -19,7 +20,7 @@ type RoomOffset struct {
 
 func (d *MainScummData) GetRoomCount() int {
 	blockName := d.fourChars(0)
-	blockSize := BE32(d.Data, 4)
+	blockSize := b.BE32(d.Data, 4)
 	fmt.Println(blockName)
 	if blockName != "LECF" {
 		panic("No main container in the file")
@@ -30,7 +31,7 @@ func (d *MainScummData) GetRoomCount() int {
 	if blockName != "LOFF" {
 		panic("No room offset table in the file")
 	}
-	blockSize = BE32(d.Data, 12)
+	blockSize = b.BE32(d.Data, 12)
 	roomCount := int(d.Data[16])
 	fmt.Printf("%v (%v bytes)\t", blockName, blockSize)
 	fmt.Printf("roomCount: %v\n", roomCount)
@@ -43,7 +44,7 @@ func (d *MainScummData) GetRoomsOffset() (offsets []RoomOffset) {
 	var out []RoomOffset
 	for i := 0; i < count; i++ {
 		count := int(d.Data[currentOffset])
-		offset := LE32(d.Data, currentOffset+1)
+		offset := b.LE32(d.Data, currentOffset+1)
 		roomOffset := RoomOffset{count, offset}
 		out = append(out, roomOffset)
 		currentOffset += 5
@@ -53,7 +54,7 @@ func (d *MainScummData) GetRoomsOffset() (offsets []RoomOffset) {
 
 func (d *MainScummData) ParseRoom(offset int) Room {
 	blockName := d.fourChars(offset)
-	blockSize := BE32(d.Data, offset+4)
+	blockSize := b.BE32(d.Data, offset+4)
 	if blockName != "ROOM" {
 		panic("No room block found")
 	}

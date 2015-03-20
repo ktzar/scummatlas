@@ -2,7 +2,9 @@ package scummatlas
 
 import (
 	"fmt"
-	"image"
+	goimage "image"
+	b "scummatlas/binaryutils"
+	"scummatlas/image"
 	"strings"
 )
 
@@ -28,7 +30,7 @@ type ObjectImage struct {
 	States   int
 	Planes   int
 	Hotspots int
-	Frames   []*image.RGBA
+	Frames   []*goimage.RGBA
 }
 
 func (self ObjectImage) FramesIndexes() (out []string) {
@@ -43,22 +45,22 @@ func (self Object) IdHex() string {
 }
 
 func NewObjectImageFromOBIM(data []byte, r *Room) (objImg ObjectImage, id int) {
-	headerName := FourCharString(data, 8)
+	headerName := b.FourCharString(data, 8)
 	if headerName != "IMHD" {
 		panic("Image header not present")
 	}
-	headerSize := BE32(data, 12)
+	headerSize := b.BE32(data, 12)
 	header := data[16 : 16+headerSize-8]
 
-	id = LE16(header, 0)
+	id = b.LE16(header, 0)
 
 	objImg = ObjectImage{
-		States: LE16(header, 2),
-		Planes: LE16(header, 4),
-		X:      LE16(header, 8),
-		Y:      LE16(header, 10),
-		Width:  LE16(header, 12),
-		Height: LE16(header, 14),
+		States: b.LE16(header, 2),
+		Planes: b.LE16(header, 4),
+		X:      b.LE16(header, 8),
+		Y:      b.LE16(header, 10),
+		Width:  b.LE16(header, 12),
+		Height: b.LE16(header, 14),
 	}
 
 	if objImg.States > 0 {
@@ -66,13 +68,13 @@ func NewObjectImageFromOBIM(data []byte, r *Room) (objImg ObjectImage, id int) {
 
 		for state := 1; state <= objImg.States; state++ {
 			expectedHeader := imageStateHeader(state)
-			if FourCharString(data, imageOffset) != expectedHeader {
-				panic("Not " + expectedHeader + " found!, found " + FourCharString(data, imageOffset) + " instead")
+			if b.FourCharString(data, imageOffset) != expectedHeader {
+				panic("Not " + expectedHeader + " found!, found " + b.FourCharString(data, imageOffset) + " instead")
 			}
-			imageSize := BE32(data, imageOffset+4)
+			imageSize := b.BE32(data, imageOffset+4)
 
 			log := false
-			img := parseImage(data[imageOffset:imageOffset+imageSize], objImg.Planes, objImg.Width, objImg.Height, r.Palette, r.TranspIndex, log)
+			img := image.ParseImage(data[imageOffset:imageOffset+imageSize], objImg.Planes, objImg.Width, objImg.Height, r.Palette, r.TranspIndex, log)
 			objImg.Frames = append(objImg.Frames, img)
 			imageOffset += imageSize
 		}
@@ -88,16 +90,16 @@ func imageStateHeader(state int) string {
 
 func NewObjectFromOBCD(data []byte) Object {
 	headerOffset := 8
-	if FourCharString(data, headerOffset) != "CDHD" {
+	if b.FourCharString(data, headerOffset) != "CDHD" {
 		panic("No object header")
 	}
-	headerSize := BE32(data, headerOffset+4)
+	headerSize := b.BE32(data, headerOffset+4)
 
 	intInOffsetTimesEight := func(offset int) int {
 		return int(data[headerOffset+offset]) * 8
 	}
 	obj := Object{
-		Id:     LE16(data, headerOffset+8),
+		Id:     b.LE16(data, headerOffset+8),
 		X:      intInOffsetTimesEight(10),
 		Y:      intInOffsetTimesEight(11),
 		Width:  intInOffsetTimesEight(12),
@@ -107,15 +109,15 @@ func NewObjectFromOBCD(data []byte) Object {
 	}
 
 	verbOffset := headerOffset + headerSize
-	if FourCharString(data, verbOffset) != "VERB" {
+	if b.FourCharString(data, verbOffset) != "VERB" {
 		panic("Object with no verbs")
 	}
-	verbSize := BE32(data, verbOffset+4)
+	verbSize := b.BE32(data, verbOffset+4)
 	objNameOffset := verbOffset + verbSize
-	if FourCharString(data, objNameOffset) != "OBNA" {
+	if b.FourCharString(data, objNameOffset) != "OBNA" {
 		panic("Object with no name")
 	}
-	objNameSize := BE32(data, objNameOffset+4)
+	objNameSize := b.BE32(data, objNameOffset+4)
 	name := data[objNameOffset+4 : objNameOffset+objNameSize]
 	obj.Name = filterObjectName(name)
 	return obj

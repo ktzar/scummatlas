@@ -1,4 +1,4 @@
-package scummatlas
+package image
 
 import "testing"
 

@@ -3,11 +3,13 @@ package scummatlas
 import (
 	_ "bufio"
 	"fmt"
-	"image"
+	goimage "image"
 	"image/color"
 	"io/ioutil"
 	"log"
 	"os"
+	b "scummatlas/binaryutils"
+	"scummatlas/image"
 )
 
 type Box struct {
@@ -48,7 +50,7 @@ type Room struct {
 	//ColorCycle ColorCycle
 	TranspIndex  uint8
 	Palette      color.Palette
-	Image        *image.RGBA
+	Image        *goimage.RGBA
 	Objects      map[int]Object
 	ExitScript   Script
 	EntryScript  Script
@@ -122,7 +124,7 @@ func (r *Room) parseTRNS() {
 }
 
 func (r *Room) parseOBIM() {
-	blockSize := BE32(r.data, r.offset+4)
+	blockSize := b.BE32(r.data, r.offset+4)
 	objImg, id := NewObjectImageFromOBIM(r.data[r.offset:r.offset+blockSize], r)
 	fmt.Printf("======================\nObject with id 0x%02X\n%+v\n", id, objImg)
 
@@ -135,7 +137,7 @@ func (r *Room) parseOBIM() {
 }
 
 func (r *Room) parseOBCD() {
-	blockSize := BE32(r.data, r.offset+4)
+	blockSize := b.BE32(r.data, r.offset+4)
 	object := NewObjectFromOBCD(r.data[r.offset : r.offset+blockSize])
 
 	existingObject, ok := r.Objects[object.Id]
@@ -155,7 +157,7 @@ func (r *Room) parseEPAL() {
 		paletteData := r.data[r.offset+8 : r.offset+r.getBlockSize()]
 		fmt.Println("Palette data size ", len(paletteData))
 
-		r.Palette = parsePalette(r.data[r.offset+8 : r.offset+8+3*256])
+		r.Palette = image.ParsePalette(r.data[r.offset+8 : r.offset+8+3*256])
 		fmt.Println("Palette length", len(r.Palette))
 		fmt.Println(r.Palette)
 	*/
@@ -166,7 +168,7 @@ func (r *Room) parseCLUT() {
 	paletteData := r.data[r.offset+8 : r.offset+r.getBlockSize()]
 	log.Println("Palette data size ", len(paletteData))
 
-	r.Palette = parsePalette(r.data[r.offset+8 : r.offset+8+3*256])
+	r.Palette = image.ParsePalette(r.data[r.offset+8 : r.offset+8+3*256])
 	log.Println("Palette length", len(r.Palette))
 
 	for _, color := range r.Palette {
@@ -185,19 +187,19 @@ func (r *Room) parseRMIM() {
 	if string(r.data[r.offset+8:r.offset+12]) != "RMIH" {
 		panic("Not room image header")
 	}
-	headerSize := BE32(r.data, r.offset+12)
-	zBuffers := LE16(r.data, r.offset+16)
+	headerSize := b.BE32(r.data, r.offset+12)
+	zBuffers := b.LE16(r.data, r.offset+16)
 	fmt.Println("headerSize", headerSize)
 	fmt.Println("zBuffers", zBuffers)
 
-	if FourCharString(r.data, r.offset+18) != "IM00" {
+	if b.FourCharString(r.data, r.offset+18) != "IM00" {
 		panic("Not room image found")
 	}
 	imageOffset := r.offset + 18
-	imageSize := BE32(r.data, imageOffset+4)
-	fmt.Println(FourCharString(r.data, imageOffset), imageSize)
+	imageSize := b.BE32(r.data, imageOffset+4)
+	fmt.Println(b.FourCharString(r.data, imageOffset), imageSize)
 
-	r.Image = parseImage(
+	r.Image = image.ParseImage(
 		r.data[imageOffset:imageOffset+4+imageSize],
 		zBuffers,
 		r.Width,
@@ -208,7 +210,7 @@ func (r *Room) parseRMIM() {
 }
 
 func (r *Room) parseBOXD() {
-	boxCount := LE16(r.data, r.offset+8)
+	boxCount := b.LE16(r.data, r.offset+8)
 	var boxOffset int
 	fmt.Println("BOXCOUNT", boxCount)
 	for i := 0; i < boxCount; i++ {
@@ -220,9 +222,9 @@ func (r *Room) parseBOXD() {
 
 func (r *Room) parseRMHD() {
 	fmt.Println("RMHD offset", r.offset)
-	r.Width = LE16(r.data, r.offset+8)
-	r.Height = LE16(r.data, r.offset+10)
-	r.ObjCount = LE16(r.data, r.offset+12)
+	r.Width = b.LE16(r.data, r.offset+8)
+	r.Height = b.LE16(r.data, r.offset+10)
+	r.ObjCount = b.LE16(r.data, r.offset+12)
 	fmt.Printf("Room size %vx%v\n", r.Width, r.Height)
 }
 
@@ -237,7 +239,7 @@ func (r Room) getBlockName() string {
 }
 
 func (r Room) getBlockSize() int {
-	return BE32(r.data, r.offset+4)
+	return b.BE32(r.data, r.offset+4)
 }
 
 func (r *Room) nextBlock() {
@@ -247,17 +249,17 @@ func (r *Room) nextBlock() {
 func NewBox(data []byte) Box {
 	box := new(Box)
 
-	box.ulx = LE16(data, 0)
-	box.uly = LE16(data, 2)
-	box.urx = LE16(data, 4)
-	box.ury = LE16(data, 6)
-	box.lrx = LE16(data, 8)
-	box.lry = LE16(data, 10)
-	box.llx = LE16(data, 12)
-	box.lly = LE16(data, 14)
+	box.ulx = b.LE16(data, 0)
+	box.uly = b.LE16(data, 2)
+	box.urx = b.LE16(data, 4)
+	box.ury = b.LE16(data, 6)
+	box.lrx = b.LE16(data, 8)
+	box.lry = b.LE16(data, 10)
+	box.llx = b.LE16(data, 12)
+	box.lly = b.LE16(data, 14)
 	box.mask = data[16]
 	box.flags = data[17]
-	box.scale = LE16(data, 18)
+	box.scale = b.LE16(data, 18)
 
 	return *box
 }
