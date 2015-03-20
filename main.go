@@ -60,16 +60,25 @@ func writeRoomBackground(id int, room scummatlas.Room, outputdir string) {
 
 func createRoomObjectImages(id int, r scummatlas.Room, outputdir string) {
 	for _, object := range r.Objects {
-		if object.Image.Image != nil {
-			imagePath := fmt.Sprintf("%v/room%02d_obj_%02x.png", outputdir, id, object.Id)
+		if len(object.Image.Frames) == 0 {
+			//fmt.Printf("Obj %v does not have an image\n", object.Id)
+			continue
+		}
+
+		for frameIndex, frame := range object.Image.Frames {
+			imagePath := fmt.Sprintf(
+				"%v/room%02d_obj_%02x_%02d.png",
+				outputdir,
+				id,
+				object.Id,
+				frameIndex)
+
 			pngFile, err := os.Create(imagePath)
 			if err != nil {
 				panic("Error creating " + imagePath)
 			}
-			png.Encode(pngFile, object.Image.Image)
+			png.Encode(pngFile, frame)
 			fmt.Printf("Obj image %v created\n", imagePath)
-		} else {
-			//fmt.Printf("Obj %v does not have an image\n", object.Id)
 		}
 	}
 }

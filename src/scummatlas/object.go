@@ -28,7 +28,7 @@ type ObjectImage struct {
 	States   int
 	Planes   int
 	Hotspots int
-	Image    *image.RGBA
+	Frames   []*image.RGBA
 }
 
 func (self Object) IdHex() string {
@@ -55,18 +55,20 @@ func NewObjectImageFromOBIM(data []byte, r *Room) (objImg ObjectImage, id int) {
 	}
 
 	if objImg.States > 0 {
-		//TODO parse next block IM01
-		currentState := 1
 		imageOffset := 8 + headerSize
-		//TODO parse all states for currentState <= objImg.States {}
-		expectedHeader := fmt.Sprintf("IM%02d", currentState)
-		if FourCharString(data, imageOffset) != expectedHeader {
-			panic("Not " + expectedHeader + " found!, found " + FourCharString(data, imageOffset) + " instead")
-		}
-		imageSize := BE32(data, imageOffset+4)
 
-		img := parseImage(data[imageOffset:imageOffset+imageSize], objImg.Planes, objImg.Width, objImg.Height, r.Palette, r.TranspIndex)
-		objImg.Image = img
+		for state := 1; state <= objImg.States; state++ {
+			expectedHeader := fmt.Sprintf("IM%02d", state)
+			if FourCharString(data, imageOffset) != expectedHeader {
+				panic("Not " + expectedHeader + " found!, found " + FourCharString(data, imageOffset) + " instead")
+			}
+			imageSize := BE32(data, imageOffset+4)
+
+			img := parseImage(data[imageOffset:imageOffset+imageSize], objImg.Planes, objImg.Width, objImg.Height, r.Palette, r.TranspIndex)
+			objImg.Frames = append(objImg.Frames, img)
+			imageOffset += imageSize
+		}
+
 	}
 
 	return
