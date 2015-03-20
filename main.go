@@ -50,7 +50,7 @@ func main() {
 
 func writeRoomBackground(id int, room scummatlas.Room, outputdir string) {
 	backgroundFile := fmt.Sprintf("%v/room%02d_bg.png", outputdir, id)
-	fmt.Printf("\nParsing room %v, file %v", id, backgroundFile)
+	fmt.Printf("\nWriting room %v background in %v", id, backgroundFile)
 	pngFile, err := os.Create(backgroundFile)
 	if err != nil {
 		panic("Error creating " + backgroundFile)

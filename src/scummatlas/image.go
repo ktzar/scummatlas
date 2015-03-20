@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"io/ioutil"
 	"log"
 	"os"
 )
@@ -39,11 +38,7 @@ func parsePalette(data []byte) color.Palette {
 	return palette
 }
 
-func parseImage(data []byte, zBuffers int, width int, height int, pal color.Palette, transpIndex uint8) *image.RGBA {
-	// DISABLE LOGGING
-	log.SetOutput(os.Stdout)
-	log.SetOutput(ioutil.Discard)
-
+func parseImage(data []byte, zBuffers int, width int, height int, pal color.Palette, transpIndex uint8, debug bool) *image.RGBA {
 	if string(data[8:12]) != "SMAP" {
 		panic("No stripe table found")
 	}
@@ -61,16 +56,20 @@ func parseImage(data []byte, zBuffers int, width int, height int, pal color.Pale
 
 	img := image.NewRGBA(image.Rect(0, 0, width, height))
 
-	log.Println("Decoding image")
-	log.Println("Stripes information")
-	log.Println("\n#ID\tCode\tMethod\tDirect\tPalInSz\tTransp")
+	if debug {
+		fmt.Println("Decoding image")
+		fmt.Println("Stripes information")
+		fmt.Println("\n#ID\tCode\tMethod\tDirect\tPalInSz\tTransp")
+	}
 	for i := 0; i < stripeCount; i++ {
 		offset := offsets[i]
 		size := len(data) - offset
 		if i < stripeCount-1 {
 			size = offsets[i+1] - offsets[i]
 		}
-		//printStripeInfo(i, data[8+offset])
+		if debug {
+			printStripeInfo(i, data[8+offset])
+		}
 		drawStripe(img, i, data[8+offset:8+offset+size], pal, transpIndex)
 	}
 	log.Println("image decoded")
@@ -92,19 +91,15 @@ func drawStripe(img *image.RGBA, stripNumber int, data []byte, pal color.Palette
 	setColor := func() {
 		var x, y int
 		if direction == HORIZONTAL {
-			x = currentPixel % 8
+			x = (currentPixel + 1) % 8
 			y = (currentPixel + 1) / 8
 		} else {
 			y = currentPixel % height
 			x = currentPixel / height
 		}
-		if x == 7 {
-			x = -1
-		}
 		x += 8 * stripNumber
 		if curPal >= 0 {
 			if transparent == TRANSP && curPal == transpIndex {
-				log.Println("TRANSPARENT")
 				img.Set(x, y, color.RGBA{0, 0, 0, 0})
 			} else {
 				img.Set(x, y, pal[curPal])

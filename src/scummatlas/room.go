@@ -203,8 +203,8 @@ func (r *Room) parseRMIM() {
 		r.Width,
 		r.Height,
 		r.Palette,
-		r.TranspIndex)
-
+		r.TranspIndex,
+		false)
 }
 
 func (r *Room) parseBOXD() {
