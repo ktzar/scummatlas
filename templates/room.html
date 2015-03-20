@@ -1,51 +1,66 @@
 <html>
     <head>
         <title>Room {{.Index}}</title>
-		<link href="./style.css"/>
+		<link href="./static/style.css" rel="stylesheet" type="text/css"/>
+		<link href="./static/bootstrap.min.css" rel="stylesheet" type="text/css"/>
 		<script src="./static/script.js"></script>
     </head>
     <body id="room-page">
-		<h1>{{.Title}}</h1>
-		<h2>Background</h2>
-		<img width="100%" src="{{.Background}}"/>
-		<h2>Walking boxes</h2>
-		<svg width="{{.SvgWidth}}" height="{{.SvgHeight}}" viewBox="{{.ViewBox}}">
-		{{range .Objects}}
-		  <rect id="{{.Id}}" x="{{.X}}" y="{{.Y}}" width="{{.Width}}" height="{{.Height}}" fill="rgba(255,0,0,0.5)" stroke="white" stroke-width="1"/>
-		  <text id="text_{{.Id}}" x="{{.X}}" y="{{.Y}}" font-size="0.8em" fill="black" font-family="monospace">{{.Name}}</text>
-		{{end}}
-		{{range .Boxes}}
-		  <polygon points="
-		  {{range .}}{{.X}},{{.Y}} {{end}}
-		  " style="fill:rgba(128,128,128,0.5);stroke:black;stroke-width:1" />
-		{{end}}
-		</svg>
+    <div class="container">
+        <div class="row">
+            <h1>{{.Title}}</h1>
+            <h2>Background</h2>
+            <img height="{{.DoubleHeight}}px" style="image-rendering: pixelated" src="{{.Background}}"/>
+        </div>
+        <div class="row">
+            <h2>Walking boxes</h2>
+            <svg width="{{.SvgWidth}}" height="{{.SvgHeight}}" viewBox="{{.ViewBox}}">
+            {{range .Objects}}
+              <rect id="{{.Id}}" x="{{.X}}" y="{{.Y}}" width="{{.Width}}" height="{{.Height}}" fill="rgba(255,0,0,0.5)" stroke="white" stroke-width=".5"/>
+              <text id="text_{{.Id}}" x="{{.X}}" y="{{.Y}}" font-size="0.8em" fill="black" font-family="monospace">{{.Name}}</text>
+            {{end}}
+            {{range .Boxes}}
+              <polygon points="
+              {{range .}}{{.X}},{{.Y}} {{end}}
+              " style="fill:rgba(128,128,128,0.5);stroke:black;stroke-width:.5" />
+            {{end}}
+            </svg>
 
-		<h2>Objects</h2>
-		<table>
-			<tr>
-				<th>ID</th>
-				<th>Name</th>
-				<th>Image</th>
-				<th>Position</th>
-				<th>Size</th>
-			</tr>
-		{{range .Objects}}
-			<tr>
-				<td>{{.IdHex}}</td>
-				<td>{{.Name}}</td>
-				<td>
-	{{ if .Image.Image }}<img src="room{{$.Index}}_obj_{{.IdHex}}.png"/>
-	{{ else }}No image{{ end }}
-				</td>
-				<td>{{.X}},{{.Y}}</td>
-				<td>{{.Width}}x{{.Height}}</td></tr>
-		{{end}}
-		</table>
-		<h2>Scripts</h2>
-		<h3>Enter script</h3>
-		<h3>Exit script</h3>
-		<h3>Local scripts</h3>
-		<h2>Palette</h2>
+        </div>
+        <div class="row">
+            <h2>Objects</h2>
+            <table class="table table-bordered">
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Image</th>
+                    <th>Position</th>
+                    <th>Size</th>
+                </tr>
+            {{range .Objects}}
+                <tr>
+                    <td>{{.IdHex}}</td>
+                    <td>{{.Name}}</td>
+                    <td>
+                    {{range Image.Frames}}
+                        {{ if .Image.Image }}<img width="64px" src="room{{$.Index}}_obj_{{.IdHex}}.png"/>
+                    {{end}}
+                {{ else }}
+                    <span>No image</span>
+                {{ end }}
+                    </td>
+                    <td>{{.X}},{{.Y}}</td>
+                    <td>{{.Width}}x{{.Height}}</td></tr>
+            {{end}}
+            </table>
+        </div>
+        <div class="row">
+            <h2>Scripts</h2>
+            <h3>Enter script</h3>
+            <h3>Exit script</h3>
+            <h3>Local scripts</h3>
+            <h2>Palette</h2>
+        </div>
+    </div>
     </body>
 </html>

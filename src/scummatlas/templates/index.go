@@ -14,6 +14,7 @@ type IndexData struct {
 
 func WriteIndex(roomNames []scummatlas.RoomName, outdir string) {
 
+	//TODO Cache that for the future
 	indexTpl, err := ioutil.ReadFile("./templates/index.html")
 	if err != nil {
 		panic("No index.html in the templates directory")

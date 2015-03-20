@@ -16,6 +16,10 @@ type roomData struct {
 	scummatlas.Room
 }
 
+func (self roomData) DoubleHeight() int {
+	return self.Height * 2
+}
+
 func (self roomData) ViewBox() string {
 	return fmt.Sprintf("-10 -10 %v %v", self.Width+10, self.Height+10)
 }
@@ -30,7 +34,7 @@ func (self roomData) SvgHeight() int {
 
 func WriteRoom(room scummatlas.Room, index int, outputdir string) {
 
-	roomTpl, err := ioutil.ReadFile("./templates/index.html")
+	roomTpl, err := ioutil.ReadFile("./templates/room.html")
 	if err != nil {
 		panic("No index.html in the templates directory")
 	}
