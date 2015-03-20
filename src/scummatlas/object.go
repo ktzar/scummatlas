@@ -31,6 +31,13 @@ type ObjectImage struct {
 	Frames   []*image.RGBA
 }
 
+func (self ObjectImage) FramesIndexes() (out []string) {
+	for i := 0; i < len(self.Frames); i++ {
+		out = append(out, fmt.Sprintf("%02d", i))
+	}
+	return
+}
+
 func (self Object) IdHex() string {
 	return fmt.Sprintf("%x", self.Id)
 }
@@ -58,7 +65,7 @@ func NewObjectImageFromOBIM(data []byte, r *Room) (objImg ObjectImage, id int) {
 		imageOffset := 8 + headerSize
 
 		for state := 1; state <= objImg.States; state++ {
-			expectedHeader := fmt.Sprintf("IM%02d", state)
+			expectedHeader := imageStateHeader(state)
 			if FourCharString(data, imageOffset) != expectedHeader {
 				panic("Not " + expectedHeader + " found!, found " + FourCharString(data, imageOffset) + " instead")
 			}
@@ -72,6 +79,10 @@ func NewObjectImageFromOBIM(data []byte, r *Room) (objImg ObjectImage, id int) {
 	}
 
 	return
+}
+
+func imageStateHeader(state int) string {
+	return fmt.Sprintf("IM%02X", state)
 }
 
 func NewObjectFromOBCD(data []byte) Object {

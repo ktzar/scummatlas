@@ -10,7 +10,7 @@
         <div class="row">
             <h1>{{.Title}}</h1>
             <h2>Background</h2>
-            <img height="{{.DoubleHeight}}px" style="image-rendering: pixelated" src="{{.Background}}"/>
+            <img class="pixelart" height="{{.DoubleHeight}}px" src="{{.Background}}"/>
         </div>
         <div class="row">
             <h2>Walking boxes</h2>
@@ -38,16 +38,14 @@
                     <th>Size</th>
                 </tr>
             {{range .Objects}}
+                {{$curObjId := .IdHex}}
                 <tr>
                     <td>{{.IdHex}}</td>
                     <td>{{.Name}}</td>
                     <td>
-                    {{range Image.Frames}}
-                        {{ if .Image.Image }}<img width="64px" src="room{{$.Index}}_obj_{{.IdHex}}.png"/>
+                    {{range .Image.FramesIndexes}}
+                    <img width="64px" src="room{{$.Index}}_obj_{{$curObjId}}_{{.}}.png"/>
                     {{end}}
-                {{ else }}
-                    <span>No image</span>
-                {{ end }}
                     </td>
                     <td>{{.X}},{{.Y}}</td>
                     <td>{{.Width}}x{{.Height}}</td></tr>
