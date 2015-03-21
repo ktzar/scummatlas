@@ -9,8 +9,6 @@ import (
 	b "scummatlas/binaryutils"
 )
 
-const debugImage = false
-
 const (
 	_ = iota
 	METHOD_UNKNOWN
