@@ -19,6 +19,7 @@ type Object struct {
 	Y      int
 	Width  int
 	Height int
+	Verbs  []Verb
 	//TODO Direction uint8
 }
 
@@ -31,6 +32,12 @@ type ObjectImage struct {
 	Planes   int
 	Hotspots int
 	Frames   []*goimage.RGBA
+}
+
+type Verb struct {
+	code   uint8
+	offset int
+	Script Script
 }
 
 func (self ObjectImage) FramesIndexes() (out []string) {
@@ -113,6 +120,9 @@ func NewObjectFromOBCD(data []byte) Object {
 		panic("Object with no verbs")
 	}
 	verbSize := b.BE32(data, verbOffset+4)
+
+	obj.Verbs = parseVerbBlock(data[verbOffset : verbOffset+verbSize])
+
 	objNameOffset := verbOffset + verbSize
 	if b.FourCharString(data, objNameOffset) != "OBNA" {
 		panic("Object with no name")
@@ -121,6 +131,10 @@ func NewObjectFromOBCD(data []byte) Object {
 	name := data[objNameOffset+4 : objNameOffset+objNameSize]
 	obj.Name = filterObjectName(name)
 	return obj
+}
+
+func parseVerbBlock(data []byte) []Verb {
+	out := []Verb{}
 }
 
 func filterObjectName(in []byte) (out string) {
