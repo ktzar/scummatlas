@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"fileutils"
 	"scummatlas"
 	"scummatlas/templates"
 )
@@ -39,14 +40,20 @@ func main() {
 
 	templates.WriteIndex(game.RoomNames, outputdir)
 
+	copyStaticFiles(outputdir)
+
 	for i, room := range game.Rooms {
 		templates.WriteRoom(room, i, outputdir)
 		writeRoomBackground(i, room, outputdir)
 		createRoomObjectImages(i, room, outputdir)
 
 	}
-
 }
+
+func copyStaticFiles(outputdir string) {
+	fileutils.CopyDir("./static", outputdir + "/static")
+}
+
 
 func writeRoomBackground(id int, room scummatlas.Room, outputdir string) {
 	backgroundFile := fmt.Sprintf("%v/room%02d_bg.png", outputdir, id)
@@ -64,7 +71,6 @@ func createRoomObjectImages(id int, r scummatlas.Room, outputdir string) {
 			//fmt.Printf("Obj %v does not have an image\n", object.Id)
 			continue
 		}
-		continue
 
 		for frameIndex, frame := range object.Image.Frames {
 			imagePath := fmt.Sprintf(
