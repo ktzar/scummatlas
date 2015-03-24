@@ -32,7 +32,6 @@ func ParseImage(data []byte, zBuffers int, width int, height int, pal color.Pale
 	stripeCount := width / 8
 	log.Println("SmapSize", b.BE32(data, 12))
 
-	log.Println("There should be ", stripeCount, "stripes")
 	offsets := make([]int, 0, stripeCount)
 	stripeOffset := 0
 	for i := 0; i < stripeCount; i++ {
