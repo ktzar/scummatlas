@@ -2,13 +2,7 @@ package scummatlas
 
 import "fmt"
 
-type Script []Opcode
-
-type Opcode struct {
-	raw    []byte
-	name   string
-	params []string
-}
+type Script []string
 
 type ScriptParser struct {
 	data   []byte
@@ -335,13 +329,6 @@ const notDefined byte = 0xFF
 const varLen byte = 0xFE
 const multi byte = 0xFD
 const endsList byte = 0xFC
-
-type opHandler func([]byte) (int, string)
-
-type opDef struct {
-	name    string
-	handler opHandler
-}
 
 var opCodesNames = map[byte]string{
 	0x00: "stopObjectCode",
