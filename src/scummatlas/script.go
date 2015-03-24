@@ -13,10 +13,10 @@ type Opcode struct {
 type ScriptParser struct {
 	data   []byte
 	offset int
-	script []Opcode
+	script Script
 }
 
-func (p *ScriptParser) parseNext() {
+func (p *ScriptParser) parseNext() string {
 	opcode := p.data[p.offset]
 	subopcode := p.data[p.offset+1]
 	opcodeName, ok := opCodesNames[opcode]
@@ -242,7 +242,10 @@ func (p *ScriptParser) parseNext() {
 	case "saveRestoreVerbs":
 		opCodeLength = 4
 	case "expression":
-		opCodeLength = varLen
+		opCodeLength = 1
+		for p.data[p.offset+int(opCodeLength)] != 0xff {
+			opCodeLength++
+		}
 	case "wait":
 		opCodeLength = 2
 		if subopcode == 0x01 {
@@ -307,6 +310,8 @@ func (p *ScriptParser) parseNext() {
 	}
 
 	p.offset += int(opCodeLength)
+
+	return opcodeName
 }
 
 func parseScriptBlock(data []byte) Script {

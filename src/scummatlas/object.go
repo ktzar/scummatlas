@@ -133,8 +133,36 @@ func NewObjectFromOBCD(data []byte) Object {
 	return obj
 }
 
-func parseVerbBlock(data []byte) []Verb {
-	out := []Verb{}
+func parseVerbBlock(data []byte) (out []Verb) {
+	currentOffset := 8
+	defer func() {
+		if err := recover(); err != nil {
+		}
+	}()
+	for currentOffset <= len(data) {
+		if data[currentOffset] == 0x00 {
+			return
+		}
+		verb := Verb{
+			code:   data[currentOffset],
+			offset: b.LE16(data, currentOffset+1),
+		}
+		fmt.Println("Verb:", getVerbName(verb.code))
+
+		parser := ScriptParser{
+			data:   data,
+			offset: verb.offset,
+		}
+		ranOpcode := ""
+		for ranOpcode != "stopObjectCode" {
+			ranOpcode = parser.parseNext()
+		}
+
+		verb.Script = parser.script
+		out = append(out, verb)
+		currentOffset += 3
+	}
+	return
 }
 
 func filterObjectName(in []byte) (out string) {
@@ -146,4 +174,28 @@ func filterObjectName(in []byte) (out string) {
 	}
 	out = strings.TrimSpace(string(filtered))
 	return
+}
+
+func getVerbName(code uint8) string {
+
+	verbNames := map[uint8]string{
+		0:  "None",
+		1:  "Open",
+		2:  "Close",
+		3:  "Give",
+		4:  "TurnOn",
+		5:  "TurnOff",
+		6:  "Fix",
+		7:  "NewKid",
+		8:  "Unlock",
+		9:  "Push",
+		10: "Pull",
+		11: "Use",
+		12: "Read",
+		13: "WalkTo",
+		14: "PickUp",
+		15: "WhatIs",
+	}
+
+	return verbNames[code]
 }
