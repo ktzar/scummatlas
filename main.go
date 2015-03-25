@@ -46,7 +46,9 @@ func main() {
 		templates.WriteRoom(room, i, outputdir)
 		writeRoomBackground(i, room, outputdir)
 		createRoomObjectImages(i, room, outputdir)
-
+		for _, obj := range room.Objects {
+			obj.PrintVerbs()
+		}
 	}
 }
 

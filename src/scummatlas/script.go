@@ -1,31 +1,29 @@
 package scummatlas
 
 import "fmt"
+import b "scummatlas/binaryutils"
 
-type Script []Opcode
-
-type Opcode struct {
-	raw    []byte
-	name   string
-	params []string
-}
+type Script []string
 
 type ScriptParser struct {
 	data   []byte
 	offset int
-	script []Opcode
+	script Script
 }
 
-func (p *ScriptParser) parseNext() {
+func (p *ScriptParser) parseNext() string {
 	opcode := p.data[p.offset]
 	subopcode := p.data[p.offset+1]
 	opcodeName, ok := opCodesNames[opcode]
 
 	if !ok {
-		fmt.Printf("%x is not a known code\n", opcode)
+		fmt.Printf("0x%x is not a known code\n", opcode)
 		panic("Unknown code")
 	}
-	fmt.Printf("Opcode %x -> %v\n", opcode, opcodeName)
+	fmt.Printf("Opcode 0x%x -> %v\n", opcode, opcodeName)
+
+	instruction := opcodeName + "("
+	instructionFinished := false
 
 	var opCodeLength byte
 
@@ -38,6 +36,10 @@ func (p *ScriptParser) parseNext() {
 		opCodeLength = 3
 	case "getActorRoom":
 		opCodeLength = 5
+		result := b.LE16(p.data, p.offset+1)
+		actor := p.data[p.offset+3]
+		instruction = fmt.Sprintf("0x%x = getActorRoom(0x%x)", result, actor)
+        instructionFinished = true
 	case "isGreaterEqual":
 		opCodeLength = 7
 	case "drawObject":
@@ -52,7 +54,11 @@ func (p *ScriptParser) parseNext() {
 		opCodeLength = 5
 	case "startScript":
 		opCodeLength = 2
+		instruction += fmt.Sprintf("0x%x", p.data[p.offset+1])
 		for p.data[p.offset+int(opCodeLength)] != 0xff {
+			l := int(opCodeLength)
+			instruction += fmt.Sprintf(", 0x%x",
+				p.data[p.offset+l:p.offset+l+1])
 			opCodeLength += 2
 		}
 		opCodeLength++
@@ -72,8 +78,12 @@ func (p *ScriptParser) parseNext() {
 		opCodeLength = 5
 	case "getObjectState":
 		opCodeLength = 5
+		object := b.LE16(p.data, p.offset+3)
+		instruction += fmt.Sprintf("%x", object)
 	case "getObjectOwner":
 		opCodeLength = 5
+		object := b.LE16(p.data, p.offset+3)
+		instruction += fmt.Sprintf("0x%x", object)
 	case "panCameraTo":
 		opCodeLength = 3
 	case "actorOps":
@@ -86,10 +96,16 @@ func (p *ScriptParser) parseNext() {
 		opCodeLength = 5
 	case "jumpRelative":
 		opCodeLength = 3
+		target := b.LE16(p.data, p.offset+1)
+		instruction += fmt.Sprintf("0x%x", target)
 	case "doSentence":
 		opCodeLength = 7
 	case "move":
 		opCodeLength = 5
+		result := b.LE16(p.data, p.offset+1)
+		value := b.LE16(p.data, p.offset+3)
+		instruction = fmt.Sprintf("0x%x = 0x%x", result, value)
+		instructionFinished = true
 	case "multiply":
 		opCodeLength = 5
 	case "startSound":
@@ -108,12 +124,17 @@ func (p *ScriptParser) parseNext() {
 		opCodeLength = 5
 	case "loadRoomWithEgo":
 		opCodeLength = 9
+		object := b.LE16(p.data, p.offset+1)
+        room := p.data[p.offset+3]
+		x := b.LE16(p.data, p.offset+4)
+		y := b.LE16(p.data, p.offset+6)
+		instruction += fmt.Sprintf("0x%x, 0x%x, %d, %d", object, room, x, y)
 	case "pickupObject":
 		opCodeLength = 5
 	case "setVarRange":
 		opCodeLength = endsList
 	case "stringOps":
-		fmt.Printf("subopcode: %x\n", subopcode)
+		fmt.Printf("subopcode: 0x%x\n", subopcode)
 		opCodeLength = varLen
 		if subopcode == 0x02 || subopcode == 0x05 {
 			opCodeLength = 5
@@ -122,6 +143,10 @@ func (p *ScriptParser) parseNext() {
 		}
 	case "equalZero":
 		opCodeLength = 5
+		variable := varName(p.data[p.offset+1])
+		target := b.LE16(p.data, p.offset+2)
+		instruction = fmt.Sprintf("unless (%v == 0) goto 0x%x", variable, target)
+		instructionFinished = true
 	case "setOwnerOf":
 		opCodeLength = 5
 	case "delayVariable":
@@ -145,7 +170,7 @@ func (p *ScriptParser) parseNext() {
 	case "setCameraAt":
 		opCodeLength = 3
 	case "roomOps":
-		fmt.Printf(" subops %x\n", subopcode)
+		fmt.Printf(" subops 0x%x\n", subopcode)
 		opCodeLength = varLen
 	case "getDist":
 		opCodeLength = 7
@@ -153,10 +178,18 @@ func (p *ScriptParser) parseNext() {
 		opCodeLength = 7
 	case "walkActorToObject":
 		opCodeLength = 4
+		actor := p.data[p.offset+1]
+		object := b.LE16(p.data, p.offset+2)
+		instruction += fmt.Sprintf("0x%x, 0x%x", actor, object)
 	case "startObject":
 		opCodeLength = endsList
 	case "lessOrEqual":
 		opCodeLength = 7
+		variable := varName(p.data[p.offset+1])
+		value := b.LE16(p.data, p.offset+2)
+		target := b.LE16(p.data, p.offset+4)
+		instruction = fmt.Sprintf("unless (%v <= 0x%x) goto 0x%x", variable, value, target)
+		instructionFinished = true
 	case "subtract":
 		opCodeLength = 5
 	case "getActorScale":
@@ -167,6 +200,16 @@ func (p *ScriptParser) parseNext() {
 		opCodeLength = 7
 	case "drawBox":
 		opCodeLength = 12
+		left := b.LE16(p.data, p.offset+1)
+		top := b.LE16(p.data, p.offset+3)
+		auxopcode := p.data[p.offset+5]
+		right := b.LE16(p.data, p.offset+6)
+		bottom := b.LE16(p.data, p.offset+8)
+		color := p.data[p.offset+10]
+		instruction += fmt.Sprintf(
+            "%d, %d, 0x%x, %d, %d, 0x%x",
+            left, top, auxopcode, right, bottom, color)
+        
 	case "chainScript":
 		opCodeLength = endsList
 	case "getActorX":
@@ -177,6 +220,11 @@ func (p *ScriptParser) parseNext() {
 		opCodeLength = 2
 	case "isEqual":
 		opCodeLength = 7
+		variable := varName(p.data[p.offset+1])
+		value := b.LE16(p.data, p.offset+2)
+		target := b.LE16(p.data, p.offset+4)
+		instruction = fmt.Sprintf("unless (0x%x == %v) goto 0x%x", value, variable, target)
+		instructionFinished = true
 	case "soundKludge":
 		opCodeLength = endsList
 	case "actorFollowCamera":
@@ -239,10 +287,17 @@ func (p *ScriptParser) parseNext() {
 		opCodeLength = 1
 	case "notEqualZero":
 		opCodeLength = 5
+		variable := varName(p.data[p.offset+1])
+		target := b.LE16(p.data, p.offset+2)
+		instruction = fmt.Sprintf("unless (%v != 0) goto 0x%x", variable, target)
+		instructionFinished = true
 	case "saveRestoreVerbs":
 		opCodeLength = 4
 	case "expression":
-		opCodeLength = varLen
+		opCodeLength = 1
+		for p.data[p.offset+int(opCodeLength)] != 0xff {
+			opCodeLength++
+		}
 	case "wait":
 		opCodeLength = 2
 		if subopcode == 0x01 {
@@ -292,7 +347,7 @@ func (p *ScriptParser) parseNext() {
 			if opCodeLength > 200 {
 				panic("print too long")
 			}
-			fmt.Printf("\tSay \"%v\"\n", say)
+			instruction += fmt.Sprintf("\"%v\"", say)
 		case 0x01, 0x02:
 			opCodeLength = 4
 		case 0x00, 0x03, 0x08:
@@ -307,6 +362,12 @@ func (p *ScriptParser) parseNext() {
 	}
 
 	p.offset += int(opCodeLength)
+	if instructionFinished == false {
+		instruction = instruction + ")"
+	}
+
+	p.script = append(p.script, instruction)
+	return opcodeName
 }
 
 func parseScriptBlock(data []byte) Script {
@@ -330,13 +391,6 @@ const notDefined byte = 0xFF
 const varLen byte = 0xFE
 const multi byte = 0xFD
 const endsList byte = 0xFC
-
-type opHandler func([]byte) (int, string)
-
-type opDef struct {
-	name    string
-	handler opHandler
-}
 
 var opCodesNames = map[byte]string{
 	0x00: "stopObjectCode",
@@ -455,6 +509,14 @@ var opCodesNames = map[byte]string{
 	0x91: "animateActor",
 	0x93: "getInventoryCount",
 	0xff: "drawBox",
+}
+
+func varName(code uint8) (name string) {
+    name = varNames[code]
+    if name == "" {
+        name = "var("+string(code)+")"
+    }
+    return
 }
 
 var varNames = map[byte]string{

@@ -19,6 +19,7 @@ type Object struct {
 	Y      int
 	Width  int
 	Height int
+	Verbs  []Verb
 	//TODO Direction uint8
 }
 
@@ -33,6 +34,17 @@ type ObjectImage struct {
 	Frames   []*goimage.RGBA
 }
 
+type Verb struct {
+	code   uint8
+	Name   string
+	offset int
+	Script Script
+}
+
+func (self Verb) PrintScript() string {
+	return strings.Join(self.Script, ";\n")
+}
+
 func (self ObjectImage) FramesIndexes() (out []string) {
 	for i := 0; i < len(self.Frames); i++ {
 		out = append(out, fmt.Sprintf("%02d", i))
@@ -42,6 +54,13 @@ func (self ObjectImage) FramesIndexes() (out []string) {
 
 func (self Object) IdHex() string {
 	return fmt.Sprintf("%x", self.Id)
+}
+
+func (self Object) PrintVerbs() {
+	fmt.Printf("Verbs for obj %x\n", self.Id)
+	for _, verb := range self.Verbs {
+		fmt.Printf("  -> %v (%02x) : %v\n", verb.Name, verb.code, verb.Script)
+	}
 }
 
 func NewObjectImageFromOBIM(data []byte, r *Room) (objImg ObjectImage, id int) {
@@ -113,6 +132,9 @@ func NewObjectFromOBCD(data []byte) Object {
 		panic("Object with no verbs")
 	}
 	verbSize := b.BE32(data, verbOffset+4)
+
+	obj.Verbs = parseVerbBlock(data[verbOffset : verbOffset+verbSize])
+
 	objNameOffset := verbOffset + verbSize
 	if b.FourCharString(data, objNameOffset) != "OBNA" {
 		panic("Object with no name")
@@ -123,6 +145,44 @@ func NewObjectFromOBCD(data []byte) Object {
 	return obj
 }
 
+func parseVerbBlock(data []byte) (out []Verb) {
+	currentOffset := 8
+	defer func() {
+		if err := recover(); err != nil {
+		}
+	}()
+	for currentOffset <= len(data) {
+		if data[currentOffset] == 0x00 {
+			return
+		}
+		verb := Verb{
+			code:   data[currentOffset],
+			Name:   getVerbName(data[currentOffset]),
+			offset: b.LE16(data, currentOffset+1),
+		}
+
+		parser := ScriptParser{
+			data:   data,
+			offset: verb.offset,
+		}
+		ranOpcode := ""
+		for ranOpcode != "stopObjectCode" {
+			ranOpcode = parser.parseNext()
+		}
+		verb.Script = parser.script
+
+		scriptLength := len(verb.Script)
+		if scriptLength > 0 &&
+			verb.Script[scriptLength-1] == "stopObjectCode()" {
+			verb.Script = verb.Script[:scriptLength-1]
+		}
+
+		out = append(out, verb)
+		currentOffset += 3
+	}
+	return
+}
+
 func filterObjectName(in []byte) (out string) {
 	filtered := []byte{}
 	for _, v := range in {
@@ -131,5 +191,26 @@ func filterObjectName(in []byte) (out string) {
 		}
 	}
 	out = strings.TrimSpace(string(filtered))
+	return
+}
+
+func getVerbName(code uint8) (name string) {
+
+	verbNames := map[uint8]string{
+		2:    "Open",
+		3:    "Close",
+		0x5a: "Go to",
+		5:    "Pull",
+		6:    "Push",
+		7:    "Use",
+		8:    "Look",
+		9:    "Pick up",
+		0xa:  "Talk to",
+	}
+
+	name = verbNames[code]
+	if name == "" {
+		name = fmt.Sprintf("0x%x", code)
+	}
 	return
 }

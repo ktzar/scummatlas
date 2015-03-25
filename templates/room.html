@@ -17,7 +17,7 @@
             <svg width="{{.SvgWidth}}" height="{{.SvgHeight}}" viewBox="{{.ViewBox}}">
             {{range .Objects}}
               <rect id="{{.Id}}" x="{{.X}}" y="{{.Y}}" width="{{.Width}}" height="{{.Height}}" fill="rgba(255,0,0,0.5)" stroke="white" stroke-width=".5"/>
-              <text id="text_{{.Id}}" x="{{.X}}" y="{{.Y}}" font-size="0.8em" fill="black" font-family="monospace">{{.IdHex}}-{{.Name}}</text>
+              <text id="text_{{.Id}}" x="{{.X}}" y="{{.Y}}" font-size="0.4em" fill="black" font-family="monospace">{{.Name}}</text>
             {{end}}
             {{range .Boxes}}
               <polygon points="
@@ -36,6 +36,7 @@
                     <th>Image</th>
                     <th>Position</th>
                     <th>Size</th>
+                    <th>Actions</th>
                 </tr>
             {{range .Objects}}
                 {{$curObjId := .IdHex}}
@@ -48,7 +49,13 @@
                     {{end}}
                     </td>
                     <td>{{.X}},{{.Y}}</td>
-                    <td>{{.Width}}x{{.Height}}</td></tr>
+                    <td>{{.Width}}x{{.Height}}</td>
+                    <td>
+                        {{range .Verbs}}
+                        <strong>{{.Name}}</strong><pre>{{.PrintScript}}</pre>
+                        {{end}}
+                    </td>
+                </tr>
             {{end}}
             </table>
         </div>
