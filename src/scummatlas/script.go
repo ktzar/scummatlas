@@ -36,6 +36,10 @@ func (p *ScriptParser) parseNext() string {
 		opCodeLength = 3
 	case "getActorRoom":
 		opCodeLength = 5
+		result := b.LE16(p.data, p.offset+1)
+		actor := p.data[p.offset+3]
+		instruction = fmt.Sprintf("0x%x = getActorRoom(0x%x)", result, actor)
+        instructionFinished = true
 	case "isGreaterEqual":
 		opCodeLength = 7
 	case "drawObject":
@@ -93,7 +97,7 @@ func (p *ScriptParser) parseNext() string {
 	case "jumpRelative":
 		opCodeLength = 3
 		target := b.LE16(p.data, p.offset+1)
-		instruction = fmt.Sprintf("0x%x", target)
+		instruction += fmt.Sprintf("0x%x", target)
 	case "doSentence":
 		opCodeLength = 7
 	case "move":
@@ -120,6 +124,11 @@ func (p *ScriptParser) parseNext() string {
 		opCodeLength = 5
 	case "loadRoomWithEgo":
 		opCodeLength = 9
+		object := b.LE16(p.data, p.offset+1)
+        room := p.data[p.offset+3]
+		x := b.LE16(p.data, p.offset+4)
+		y := b.LE16(p.data, p.offset+6)
+		instruction += fmt.Sprintf("0x%x, 0x%x, %d, %d", object, room, x, y)
 	case "pickupObject":
 		opCodeLength = 5
 	case "setVarRange":
@@ -134,6 +143,10 @@ func (p *ScriptParser) parseNext() string {
 		}
 	case "equalZero":
 		opCodeLength = 5
+		variable := varName(p.data[p.offset+1])
+		target := b.LE16(p.data, p.offset+2)
+		instruction = fmt.Sprintf("unless (%v == 0) goto 0x%x", variable, target)
+		instructionFinished = true
 	case "setOwnerOf":
 		opCodeLength = 5
 	case "delayVariable":
@@ -165,10 +178,18 @@ func (p *ScriptParser) parseNext() string {
 		opCodeLength = 7
 	case "walkActorToObject":
 		opCodeLength = 4
+		actor := p.data[p.offset+1]
+		object := b.LE16(p.data, p.offset+2)
+		instruction += fmt.Sprintf("0x%x, 0x%x", actor, object)
 	case "startObject":
 		opCodeLength = endsList
 	case "lessOrEqual":
 		opCodeLength = 7
+		variable := varName(p.data[p.offset+1])
+		value := b.LE16(p.data, p.offset+2)
+		target := b.LE16(p.data, p.offset+4)
+		instruction = fmt.Sprintf("unless (%v <= 0x%x) goto 0x%x", variable, value, target)
+		instructionFinished = true
 	case "subtract":
 		opCodeLength = 5
 	case "getActorScale":
@@ -179,6 +200,16 @@ func (p *ScriptParser) parseNext() string {
 		opCodeLength = 7
 	case "drawBox":
 		opCodeLength = 12
+		left := b.LE16(p.data, p.offset+1)
+		top := b.LE16(p.data, p.offset+3)
+		auxopcode := p.data[p.offset+5]
+		right := b.LE16(p.data, p.offset+6)
+		bottom := b.LE16(p.data, p.offset+8)
+		color := p.data[p.offset+10]
+		instruction += fmt.Sprintf(
+            "%d, %d, 0x%x, %d, %d, 0x%x",
+            left, top, auxopcode, right, bottom, color)
+        
 	case "chainScript":
 		opCodeLength = endsList
 	case "getActorX":
@@ -189,10 +220,10 @@ func (p *ScriptParser) parseNext() string {
 		opCodeLength = 2
 	case "isEqual":
 		opCodeLength = 7
-		variable := p.data[p.offset+1]
+		variable := varName(p.data[p.offset+1])
 		value := b.LE16(p.data, p.offset+2)
 		target := b.LE16(p.data, p.offset+4)
-		instruction = fmt.Sprintf("unless (0x%x == 0x%x) goto 0x%x", value, variable, target)
+		instruction = fmt.Sprintf("unless (0x%x == %v) goto 0x%x", value, variable, target)
 		instructionFinished = true
 	case "soundKludge":
 		opCodeLength = endsList
@@ -256,9 +287,9 @@ func (p *ScriptParser) parseNext() string {
 		opCodeLength = 1
 	case "notEqualZero":
 		opCodeLength = 5
-		variable := p.data[p.offset+1]
+		variable := varName(p.data[p.offset+1])
 		target := b.LE16(p.data, p.offset+2)
-		instruction = fmt.Sprintf("unless (0x%x != 0) goto 0x%x", variable, target)
+		instruction = fmt.Sprintf("unless (%v != 0) goto 0x%x", variable, target)
 		instructionFinished = true
 	case "saveRestoreVerbs":
 		opCodeLength = 4
@@ -478,6 +509,14 @@ var opCodesNames = map[byte]string{
 	0x91: "animateActor",
 	0x93: "getInventoryCount",
 	0xff: "drawBox",
+}
+
+func varName(code uint8) (name string) {
+    name = varNames[code]
+    if name == "" {
+        name = "var("+string(code)+")"
+    }
+    return
 }
 
 var varNames = map[byte]string{
