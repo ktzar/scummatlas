@@ -202,8 +202,9 @@ func getVerbName(code uint8) (name string) {
 		0x5a: "Go to",
 		5:    "Pull",
 		6:    "Push",
-		7:    "Pick up",
+		7:    "Use",
 		8:    "Look",
+		9:    "Pick up",
 	}
 
 	name = verbNames[code]
