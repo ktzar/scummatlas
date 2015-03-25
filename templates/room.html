@@ -36,6 +36,7 @@
                     <th>Image</th>
                     <th>Position</th>
                     <th>Size</th>
+                    <th>Actions</th>
                 </tr>
             {{range .Objects}}
                 {{$curObjId := .IdHex}}
@@ -48,7 +49,13 @@
                     {{end}}
                     </td>
                     <td>{{.X}},{{.Y}}</td>
-                    <td>{{.Width}}x{{.Height}}</td></tr>
+                    <td>{{.Width}}x{{.Height}}</td>
+                    <td>
+                        {{range .Verbs}}
+                        <strong>{{.Name}}</strong><pre>{{.PrintScript}}</pre>
+                        {{end}}
+                    </td>
+                </tr>
             {{end}}
             </table>
         </div>

@@ -36,8 +36,13 @@ type ObjectImage struct {
 
 type Verb struct {
 	code   uint8
+	Name   string
 	offset int
 	Script Script
+}
+
+func (self Verb) PrintScript() string {
+	return strings.Join(self.Script, ";\n")
 }
 
 func (self ObjectImage) FramesIndexes() (out []string) {
@@ -49,6 +54,13 @@ func (self ObjectImage) FramesIndexes() (out []string) {
 
 func (self Object) IdHex() string {
 	return fmt.Sprintf("%x", self.Id)
+}
+
+func (self Object) PrintVerbs() {
+	fmt.Printf("Verbs for obj %x\n", self.Id)
+	for _, verb := range self.Verbs {
+		fmt.Printf("  -> %v (%02x) : %v\n", verb.Name, verb.code, verb.Script)
+	}
 }
 
 func NewObjectImageFromOBIM(data []byte, r *Room) (objImg ObjectImage, id int) {
@@ -145,9 +157,9 @@ func parseVerbBlock(data []byte) (out []Verb) {
 		}
 		verb := Verb{
 			code:   data[currentOffset],
+			Name:   getVerbName(data[currentOffset]),
 			offset: b.LE16(data, currentOffset+1),
 		}
-		fmt.Println("Verb:", getVerbName(verb.code))
 
 		parser := ScriptParser{
 			data:   data,
@@ -157,8 +169,14 @@ func parseVerbBlock(data []byte) (out []Verb) {
 		for ranOpcode != "stopObjectCode" {
 			ranOpcode = parser.parseNext()
 		}
-
 		verb.Script = parser.script
+
+		scriptLength := len(verb.Script)
+		if scriptLength > 0 &&
+			verb.Script[scriptLength-1] == "stopObjectCode()" {
+			verb.Script = verb.Script[:scriptLength-1]
+		}
+
 		out = append(out, verb)
 		currentOffset += 3
 	}
@@ -176,26 +194,21 @@ func filterObjectName(in []byte) (out string) {
 	return
 }
 
-func getVerbName(code uint8) string {
+func getVerbName(code uint8) (name string) {
 
 	verbNames := map[uint8]string{
-		0:  "None",
-		1:  "Open",
-		2:  "Close",
-		3:  "Give",
-		4:  "TurnOn",
-		5:  "TurnOff",
-		6:  "Fix",
-		7:  "NewKid",
-		8:  "Unlock",
-		9:  "Push",
-		10: "Pull",
-		11: "Use",
-		12: "Read",
-		13: "WalkTo",
-		14: "PickUp",
-		15: "WhatIs",
+		2:    "Open",
+		3:    "Close",
+		0x5a: "Go to",
+		5:    "Pull",
+		6:    "Push",
+		7:    "Pick up",
+		8:    "Look",
 	}
 
-	return verbNames[code]
+	name = verbNames[code]
+	if name == "" {
+		name = fmt.Sprintf("0x%x", code)
+	}
+	return
 }
