@@ -98,9 +98,9 @@ func NewGame(gamedir string, outputdir string) *Game {
 
 			fmt.Println("Room count", game.RoomCount)
 
-			//singleRoom := 55
-			//for i := singleRoom; i < singleRoom+1; i++ {
-			for i := 1; i < mainScumm.GetRoomCount(); i++ {
+			singleRoom := 30
+			for i := singleRoom; i < singleRoom+1; i++ {
+				//for i := 1; i < mainScumm.GetRoomCount(); i++ {
 				room := mainScumm.ParseRoom(roomOffsets[i-1].Offset)
 				game.Rooms = append(game.Rooms, room)
 			}

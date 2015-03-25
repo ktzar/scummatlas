@@ -43,7 +43,9 @@ func main() {
 		templates.WriteRoom(room, i, outputdir)
 		writeRoomBackground(i, room, outputdir)
 		createRoomObjectImages(i, room, outputdir)
-
+		for _, obj := range room.Objects {
+			obj.PrintVerbs()
+		}
 	}
 
 }
@@ -64,7 +66,6 @@ func createRoomObjectImages(id int, r scummatlas.Room, outputdir string) {
 			//fmt.Printf("Obj %v does not have an image\n", object.Id)
 			continue
 		}
-		continue
 
 		for frameIndex, frame := range object.Image.Frames {
 			imagePath := fmt.Sprintf(
