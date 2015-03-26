@@ -61,9 +61,22 @@
         </div>
         <div class="row">
             <h2>Scripts</h2>
-            <h3>Enter script</h3>
+            {{if .EntryScript}}
+            <h3>Entry script</h3>
+            <pre>{{.EntryScript.Print}}</pre>
+            {{end}}
+
+            {{if .ExitScript}}
             <h3>Exit script</h3>
+            <pre>{{.ExitScript.Print}}</pre>
+            {{end}}
+
             <h3>Local scripts</h3>
+            {{range $index, $element := .LocalScripts}}
+            <h4>{{printf "0x%x" $index}}</h4>
+            <pre>{{$element.Print}}</pre>
+            {{end}}
+
             <h2>Palette</h2>
         </div>
     </div>

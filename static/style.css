@@ -1,3 +1,8 @@
 .pixelart {
     image-rendering: pixelated;
 }
+
+.screenshot img {
+    width: 100%;
+    height: auto;
+}

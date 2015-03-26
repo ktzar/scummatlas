@@ -28,7 +28,7 @@ type Room struct {
 	ExitScript   Script
 	EntryScript  Script
 	Boxes        []Box
-	LocalScripts []Script
+	LocalScripts map[int]Script
 	BoxMatrix    BoxMatrix
 }
 
@@ -37,6 +37,7 @@ func NewRoom(data []byte) *Room {
 	room.data = data
 	room.offset = 0
 	room.Objects = make(map[int]Object)
+    room.LocalScripts = make(map[int]Script)
 
 	blockName := room.getBlockName()
 	if blockName != "ROOM" {
@@ -88,7 +89,7 @@ func (r *Room) parseLSCR() {
 	fmt.Println("ScriptID", scriptId)
 	script := parseScriptBlock(
 		r.data[r.offset+9 : r.offset+r.getBlockSize()])
-	r.LocalScripts = append(r.LocalScripts, script)
+	r.LocalScripts[scriptId] = script
 }
 
 func (r *Room) parseTRNS() {
@@ -153,7 +154,7 @@ func (r *Room) parseCLUT() {
 }
 
 func (r *Room) parseEXCD() {
-	r.EntryScript = parseScriptBlock(r.data[r.offset+8 : r.offset+r.getBlockSize()])
+	r.ExitScript = parseScriptBlock(r.data[r.offset+8 : r.offset+r.getBlockSize()])
 }
 
 func (r *Room) parseRMIM() {

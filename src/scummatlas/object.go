@@ -42,7 +42,7 @@ type Verb struct {
 }
 
 func (self Verb) PrintScript() string {
-	return strings.Join(self.Script, ";\n")
+	return self.Script.Print()
 }
 
 func (self ObjectImage) FramesIndexes() (out []string) {
@@ -57,7 +57,9 @@ func (self Object) IdHex() string {
 }
 
 func (self Object) PrintVerbs() {
-	fmt.Printf("Verbs for obj %x\n", self.Id)
+    if len(self.Verbs) > 0 {
+	    fmt.Printf("Verbs for obj %x\n", self.Id)
+    }
 	for _, verb := range self.Verbs {
 		fmt.Printf("  -> %v (%02x) : %v\n", verb.Name, verb.code, verb.Script)
 	}
