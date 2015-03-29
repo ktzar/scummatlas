@@ -1,12 +1,12 @@
 package main
 
 import (
+	"fileutils"
 	"fmt"
 	"image/png"
 	"io/ioutil"
 	"log"
 	"os"
-	"fileutils"
 	"scummatlas"
 	"scummatlas/templates"
 )
@@ -53,9 +53,8 @@ func main() {
 }
 
 func copyStaticFiles(outputdir string) {
-	fileutils.CopyDir("./static", outputdir + "/static")
+	fileutils.CopyDir("./static", outputdir+"/static")
 }
-
 
 func writeRoomBackground(id int, room scummatlas.Room, outputdir string) {
 	backgroundFile := fmt.Sprintf("%v/room%02d_bg.png", outputdir, id)

@@ -37,7 +37,7 @@ func NewRoom(data []byte) *Room {
 	room.data = data
 	room.offset = 0
 	room.Objects = make(map[int]Object)
-    room.LocalScripts = make(map[int]Script)
+	room.LocalScripts = make(map[int]Script)
 
 	blockName := room.getBlockName()
 	if blockName != "ROOM" {
@@ -86,10 +86,16 @@ func NewRoom(data []byte) *Room {
 
 func (r *Room) parseLSCR() {
 	scriptId := int(r.data[r.offset+8])
-	fmt.Println("ScriptID", scriptId)
-	script := parseScriptBlock(
-		r.data[r.offset+9 : r.offset+r.getBlockSize()])
+	fmt.Printf("ScriptID 0x%02x\n", scriptId)
+	scriptBlock := r.data[r.offset+9 : r.offset+r.getBlockSize()]
+	script := parseScriptBlock(scriptBlock)
 	r.LocalScripts[scriptId] = script
+	if len(script) == 0 {
+		fmt.Printf("DUMP from %x\n", r.offset+9)
+		fmt.Printf("%x", scriptBlock)
+		parseScriptBlock(scriptBlock)
+	}
+	fmt.Println("Local Script, size", r.getBlockSize(), script)
 }
 
 func (r *Room) parseTRNS() {
