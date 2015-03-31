@@ -86,16 +86,14 @@ func NewRoom(data []byte) *Room {
 
 func (r *Room) parseLSCR() {
 	scriptId := int(r.data[r.offset+8])
-	fmt.Printf("ScriptID 0x%02x\n", scriptId)
 	scriptBlock := r.data[r.offset+9 : r.offset+r.getBlockSize()]
 	script := parseScriptBlock(scriptBlock)
 	r.LocalScripts[scriptId] = script
 	if len(script) == 0 {
 		fmt.Printf("DUMP from %x\n", r.offset+9)
 		fmt.Printf("%x", scriptBlock)
-		parseScriptBlock(scriptBlock)
 	}
-	fmt.Println("Local Script, size", r.getBlockSize(), script)
+	fmt.Printf("Local ScriptID 0x%02x, size %d, script %v\n", scriptId, r.getBlockSize(), script)
 }
 
 func (r *Room) parseTRNS() {

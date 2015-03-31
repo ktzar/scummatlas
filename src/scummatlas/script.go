@@ -116,7 +116,19 @@ func (p *ScriptParser) parseNext() string {
 	case "panCameraTo":
 		opCodeLength = 3
 	case "actorOps":
-		opCodeLength = varLen
+		opCodeLength = 4
+		subopcode = p.data[p.offset+3]
+		actor := b.LE16(p.data, p.offset+1)
+		instructionFinished = true
+		command := actorOps[subopcode]
+		instruction = fmt.Sprintf("actorOps.%v(actor=0x%x)", command, actor)
+		for p.data[p.offset+int(opCodeLength)] != 0xff {
+			opCodeLength++
+			if opCodeLength > 200 {
+				panic("cutscene too long")
+			}
+		}
+		opCodeLength++
 	case "actorFromPos":
 		opCodeLength = 5
 	case "getRandomNumber":
@@ -554,7 +566,10 @@ var opCodesNames = map[byte]string{
 	0xd6: "getActorMoving",
 	0xe1: "putActor",
 	0x64: "loadRoomWithEgo",
+	0x69: "setOwnerOf",
 	0x6a: "startScript",
+	0x8c: "resourceRoutines",
+	0x8f: "getObjectState",
 	0x91: "animateActor",
 	0x93: "getInventoryCount",
 	0x9a: "move",
@@ -568,6 +583,32 @@ func varName(code uint8) (name string) {
 		name = "var(" + string(code) + ")"
 	}
 	return
+}
+
+var actorOps = map[byte]string{
+	0x00: "dummy",
+	0x01: "costume",
+	0x02: "step_dist",
+	0x03: "sound",
+	0x04: "walk_animation",
+	0x05: "talk_animation",
+	0x06: "stand_animation",
+	0x07: "animation",
+	0x08: "default",
+	0x09: "elevation",
+	0x0a: "animation_default",
+	0x0b: "palette",
+	0x0c: "talk_color",
+	0x0d: "actor_name",
+	0x0e: "init_animation",
+	0x10: "actor_width",
+	0x11: "actor_scale",
+	0x12: "never_zclip",
+	0x13: "always_zclip",
+	0x14: "ignore_boxes",
+	0x15: "follow_boxes",
+	0x16: "animation_speed",
+	0x17: "shadow",
 }
 
 var varNames = map[byte]string{
