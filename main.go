@@ -47,7 +47,9 @@ func main() {
 		}
 	}
 
-	game := scummatlas.NewGame(gamedir, outputdir)
+	game := scummatlas.NewGame(gamedir)
+	game.ProcessIndex(outputdir)
+	game.ProcessMain(outputdir)
 
 	templates.WriteIndex(game.RoomNames, outputdir)
 

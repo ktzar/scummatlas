@@ -2,6 +2,7 @@ package scummatlas
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -14,13 +15,19 @@ type Game struct {
 	RoomCount int
 	RoomNames []RoomName
 	Rooms     []Room
+	gamedir   string
+	indexFile string
+	mainFile  string
 }
 
 const DEBUG_SAVE_DECODED = true
+const V5_KEY = 0x69
 
-func NewGame(gamedir string, outputdir string) *Game {
+func NewGame(gamedir string) *Game {
 
-	var game Game
+	game := Game{
+		gamedir: gamedir,
+	}
 
 	filesInfo, err := ioutil.ReadDir(gamedir)
 	if err != nil {
@@ -31,79 +38,105 @@ func NewGame(gamedir string, outputdir string) *Game {
 	for _, file := range filesInfo {
 		fileName := gamedir + "/" + file.Name()
 		extension := filepath.Ext(fileName)
-		data := []byte{}
 
 		if strings.Contains(extension, ".00") {
-			absPath, _ := filepath.Abs(gamedir + "/" + file.Name())
-			data, err = ReadXoredFile(absPath, 0x69)
-			if err != nil {
-				panic("Can't read index file")
+			if extension == ".000" {
+				game.indexFile = file.Name()
 			}
 
-			if DEBUG_SAVE_DECODED {
-				f, _ := os.Create(outputdir + "/" + file.Name() + ".decoded")
-				defer f.Close()
-				f.Write(data)
-			}
-		}
-
-		if extension == ".000" {
-			currIndex := 0
-			for currIndex < len(data) {
-				blockName := string(data[currIndex : currIndex+4])
-				blockSize := int(binary.BigEndian.Uint32(data[currIndex+4 : currIndex+8]))
-				currBlock := data[currIndex : currIndex+blockSize]
-
-				currIndex += blockSize
-				//TODO Remove
-				//continue
-				switch blockName {
-				case "RNAM":
-					fmt.Println("Parse Room Names")
-					game.RoomNames = ParseRoomNames(currBlock)
-
-				case "MAXS":
-					//fmt.Println("Parse Maximum Values")
-
-				case "DROO":
-					//fmt.Println("Parse Directory of Rooms")
-					//fmt.Println(ParseRoomIndex(currBlock))
-
-				case "DSCR":
-					//fmt.Println("Parse Directory of Scripts")
-					//fmt.Println(len(ParseScriptsIndex(currBlock)), "scripts available")
-
-				case "DSOU":
-					//fmt.Println("Parse Directory of Sounds")
-
-				case "DCOS":
-					//fmt.Println("Parse Directory of Costumes")
-
-				case "DCHR":
-					//fmt.Println("Parse Directory of Charsets")
-
-				case "DOBJ":
-					//fmt.Println("Parse Directory of Objects")
-
-				}
-
-			}
-		}
-
-		if extension == ".001" { // MAIN FILE
-			mainScumm := MainScummData{data}
-
-			game.RoomCount = mainScumm.GetRoomCount()
-			roomOffsets := mainScumm.GetRoomsOffset()
-
-			fmt.Println("Room count", game.RoomCount)
-
-			for i := 1; i < mainScumm.GetRoomCount(); i++ {
-				room := mainScumm.ParseRoom(roomOffsets[i-1].Offset)
-				game.Rooms = append(game.Rooms, room)
+			if extension == ".001" { // MAIN FILE
+				game.mainFile = file.Name()
 			}
 		}
 	}
 
 	return &game
+}
+
+func (self *Game) ProcessIndex(outputdir string) error {
+	if self.indexFile == "" {
+		return errors.New("No index file")
+	}
+
+	data, err := ReadXoredFile(self.gamedir+"/"+self.indexFile, V5_KEY)
+	if DEBUG_SAVE_DECODED {
+		if err != nil {
+			panic("Can't read " + self.indexFile)
+		}
+		f, _ := os.Create(outputdir + "/" + self.indexFile + ".decoded")
+		defer f.Close()
+		f.Write(data)
+	}
+
+	currIndex := 0
+	for currIndex < len(data) {
+		blockName := string(data[currIndex : currIndex+4])
+		blockSize := int(binary.BigEndian.Uint32(data[currIndex+4 : currIndex+8]))
+		currBlock := data[currIndex : currIndex+blockSize]
+
+		currIndex += blockSize
+		//TODO Remove
+		//continue
+		switch blockName {
+		case "RNAM":
+			fmt.Println("Parse Room Names")
+			self.RoomNames = ParseRoomNames(currBlock)
+
+		case "MAXS":
+			//fmt.Println("Parse Maximum Values")
+
+		case "DROO":
+			//fmt.Println("Parse Directory of Rooms")
+			//fmt.Println(ParseRoomIndex(currBlock))
+
+		case "DSCR":
+			//fmt.Println("Parse Directory of Scripts")
+			//fmt.Println(len(ParseScriptsIndex(currBlock)), "scripts available")
+
+		case "DSOU":
+			//fmt.Println("Parse Directory of Sounds")
+
+		case "DCOS":
+			//fmt.Println("Parse Directory of Costumes")
+
+		case "DCHR":
+			//fmt.Println("Parse Directory of Charsets")
+
+		case "DOBJ":
+			//fmt.Println("Parse Directory of Objects")
+
+		}
+	}
+
+	return nil
+}
+
+func (self *Game) ProcessMain(outputdir string) error {
+
+	if self.mainFile == "" {
+		return errors.New("No main file")
+	}
+
+	data, err := ReadXoredFile(self.gamedir+"/"+self.mainFile, V5_KEY)
+	if DEBUG_SAVE_DECODED {
+		if err != nil {
+			panic("Can't read " + self.indexFile)
+		}
+		f, _ := os.Create(outputdir + "/" + self.indexFile + ".decoded")
+		defer f.Close()
+		f.Write(data)
+	}
+
+	mainScumm := MainScummData{data}
+
+	self.RoomCount = mainScumm.GetRoomCount()
+	roomOffsets := mainScumm.GetRoomsOffset()
+
+	fmt.Println("Room count", self.RoomCount)
+
+	for i := 1; i < mainScumm.GetRoomCount(); i++ {
+		room := mainScumm.ParseRoom(roomOffsets[i-1].Offset)
+		self.Rooms = append(self.Rooms, room)
+	}
+	return nil
 }
