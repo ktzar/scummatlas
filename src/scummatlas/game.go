@@ -111,10 +111,9 @@ func (self *Game) ProcessIndex(outputdir string) error {
 	return nil
 }
 
-func (self *Game) ProcessMain(outputdir string) error {
-
+func (self *Game) processMainFile(outputdir string) MainScummData {
 	if self.mainFile == "" {
-		return errors.New("No main file")
+		panic("No main file")
 	}
 
 	data, err := ReadXoredFile(self.gamedir+"/"+self.mainFile, V5_KEY)
@@ -130,13 +129,25 @@ func (self *Game) ProcessMain(outputdir string) error {
 	mainScumm := MainScummData{data}
 
 	self.RoomCount = mainScumm.GetRoomCount()
-	roomOffsets := mainScumm.GetRoomsOffset()
-
 	fmt.Println("Room count", self.RoomCount)
 
-	for i := 1; i < mainScumm.GetRoomCount(); i++ {
-		room := mainScumm.ParseRoom(roomOffsets[i-1].Offset)
-		self.Rooms = append(self.Rooms, room)
+	self.Rooms = make([]Room, self.RoomCount)
+
+	return mainScumm
+}
+
+func (self *Game) ProcessAllRooms(outputdir string) {
+	mainScumm := self.processMainFile(outputdir)
+	roomOffsets := mainScumm.GetRoomsOffset()
+	for i := 0; i < mainScumm.GetRoomCount()-1; i++ {
+		room := mainScumm.ParseRoom(roomOffsets[i].Offset)
+		self.Rooms[i] = room
 	}
-	return nil
+}
+
+func (self *Game) ProcessSingleRoom(room int, outputdir string) {
+	mainScumm := self.processMainFile(outputdir)
+	roomOffsets := mainScumm.GetRoomsOffset()
+	roomData := mainScumm.ParseRoom(roomOffsets[room-1].Offset)
+	self.Rooms[room-1] = roomData
 }

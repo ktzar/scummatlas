@@ -49,7 +49,7 @@ func main() {
 
 	game := scummatlas.NewGame(gamedir)
 	game.ProcessIndex(outputdir)
-	game.ProcessMain(outputdir)
+	game.ProcessAllRooms(outputdir)
 
 	templates.WriteIndex(game.RoomNames, outputdir)
 
@@ -63,7 +63,7 @@ func main() {
 			obj.PrintVerbs()
 		}
 	}
-	fmt.Println("There are", len(game.Rooms), "rooms")
+
 	if singleRoom != -1 {
 		fmt.Println("Processing room ", singleRoom)
 		processRoom(singleRoom, game.Rooms[singleRoom])
