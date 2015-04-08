@@ -9,6 +9,7 @@ import (
 	"os"
 	"scummatlas"
 	"scummatlas/templates"
+	"strconv"
 )
 
 func helpAndDie(msg string) {
@@ -22,8 +23,18 @@ func main() {
 	if len(os.Args) < 3 {
 		helpAndDie("Not enough arguments")
 	}
-	gamedir := os.Args[1]
-	outputdir := os.Args[2]
+	paramsOffset := 1
+	singleRoom := -1
+	if os.Args[1] == "--room" {
+		paramsOffset = 3
+		room, err := strconv.Atoi(os.Args[2])
+		if err != nil {
+			panic("Room needs to be a number")
+		}
+		singleRoom = room
+	}
+	gamedir := os.Args[paramsOffset]
+	outputdir := os.Args[paramsOffset+1]
 	log.SetFlags(0)
 
 	fmt.Println("Gamedir: ", gamedir)
@@ -42,7 +53,7 @@ func main() {
 
 	copyStaticFiles(outputdir)
 
-	for i, room := range game.Rooms {
+	processRoom := func(i int, room scummatlas.Room) {
 		templates.WriteRoom(room, i, outputdir)
 		writeRoomBackground(i, room, outputdir)
 		createRoomObjectImages(i, room, outputdir)
@@ -50,6 +61,16 @@ func main() {
 			obj.PrintVerbs()
 		}
 	}
+	fmt.Println("There are", len(game.Rooms), "rooms")
+	if singleRoom != -1 {
+		fmt.Println("Processing room ", singleRoom)
+		processRoom(singleRoom, game.Rooms[singleRoom])
+	} else {
+		for i, room := range game.Rooms {
+			processRoom(i, room)
+		}
+	}
+
 }
 
 func copyStaticFiles(outputdir string) {
