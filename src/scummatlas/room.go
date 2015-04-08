@@ -93,7 +93,7 @@ func (r *Room) parseLSCR() {
 		fmt.Printf("DUMP from %x\n", r.offset+9)
 		fmt.Printf("%x", scriptBlock)
 	}
-	fmt.Printf("Local ScriptID 0x%02x, size %d, script %v\n", scriptId, r.getBlockSize(), script)
+	fmt.Printf("\nLocal ScriptID 0x%02x, size %d, script %v\n", scriptId, r.getBlockSize(), script)
 }
 
 func (r *Room) parseTRNS() {

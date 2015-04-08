@@ -57,7 +57,7 @@ func (p *ScriptParser) parseNext() string {
 		instruction = fmt.Sprintf("unless (0x%x >= %v) goto 0x%x", value, variable, target)
 	case "drawObject":
 		opCodeLength = varLen
-		fmt.Println("drawObject subcode %x\n", subopcode)
+		fmt.Printf("drawObject subcode 0x%x\n", subopcode)
 		switch subopcode {
 		case 0x01:
 			opCodeLength = 6
@@ -357,7 +357,7 @@ func (p *ScriptParser) parseNext() string {
 			opCodeLength = 4
 		}
 	case "cutscene":
-		opCodeLength = 2
+		opCodeLength = 1
 		for p.data[p.offset+int(opCodeLength)] != 0xff {
 			opCodeLength++
 			if opCodeLength > 200 {
@@ -560,27 +560,32 @@ var opCodesNames = map[byte]string{
 	0xd8: "printEgo",
 
 	//from ScummVM sourcecode
-	0xc8: "isEqual",
-	0xa3: "getActorY",
-	0xc3: "getActorX",
-	0xd6: "getActorMoving",
-	0xe1: "putActor",
+	0x59: "doSentence",
+	0x61: "putActor",
 	0x64: "loadRoomWithEgo",
 	0x69: "setOwnerOf",
 	0x6a: "startScript",
+	0x6d: "putActorInRoom",
+	0x74: "getDist",
+	0x77: "startObject",
 	0x8c: "resourceRoutines",
 	0x8f: "getObjectState",
 	0x91: "animateActor",
 	0x93: "getInventoryCount",
 	0x9a: "move",
+	0xa3: "getActorY",
 	0xba: "subtract",
+	0xc3: "getActorX",
+	0xc8: "isEqual",
+	0xd6: "getActorMoving",
+	0xe1: "putActor",
 	0xff: "drawBox",
 }
 
 func varName(code uint8) (name string) {
 	name = varNames[code]
 	if name == "" {
-		name = "var(" + string(code) + ")"
+		name = "var(" + fmt.Sprintf("0x%x", code) + ")"
 	}
 	return
 }
