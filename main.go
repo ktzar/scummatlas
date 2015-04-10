@@ -14,17 +14,16 @@ import (
 
 func helpAndDie(msg string) {
 	fmt.Println(msg)
-	fmt.Println("Usage:")
-	fmt.Println("scummatlas [gamedir] [outputdir]")
-	os.Exit(1)
+	fmt.Println("Usage: scummatlas [options] gamedir outputdir")
+	fmt.Println("Options:")
+	fmt.Println("  --room roomNumber\tProcess a single room")
+	os.Exit(0)
 }
 
 func main() {
-	if len(os.Args) < 3 {
-		helpAndDie("Not enough arguments")
-	}
+	var singleRoom int
+
 	paramsOffset := 1
-	singleRoom := -1
 	if os.Args[1] == "--room" {
 		paramsOffset = 3
 		room, err := strconv.Atoi(os.Args[2])
@@ -33,12 +32,13 @@ func main() {
 		}
 		singleRoom = room
 	}
+	if len(os.Args) < paramsOffset+2 {
+		helpAndDie("Not enough arguments")
+	}
 	gamedir := os.Args[paramsOffset]
 	outputdir := os.Args[paramsOffset+1]
 	log.SetFlags(0)
 
-	fmt.Println("Gamedir: ", gamedir)
-	fmt.Println("Outputdir: ", outputdir)
 	_, err := ioutil.ReadDir(outputdir)
 	if err != nil {
 		err := os.Mkdir(outputdir, 0755)
@@ -49,7 +49,11 @@ func main() {
 
 	game := scummatlas.NewGame(gamedir)
 	game.ProcessIndex(outputdir)
-	game.ProcessAllRooms(outputdir)
+	if singleRoom < 1 {
+		game.ProcessAllRooms(outputdir)
+	} else {
+		game.ProcessSingleRoom(singleRoom, outputdir)
+	}
 
 	templates.WriteIndex(game.RoomNames, outputdir)
 
@@ -66,7 +70,7 @@ func main() {
 
 	if singleRoom != -1 {
 		fmt.Println("Processing room ", singleRoom)
-		processRoom(singleRoom, game.Rooms[singleRoom])
+		processRoom(singleRoom, game.Rooms[singleRoom-1])
 	} else {
 		for i, room := range game.Rooms {
 			processRoom(i, room)
