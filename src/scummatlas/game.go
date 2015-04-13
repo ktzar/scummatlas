@@ -139,8 +139,11 @@ func (self *Game) processMainFile(outputdir string) MainScummData {
 func (self *Game) ProcessAllRooms(outputdir string) {
 	mainScumm := self.processMainFile(outputdir)
 	roomOffsets := mainScumm.GetRoomsOffset()
-	for i := 0; i < mainScumm.GetRoomCount()-1; i++ {
-		room := mainScumm.ParseRoom(roomOffsets[i].Offset)
+	//fmt.Println("PROCESS ALL ROOMS\n************")
+	for i, offset := range roomOffsets {
+		//fmt.Printf("PROCESS ROOM %v\n************\n", offset.Number)
+		room := mainScumm.ParseRoom(offset.Offset)
+		//fmt.Printf("ROOM %v PROCESSED\n************\n", offset.Number)
 		self.Rooms[i] = room
 	}
 }
@@ -148,6 +151,10 @@ func (self *Game) ProcessAllRooms(outputdir string) {
 func (self *Game) ProcessSingleRoom(room int, outputdir string) {
 	mainScumm := self.processMainFile(outputdir)
 	roomOffsets := mainScumm.GetRoomsOffset()
-	roomData := mainScumm.ParseRoom(roomOffsets[room-1].Offset)
-	self.Rooms[room-1] = roomData
+	for _, offset := range roomOffsets {
+		if offset.Number == room {
+			roomData := mainScumm.ParseRoom(offset.Offset)
+			self.Rooms[offset.Number-1] = roomData
+		}
+	}
 }

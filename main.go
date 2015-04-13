@@ -70,7 +70,7 @@ func main() {
 
 	if singleRoom != -1 {
 		fmt.Println("Processing room ", singleRoom)
-		processRoom(singleRoom, game.Rooms[singleRoom-1])
+		processRoom(singleRoom, game.Rooms[singleRoom])
 	} else {
 		for i, room := range game.Rooms {
 			processRoom(i, room)

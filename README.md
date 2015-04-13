@@ -6,6 +6,7 @@ The aim of this software is to provide an easy to understand, testable, and orga
 It creates a bunch of HTML files that software that aim to show the inner aspects of how these beloved games were implemented.
 
 TODO
-- Parse local and object scripts
-- Parse object images
+- Improve parsing local and object scripts
 - Fix issues with some types of stripes
+- Parse costumes
+- Have a game detector

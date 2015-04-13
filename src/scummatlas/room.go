@@ -56,18 +56,18 @@ func NewRoom(data []byte) *Room {
 		case "BOXD":
 			room.parseBOXD()
 		case "EXCD":
-			room.parseEXCD()
+			//room.parseEXCD()
 		case "ENCD":
-			room.parseENCD()
+			//room.parseENCD()
 		case "EPAL":
 			room.parseEPAL()
 		case "CLUT":
 			log.SetOutput(ioutil.Discard)
 			room.parseCLUT()
 		case "LSCR":
-			room.parseLSCR()
+			//room.parseLSCR()
 		case "OBCD":
-			room.parseOBCD()
+			//room.parseOBCD()
 		case "OBIM":
 			room.parseOBIM()
 		case "RMIM":
