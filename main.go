@@ -68,8 +68,8 @@ func main() {
 		}
 	}
 
-	if singleRoom != 0 {
-		processRoom(singleRoom, game.Rooms[singleRoom])
+	if singleRoom > 0 {
+		processRoom(singleRoom, game.Rooms[singleRoom-1])
 	} else {
 		for i, room := range game.Rooms {
 			processRoom(i, room)
@@ -84,7 +84,7 @@ func copyStaticFiles(outputdir string) {
 
 func writeRoomBackground(id int, room scummatlas.Room, outputdir string) {
 	backgroundFile := fmt.Sprintf("%v/room%02d_bg.png", outputdir, id)
-	fmt.Printf("\nWriting room %v background in %v", id, backgroundFile)
+	fmt.Printf("\nWriting room %v background in %v\n", id, backgroundFile)
 	pngFile, err := os.Create(backgroundFile)
 	if err != nil {
 		panic("Error creating " + backgroundFile)
