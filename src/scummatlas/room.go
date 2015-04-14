@@ -15,36 +15,35 @@ import (
 type BoxMatrix bool
 
 type Room struct {
-	data     []byte
-	offset   int
-	Width    int
-	Height   int
-	ObjCount int
-	//ColorCycle ColorCycle
+	data         []byte
+	offset       int
+	Width        int
+	Height       int
+	ObjCount     int
 	TranspIndex  uint8
 	Palette      color.Palette
 	Image        *goimage.RGBA
-	Objects      map[int]Object
+	Boxes        []Box
+	BoxMatrix    BoxMatrix
 	ExitScript   Script
 	EntryScript  Script
-	Boxes        []Box
 	LocalScripts map[int]Script
-	BoxMatrix    BoxMatrix
+	Objects      map[int]Object
+	//ColorCycle ColorCycle
 }
 
 func NewRoom(data []byte) *Room {
-	room := new(Room)
-	room.data = data
-	room.offset = 0
-	room.Objects = make(map[int]Object)
-	room.LocalScripts = make(map[int]Script)
-
 	blockName := room.getBlockName()
 	if blockName != "ROOM" {
 		panic("Can't find ROOM")
 	}
 
+	room := new(Room)
+	room.data = data
 	room.offset = 8
+	room.Objects = make(map[int]Object)
+	room.LocalScripts = make(map[int]Script)
+
 	fmt.Printf("Block Name\tBlock Size\n=============\n")
 	for room.offset < len(data) {
 		blockName := room.getBlockName()
@@ -79,8 +78,6 @@ func NewRoom(data []byte) *Room {
 		room.nextBlock()
 	}
 
-	fmt.Println("New ROOM\n")
-	room.Print()
 	return room
 }
 
