@@ -41,7 +41,7 @@ func WriteRoom(room scummatlas.Room, index int, outputdir string) {
 
 	t := template.Must(template.New("index").Parse(string(roomTpl)))
 
-	bgPath := fmt.Sprintf("./room%02d_bg.png", index)
+	bgPath := fmt.Sprintf("./img_bg/room%02d_bg.png", index)
 	htmlPath := fmt.Sprintf("%v/room%02d.html", outputdir, index)
 	file, err := os.Create(htmlPath)
 	if err != nil {

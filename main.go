@@ -46,6 +46,8 @@ func main() {
 			helpAndDie("Output directory doesn't exist and I can't create it.")
 		}
 	}
+	os.MkdirAll(outputdir+"/img_obj", 0755)
+	os.MkdirAll(outputdir+"/img_bg", 0755)
 
 	game := scummatlas.NewGame(gamedir)
 	game.ProcessIndex(outputdir)
@@ -83,7 +85,7 @@ func copyStaticFiles(outputdir string) {
 }
 
 func writeRoomBackground(id int, room scummatlas.Room, outputdir string) {
-	backgroundFile := fmt.Sprintf("%v/room%02d_bg.png", outputdir, id)
+	backgroundFile := fmt.Sprintf("%v/img_bg/room%02d_bg.png", outputdir, id)
 	fmt.Printf("\nWriting room %v background in %v\n", id, backgroundFile)
 	pngFile, err := os.Create(backgroundFile)
 	if err != nil {
@@ -101,7 +103,7 @@ func createRoomObjectImages(id int, r scummatlas.Room, outputdir string) {
 
 		for frameIndex, frame := range object.Image.Frames {
 			imagePath := fmt.Sprintf(
-				"%v/room%02d_obj_%02x_%02d.png",
+				"%v/img_obj/room%02d_obj_%02x_%02d.png",
 				outputdir,
 				id,
 				object.Id,
