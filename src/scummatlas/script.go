@@ -1,8 +1,11 @@
 package scummatlas
 
-import "fmt"
-import "strings"
-import b "scummatlas/binaryutils"
+import (
+	"fmt"
+	"log"
+	b "scummatlas/binaryutils"
+	"strings"
+)
 
 type Script []string
 
@@ -17,6 +20,7 @@ type ScriptParser struct {
 }
 
 func (p *ScriptParser) parseNext() string {
+	log.SetOutput(DBG_SCRIPT)
 	opcode := p.data[p.offset]
 	subopcode := p.data[p.offset+1]
 	opcodeName, ok := opCodesNames[opcode]
@@ -25,7 +29,7 @@ func (p *ScriptParser) parseNext() string {
 		fmt.Printf("0x%x is not a known code\n", opcode)
 		panic("Unknown code")
 	}
-	fmt.Printf("Opcode 0x%x -> %v\n", opcode, opcodeName)
+	log.Printf("Opcode 0x%x -> %v\n", opcode, opcodeName)
 
 	instruction := opcodeName + "("
 	instructionFinished := false
@@ -175,7 +179,7 @@ func (p *ScriptParser) parseNext() string {
 	case "setVarRange":
 		opCodeLength = endsList
 	case "stringOps":
-		fmt.Printf("subopcode: 0x%x\n", subopcode)
+		log.Printf("subopcode: 0x%x\n", subopcode)
 		opCodeLength = varLen
 		if subopcode == 0x02 || subopcode == 0x05 {
 			opCodeLength = 5
@@ -211,7 +215,7 @@ func (p *ScriptParser) parseNext() string {
 	case "setCameraAt":
 		opCodeLength = 3
 	case "roomOps":
-		fmt.Printf(" subops 0x%x\n", subopcode)
+		log.Printf(" subops 0x%x\n", subopcode)
 		opCodeLength = varLen
 	case "getDist":
 		opCodeLength = 7
@@ -423,6 +427,7 @@ func (p *ScriptParser) parseNext() string {
 	}
 
 	p.script = append(p.script, instruction)
+	resetLog()
 	return opcodeName
 }
 
