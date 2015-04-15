@@ -33,16 +33,18 @@ type Room struct {
 }
 
 func NewRoom(data []byte) *Room {
-	blockName := room.getBlockName()
-	if blockName != "ROOM" {
-		panic("Can't find ROOM")
-	}
-
 	room := new(Room)
 	room.data = data
-	room.offset = 8
+	room.offset = 0
 	room.Objects = make(map[int]Object)
 	room.LocalScripts = make(map[int]Script)
+
+	blockName := room.getBlockName()
+	if blockName != "ROOM" {
+		panic("Can't find ROOM, found " + blockName + " instead")
+	}
+
+	room.offset = 8
 
 	fmt.Printf("Block Name\tBlock Size\n=============\n")
 	for room.offset < len(data) {
@@ -210,7 +212,7 @@ func (r Room) Print() {
 }
 
 func (r Room) getBlockName() string {
-	return string(r.data[r.offset : r.offset+4])
+	return b.FourCharString(r.data, r.offset)
 }
 
 func (r Room) getBlockSize() int {
