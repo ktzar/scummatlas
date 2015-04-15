@@ -1,11 +1,18 @@
 package scummatlas
 
-import "io/ioutil"
-import "os"
-import "log"
+import "fmt"
 
-var DBG_SCRIPT = ioutil.Discard
+var Logflags = map[string]bool{
+	"script":  false,
+	"palette": false,
+	"box":     false,
+	"image":   false,
+	"room":    false,
+	"object":  false,
+}
 
-func resetLog() {
-	log.SetOutput(os.Stdout)
+func log(section string, format string, v ...interface{}) {
+	if Logflags[section] {
+		fmt.Printf(format, v...)
+	}
 }

@@ -57,11 +57,11 @@ func (self Object) IdHex() string {
 }
 
 func (self Object) PrintVerbs() {
-    if len(self.Verbs) > 0 {
-	    fmt.Printf("Verbs for obj %x\n", self.Id)
-    }
+	if len(self.Verbs) > 0 {
+		log("object", "Verbs for obj %x\n", self.Id)
+	}
 	for _, verb := range self.Verbs {
-		fmt.Printf("  -> %v (%02x) : %v\n", verb.Name, verb.code, verb.Script)
+		log("object", "  -> %v (%02x) : %v\n", verb.Name, verb.code, verb.Script)
 	}
 }
 

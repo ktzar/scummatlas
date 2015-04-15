@@ -5,9 +5,6 @@ import (
 	"fmt"
 	goimage "image"
 	"image/color"
-	"io/ioutil"
-	"log"
-	"os"
 	b "scummatlas/binaryutils"
 	"scummatlas/image"
 )
@@ -57,18 +54,17 @@ func NewRoom(data []byte) *Room {
 		case "BOXD":
 			room.parseBOXD()
 		case "EXCD":
-			//room.parseEXCD()
+			room.parseEXCD()
 		case "ENCD":
-			//room.parseENCD()
+			room.parseENCD()
 		case "EPAL":
 			room.parseEPAL()
 		case "CLUT":
-			log.SetOutput(ioutil.Discard)
 			room.parseCLUT()
 		case "LSCR":
-			//room.parseLSCR()
+			room.parseLSCR()
 		case "OBCD":
-			//room.parseOBCD()
+			room.parseOBCD()
 		case "OBIM":
 			room.parseOBIM()
 		case "RMIM":
@@ -76,7 +72,6 @@ func NewRoom(data []byte) *Room {
 		case "TRNS":
 			room.parseTRNS()
 		}
-		log.SetOutput(os.Stdout)
 		room.nextBlock()
 	}
 
@@ -89,10 +84,10 @@ func (r *Room) parseLSCR() {
 	script := parseScriptBlock(scriptBlock)
 	r.LocalScripts[scriptId] = script
 	if len(script) == 0 {
-		fmt.Printf("DUMP from %x\n", r.offset+9)
+		log("script", "DUMP from %x\n", r.offset+9)
 		fmt.Printf("%x", scriptBlock)
 	}
-	fmt.Printf("\nLocal ScriptID 0x%02x, size %d, script %v\n", scriptId, r.getBlockSize(), script)
+	log("script", "\nLocal ScriptID 0x%02x, size %d, script %v\n", scriptId, r.getBlockSize(), script)
 }
 
 func (r *Room) parseTRNS() {
@@ -103,7 +98,7 @@ func (r *Room) parseTRNS() {
 func (r *Room) parseOBIM() {
 	blockSize := b.BE32(r.data, r.offset+4)
 	objImg, id := NewObjectImageFromOBIM(r.data[r.offset:r.offset+blockSize], r)
-	fmt.Printf("======================\nObject with id 0x%02X\n%+v\n", id, objImg)
+	log("image", "======================\nObject with id 0x%02X\n%+v\n", id, objImg)
 
 	existing, ok := r.Objects[id]
 	if !ok {
@@ -129,31 +124,31 @@ func (r *Room) parseENCD() {
 }
 
 func (r *Room) parseEPAL() {
-	fmt.Println("EGA palette, not used")
-	/*
-		paletteData := r.data[r.offset+8 : r.offset+r.getBlockSize()]
-		fmt.Println("Palette data size ", len(paletteData))
+	log("palette", "EGA palette, not used\n")
+	return
+	//TODO REMOVE
+	paletteData := r.data[r.offset+8 : r.offset+r.getBlockSize()]
+	fmt.Println("Palette data size ", len(paletteData))
 
-		r.Palette = image.ParsePalette(r.data[r.offset+8 : r.offset+8+3*256])
-		fmt.Println("Palette length", len(r.Palette))
-		fmt.Println(r.Palette)
-	*/
+	r.Palette = image.ParsePalette(r.data[r.offset+8 : r.offset+8+3*256])
+	fmt.Println("Palette length", len(r.Palette))
+	fmt.Println(r.Palette)
 
 }
 
 func (r *Room) parseCLUT() {
 	paletteData := r.data[r.offset+8 : r.offset+r.getBlockSize()]
-	log.Println("Palette data size ", len(paletteData))
+	log("palette", "\nPalette data size ", len(paletteData))
 
 	r.Palette = image.ParsePalette(r.data[r.offset+8 : r.offset+8+3*256])
-	log.Println("Palette length", len(r.Palette))
+	log("palette", "\nPalette length", len(r.Palette))
 
 	for _, color := range r.Palette {
 		r, g, b, _ := color.RGBA()
 		r8, g8, b8 := uint8(r), uint8(g), uint8(b)
-		log.Printf(" %x%x%x", r8, g8, b8)
+		log("palette", " %x%x%x", r8, g8, b8)
 	}
-	log.Println()
+	log("palette", "\n")
 }
 
 func (r *Room) parseEXCD() {
@@ -166,15 +161,15 @@ func (r *Room) parseRMIM() {
 	}
 	headerSize := b.BE32(r.data, r.offset+12)
 	zBuffers := b.LE16(r.data, r.offset+16)
-	fmt.Println("headerSize", headerSize)
-	fmt.Println("zBuffers", zBuffers)
+	log("image", "headerSize", headerSize)
+	log("image", "zBuffers", zBuffers)
 
 	if b.FourCharString(r.data, r.offset+18) != "IM00" {
 		panic("Not room image found")
 	}
 	imageOffset := r.offset + 18
 	imageSize := b.BE32(r.data, imageOffset+4)
-	fmt.Println(b.FourCharString(r.data, imageOffset), imageSize)
+	log("image", b.FourCharString(r.data, imageOffset), imageSize)
 
 	r.Image = image.ParseImage(
 		r.data[imageOffset:imageOffset+4+imageSize],
@@ -189,7 +184,7 @@ func (r *Room) parseRMIM() {
 func (r *Room) parseBOXD() {
 	boxCount := b.LE16(r.data, r.offset+8)
 	var boxOffset int
-	fmt.Println("BOXCOUNT", boxCount)
+	log("box", "BOXCOUNT", boxCount)
 	for i := 0; i < boxCount; i++ {
 		boxOffset = r.offset + 10 + i*20
 		box := NewBox(r.data[boxOffset : boxOffset+20])
@@ -198,11 +193,11 @@ func (r *Room) parseBOXD() {
 }
 
 func (r *Room) parseRMHD() {
-	fmt.Println("RMHD offset", r.offset)
+	log("room", "RMHD offset", r.offset)
 	r.Width = b.LE16(r.data, r.offset+8)
 	r.Height = b.LE16(r.data, r.offset+10)
 	r.ObjCount = b.LE16(r.data, r.offset+12)
-	fmt.Printf("Room size %vx%v\n", r.Width, r.Height)
+	log("room", "Room size %vx%v\n", r.Width, r.Height)
 }
 
 func (r Room) Print() {
