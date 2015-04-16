@@ -28,14 +28,6 @@
 
         </div>
         <div class="row">
-            <h2>Palette</h2>
-            <div class="palette">
-                {{range .PaletteHex}}
-                <span class="colour" style="background: #{{.}}"></span>
-                {{end}}
-            </div>
-        </div>
-        <div class="row">
             <h2>Objects</h2>
             <table class="table table-bordered">
                 <tr>
@@ -85,7 +77,14 @@
             <pre>{{$element.Print}}</pre>
             {{end}}
 
+        </div>
+        <div class="row">
             <h2>Palette</h2>
+            <div class="palette">
+                {{range .PaletteHex}}
+                <span class="colour" style="background: #{{.}}"></span>
+                {{end}}
+            </div>
         </div>
     </div>
     </body>

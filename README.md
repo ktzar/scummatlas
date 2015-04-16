@@ -10,3 +10,4 @@ TODO
 - Fix issues with some types of stripes
 - Parse costumes
 - Have a game detector
+- Add a table view of all the rooms with ordering capabilities
