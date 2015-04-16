@@ -7,3 +7,9 @@
     height: auto;
     max-height: 320px;
 }
+
+.palette .colour {
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+}

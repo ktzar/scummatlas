@@ -55,7 +55,7 @@ func main() {
 	if singleRoom < 1 {
 		game.ProcessAllRooms(outputdir)
 	} else {
-		game.ProcessSingleRoom(singleRoom, outputdir)
+		game.ProcessSingleRoom(singleRoom+1, outputdir)
 	}
 
 	templates.WriteIndex(game.RoomNames, outputdir)
@@ -73,7 +73,7 @@ func main() {
 	}
 
 	if singleRoom > 0 {
-		processRoom(singleRoom, game.Rooms[singleRoom-1])
+		processRoom(singleRoom, game.Rooms[singleRoom])
 	} else {
 		for i, room := range game.Rooms {
 			processRoom(i, room)

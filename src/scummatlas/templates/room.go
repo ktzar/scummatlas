@@ -17,6 +17,16 @@ type roomData struct {
 	scummatlas.Room
 }
 
+func (self roomData) PaletteHex() []string {
+	var hexes []string
+	hexes = make([]string, len(self.Palette))
+	for i, color := range self.Palette {
+		r, g, b, _ := color.RGBA()
+		hexes[i] = fmt.Sprintf("%02x%02x%02x", uint8(r), uint8(g), uint8(b))
+	}
+	return hexes
+}
+
 func (self roomData) DoubleHeight() int {
 	return self.Height * 2
 }
