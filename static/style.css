@@ -5,4 +5,5 @@
 .screenshot img {
     width: 100%;
     height: auto;
+    max-height: 320px;
 }
