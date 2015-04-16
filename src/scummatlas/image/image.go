@@ -1,12 +1,10 @@
 package image
 
 import (
-	"fmt"
 	"image"
 	"image/color"
-	"log"
-	"os"
 	b "scummatlas/binaryutils"
+	l "scummatlas/condlog"
 )
 
 func ParsePalette(data []byte) color.Palette {
@@ -24,13 +22,13 @@ func ParsePalette(data []byte) color.Palette {
 	return palette
 }
 
-func ParseImage(data []byte, zBuffers int, width int, height int, pal color.Palette, transpIndex uint8, debug bool) *image.RGBA {
+func ParseImage(data []byte, zBuffers int, width int, height int, pal color.Palette, transpIndex uint8) *image.RGBA {
 	if string(data[8:12]) != "SMAP" {
 		panic("No stripe table found")
 	}
 
 	stripeCount := width / 8
-	log.Println("SmapSize", b.BE32(data, 12))
+	l.Log("image", "SmapSize %v", b.BE32(data, 12))
 
 	offsets := make([]int, 0, stripeCount)
 	stripeOffset := 0
@@ -41,23 +39,20 @@ func ParseImage(data []byte, zBuffers int, width int, height int, pal color.Pale
 
 	img := image.NewRGBA(image.Rect(0, 0, width, height))
 
-	if debug {
-		fmt.Println("Decoding image")
-		fmt.Println("Stripes information")
-		fmt.Println("\n#ID\tCode\tMethod\tDirect\tPalInSz\tTransp")
-	}
+	l.Log("image", "Decoding image")
+	l.Log("image", "Stripes information")
+	l.Log("image", "\n#ID\tCode\tMethod\tDirect\tPalInSz\tTransp")
 	for i := 0; i < stripeCount; i++ {
 		offset := offsets[i]
 		size := len(data) - offset
 		if i < stripeCount-1 {
 			size = offsets[i+1] - offsets[i]
 		}
-		if debug {
+		if l.Logflags["image"] {
 			printStripeInfo(i, data[8+offset])
 		}
 		drawStripe(img, i, data[8+offset:8+offset+size], pal, transpIndex)
 	}
-	log.Println("image decoded")
-	log.SetOutput(os.Stdout)
+	l.Log("image", "image decoded\n")
 	return img
 }

@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"scummatlas"
+	l "scummatlas/condlog"
 )
 
 type roomData struct {
@@ -44,6 +45,7 @@ func WriteRoom(room scummatlas.Room, index int, outputdir string) {
 	bgPath := fmt.Sprintf("./img_bg/room%02d_bg.png", index)
 	htmlPath := fmt.Sprintf("%v/room%02d.html", outputdir, index)
 	file, err := os.Create(htmlPath)
+	l.Log("template", "Create "+htmlPath)
 	if err != nil {
 		panic("Can't create room file")
 	}

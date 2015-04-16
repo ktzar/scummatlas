@@ -1,8 +1,8 @@
 package scummatlas
 
 import (
-	"fmt"
 	b "scummatlas/binaryutils"
+	l "scummatlas/condlog"
 )
 
 type MainScummData struct {
@@ -21,11 +21,11 @@ type RoomOffset struct {
 func (d *MainScummData) GetRoomCount() int {
 	blockName := d.fourChars(0)
 	blockSize := b.BE32(d.Data, 4)
-	fmt.Println(blockName)
+	l.Log("structure", blockName)
 	if blockName != "LECF" {
 		panic("No main container in the file")
 	}
-	fmt.Printf("%v (%v bytes)\t", blockName, blockSize)
+	l.Log("room", "%v (%v bytes)\t", blockName, blockSize)
 
 	blockName = d.fourChars(8)
 	if blockName != "LOFF" {
@@ -33,8 +33,8 @@ func (d *MainScummData) GetRoomCount() int {
 	}
 	blockSize = b.BE32(d.Data, 12)
 	roomCount := int(d.Data[16])
-	fmt.Printf("%v (%v bytes)\t", blockName, blockSize)
-	fmt.Printf("roomCount: %v\n", roomCount)
+	l.Log("room", "%v (%v bytes)\t", blockName, blockSize)
+	l.Log("room", "roomCount: %v", roomCount)
 	return roomCount
 }
 
@@ -58,7 +58,7 @@ func (d *MainScummData) ParseRoom(offset int) Room {
 	if blockName != "ROOM" {
 		panic("No room block found")
 	}
-	fmt.Println("Room of size", blockSize)
+	l.Log("room", "Room of size", blockSize)
 
 	room := NewRoom(d.Data[offset : offset+blockSize])
 	return *room

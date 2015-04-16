@@ -3,10 +3,10 @@ package scummatlas
 import (
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	l "scummatlas/condlog"
 	"strings"
 )
 
@@ -77,9 +77,9 @@ func (self *Game) ProcessIndex(outputdir string) error {
 		currIndex += blockSize
 		//TODO Remove
 		//continue
+		l.Log("structure", "Parse Block", blockName)
 		switch blockName {
 		case "RNAM":
-			fmt.Println("Parse Room Names")
 			self.RoomNames = ParseRoomNames(currBlock)
 
 		case "MAXS":
@@ -129,7 +129,7 @@ func (self *Game) processMainFile(outputdir string) MainScummData {
 	mainScumm := MainScummData{data}
 
 	self.RoomCount = mainScumm.GetRoomCount()
-	fmt.Println("Room count", self.RoomCount)
+	l.Log("structure", "Room count", self.RoomCount)
 
 	self.Rooms = make([]Room, self.RoomCount)
 
@@ -140,6 +140,7 @@ func (self *Game) ProcessAllRooms(outputdir string) {
 	mainScumm := self.processMainFile(outputdir)
 	roomOffsets := mainScumm.GetRoomsOffset()
 	for i, offset := range roomOffsets {
+		l.Log("game", "Parsing room %v", i)
 		room := mainScumm.ParseRoom(offset.Offset)
 		self.Rooms[i] = room
 	}
@@ -148,6 +149,7 @@ func (self *Game) ProcessAllRooms(outputdir string) {
 func (self *Game) ProcessSingleRoom(room int, outputdir string) {
 	mainScumm := self.processMainFile(outputdir)
 	roomOffsets := mainScumm.GetRoomsOffset()
+	l.Log("game", "Parsing room %v", room)
 	for _, offset := range roomOffsets {
 		if offset.Number == room {
 			roomData := mainScumm.ParseRoom(offset.Offset)

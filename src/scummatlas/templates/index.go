@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"scummatlas"
+	l "scummatlas/condlog"
 )
 
 type IndexData struct {
@@ -26,7 +27,9 @@ func WriteIndex(roomNames []scummatlas.RoomName, outdir string) {
 	}
 	t := template.Must(template.New("index").Parse(string(indexTpl)))
 
-	file, err := os.Create(outdir + "/index.html")
+	filename := outdir + "/index.html"
+	file, err := os.Create(filename)
+	l.Log("template", "Create "+filename)
 	if err != nil {
 		panic("Can't create index file")
 	}

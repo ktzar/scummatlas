@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"log"
 	b "scummatlas/binaryutils"
+	l "scummatlas/condlog"
 )
 
 const (
@@ -159,5 +159,5 @@ func printStripeInfo(stripNumber int, code byte) {
 	} else {
 		out += "\tNo"
 	}
-	log.Println(out)
+	l.Log("image", out)
 }

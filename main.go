@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"scummatlas"
+	l "scummatlas/condlog"
 	"scummatlas/templates"
 	"strconv"
 )
@@ -62,6 +63,7 @@ func main() {
 	copyStaticFiles(outputdir)
 
 	processRoom := func(i int, room scummatlas.Room) {
+		fmt.Println("Generate files for room ", i)
 		templates.WriteRoom(room, i, outputdir)
 		writeRoomBackground(i, room, outputdir)
 		createRoomObjectImages(i, room, outputdir)
@@ -86,7 +88,7 @@ func copyStaticFiles(outputdir string) {
 
 func writeRoomBackground(id int, room scummatlas.Room, outputdir string) {
 	backgroundFile := fmt.Sprintf("%v/img_bg/room%02d_bg.png", outputdir, id)
-	fmt.Printf("\nWriting room %v background in %v\n", id, backgroundFile)
+	l.Log("template", "\nWriting room %v background in %v\n", id, backgroundFile)
 	pngFile, err := os.Create(backgroundFile)
 	if err != nil {
 		panic("Error creating " + backgroundFile)
@@ -114,7 +116,7 @@ func createRoomObjectImages(id int, r scummatlas.Room, outputdir string) {
 				panic("Error creating " + imagePath)
 			}
 			png.Encode(pngFile, frame)
-			fmt.Printf("Obj image %v created\n", imagePath)
+			l.Log("template", "Obj image %v created\n", imagePath)
 		}
 	}
 }

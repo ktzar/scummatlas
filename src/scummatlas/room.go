@@ -6,6 +6,7 @@ import (
 	goimage "image"
 	"image/color"
 	b "scummatlas/binaryutils"
+	l "scummatlas/condlog"
 	"scummatlas/image"
 )
 
@@ -43,10 +44,10 @@ func NewRoom(data []byte) *Room {
 
 	room.offset = 8
 
-	fmt.Printf("Block Name\tBlock Size\n=============\n")
+	l.Log("structure", "Block Name\tBlock Size\n=============")
 	for room.offset < len(data) {
 		blockName := room.getBlockName()
-		fmt.Printf("%v\t%v bytes\n", blockName, room.getBlockSize())
+		l.Log("structure", "%v\t%v bytes", blockName, room.getBlockSize())
 
 		switch blockName {
 		case "RMHD":
@@ -84,21 +85,21 @@ func (r *Room) parseLSCR() {
 	script := parseScriptBlock(scriptBlock)
 	r.LocalScripts[scriptId] = script
 	if len(script) == 0 {
-		log("script", "DUMP from %x\n", r.offset+9)
-		fmt.Printf("%x", scriptBlock)
+		l.Log("script", "DUMP from %x", r.offset+9)
+		l.Log("script", "%x", scriptBlock)
 	}
-	log("script", "\nLocal ScriptID 0x%02x, size %d, script %v\n", scriptId, r.getBlockSize(), script)
+	l.Log("script", "\nLocal ScriptID 0x%02x, size %d, script %v", scriptId, r.getBlockSize(), script)
 }
 
 func (r *Room) parseTRNS() {
 	r.TranspIndex = r.data[r.offset+8]
-	fmt.Println("Transparent index", r.TranspIndex)
+	l.Log("image", "Transparent index", r.TranspIndex)
 }
 
 func (r *Room) parseOBIM() {
 	blockSize := b.BE32(r.data, r.offset+4)
 	objImg, id := NewObjectImageFromOBIM(r.data[r.offset:r.offset+blockSize], r)
-	log("image", "======================\nObject with id 0x%02X\n%+v\n", id, objImg)
+	l.Log("image", "======================\nObject with id 0x%02X\n%+v", id, objImg)
 
 	existing, ok := r.Objects[id]
 	if !ok {
@@ -124,7 +125,7 @@ func (r *Room) parseENCD() {
 }
 
 func (r *Room) parseEPAL() {
-	log("palette", "EGA palette, not used\n")
+	l.Log("palette", "EGA palette, not used")
 	return
 	//TODO REMOVE
 	paletteData := r.data[r.offset+8 : r.offset+r.getBlockSize()]
@@ -138,17 +139,17 @@ func (r *Room) parseEPAL() {
 
 func (r *Room) parseCLUT() {
 	paletteData := r.data[r.offset+8 : r.offset+r.getBlockSize()]
-	log("palette", "\nPalette data size ", len(paletteData))
+	l.Log("palette", "Palette data size ", len(paletteData))
 
 	r.Palette = image.ParsePalette(r.data[r.offset+8 : r.offset+8+3*256])
-	log("palette", "\nPalette length", len(r.Palette))
+	l.Log("palette", "Palette length", len(r.Palette))
 
 	for _, color := range r.Palette {
 		r, g, b, _ := color.RGBA()
 		r8, g8, b8 := uint8(r), uint8(g), uint8(b)
-		log("palette", " %x%x%x", r8, g8, b8)
+		l.Log("palette", " %x%x%x", r8, g8, b8)
 	}
-	log("palette", "\n")
+	l.Log("palette", "")
 }
 
 func (r *Room) parseEXCD() {
@@ -161,15 +162,15 @@ func (r *Room) parseRMIM() {
 	}
 	headerSize := b.BE32(r.data, r.offset+12)
 	zBuffers := b.LE16(r.data, r.offset+16)
-	log("image", "headerSize", headerSize)
-	log("image", "zBuffers", zBuffers)
+	l.Log("image", "headerSize", headerSize)
+	l.Log("image", "zBuffers", zBuffers)
 
 	if b.FourCharString(r.data, r.offset+18) != "IM00" {
 		panic("Not room image found")
 	}
 	imageOffset := r.offset + 18
 	imageSize := b.BE32(r.data, imageOffset+4)
-	log("image", b.FourCharString(r.data, imageOffset), imageSize)
+	l.Log("image", b.FourCharString(r.data, imageOffset), imageSize)
 
 	r.Image = image.ParseImage(
 		r.data[imageOffset:imageOffset+4+imageSize],
@@ -177,14 +178,13 @@ func (r *Room) parseRMIM() {
 		r.Width,
 		r.Height,
 		r.Palette,
-		r.TranspIndex,
-		false)
+		r.TranspIndex)
 }
 
 func (r *Room) parseBOXD() {
 	boxCount := b.LE16(r.data, r.offset+8)
 	var boxOffset int
-	log("box", "BOXCOUNT", boxCount)
+	l.Log("box", "BOXCOUNT", boxCount)
 	for i := 0; i < boxCount; i++ {
 		boxOffset = r.offset + 10 + i*20
 		box := NewBox(r.data[boxOffset : boxOffset+20])
@@ -193,11 +193,11 @@ func (r *Room) parseBOXD() {
 }
 
 func (r *Room) parseRMHD() {
-	log("room", "RMHD offset", r.offset)
+	l.Log("room", "RMHD offset", r.offset)
 	r.Width = b.LE16(r.data, r.offset+8)
 	r.Height = b.LE16(r.data, r.offset+10)
 	r.ObjCount = b.LE16(r.data, r.offset+12)
-	log("room", "Room size %vx%v\n", r.Width, r.Height)
+	l.Log("room", "Room size %vx%v", r.Width, r.Height)
 }
 
 func (r Room) Print() {

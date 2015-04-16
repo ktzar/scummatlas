@@ -4,6 +4,7 @@ import (
 	"fmt"
 	goimage "image"
 	b "scummatlas/binaryutils"
+	l "scummatlas/condlog"
 	"scummatlas/image"
 	"strings"
 )
@@ -58,10 +59,10 @@ func (self Object) IdHex() string {
 
 func (self Object) PrintVerbs() {
 	if len(self.Verbs) > 0 {
-		log("object", "Verbs for obj %x\n", self.Id)
+		l.Log("object", "Verbs for obj %x", self.Id)
 	}
 	for _, verb := range self.Verbs {
-		log("object", "  -> %v (%02x) : %v\n", verb.Name, verb.code, verb.Script)
+		l.Log("object", "  -> %v (%02x) : %v", verb.Name, verb.code, verb.Script)
 	}
 }
 
@@ -94,8 +95,7 @@ func NewObjectImageFromOBIM(data []byte, r *Room) (objImg ObjectImage, id int) {
 			}
 			imageSize := b.BE32(data, imageOffset+4)
 
-			log := false
-			img := image.ParseImage(data[imageOffset:imageOffset+imageSize], objImg.Planes, objImg.Width, objImg.Height, r.Palette, r.TranspIndex, log)
+			img := image.ParseImage(data[imageOffset:imageOffset+imageSize], objImg.Planes, objImg.Width, objImg.Height, r.Palette, r.TranspIndex)
 			objImg.Frames = append(objImg.Frames, img)
 			imageOffset += imageSize
 		}
