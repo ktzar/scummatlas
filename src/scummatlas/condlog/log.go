@@ -7,11 +7,11 @@ var Logflags = map[string]bool{
 	"palette":   false,
 	"box":       false,
 	"image":     false,
-	"game":      true,
+	"game":      false,
 	"room":      false,
 	"structure": false,
 	"object":    false,
-	"template":  true,
+	"template":  false,
 }
 
 func Log(section string, format string, v ...interface{}) {

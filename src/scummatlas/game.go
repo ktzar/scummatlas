@@ -142,6 +142,10 @@ func (self *Game) ProcessAllRooms(outputdir string) {
 	for i, offset := range roomOffsets {
 		l.Log("game", "Parsing room %v", i)
 		room := mainScumm.ParseRoom(offset.Offset)
+		if len(self.RoomNames) > 0 {
+			room.Name = self.RoomNames[i].Name
+			room.Number = self.RoomNames[i].Number
+		}
 		self.Rooms[i] = room
 	}
 }

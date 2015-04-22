@@ -58,9 +58,11 @@ func main() {
 		game.ProcessSingleRoom(singleRoom+1, outputdir)
 	}
 
-	templates.WriteIndex(game.RoomNames, outputdir)
+	templates.WriteIndex(game, outputdir)
+	templates.WriteTable(game, outputdir)
 
 	copyStaticFiles(outputdir)
+	return
 
 	processRoom := func(i int, room scummatlas.Room) {
 		fmt.Println("Generate files for room ", i)

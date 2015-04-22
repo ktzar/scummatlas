@@ -1,0 +1,41 @@
+<html>
+    <head>
+        <title>Room Index</title>
+		<link href="./static/style.css" rel="stylesheet" type="text/css"/>
+		<link href="./static/bootstrap.min.css" rel="stylesheet" type="text/css"/>
+		<script src="./static/script.js"></script>
+    </head>
+    <body id="index-page">
+    <div class="container">
+        <h1>{{.Title}}</h1>
+        <a href="index.html">Mosaic view</a>
+        <h2>List of rooms</h2>
+        <table class="table table-bordered">
+            <tr>
+                <th>Image</th>
+                <th>Name</th>
+                <th>Width</th>
+                <th>Height</th>
+                <th>Number of objects</th>
+                <th>Palette length</th>
+                <th>Number of boxes</th>
+                <th>Number of local scripts</th>
+            </tr>
+        {{range .Rooms}}
+            <tr>
+                <td>
+                    <img src="img_bg/room{{.Number}}_bg.png"/>
+                </td>
+                <td>{{.Name}}</td>
+                <td>{{.Width}}</td>
+                <td>{{.Height}}</td>
+                <td>{{.ObjCount}}</td>
+                <td>{{.PaletteLength}}</td>
+                <td>{{.BoxCount}}</td>
+                <td>{{.LocalScriptCount}}</td>
+            </tr>
+        {{end}}
+        </table>
+    </div>
+    </body>
+</html>

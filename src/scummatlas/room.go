@@ -15,6 +15,8 @@ type BoxMatrix bool
 type Room struct {
 	data         []byte
 	offset       int
+	Number       int
+	Name         string
 	Width        int
 	Height       int
 	ObjCount     int
@@ -28,6 +30,18 @@ type Room struct {
 	LocalScripts map[int]Script
 	Objects      map[int]Object
 	//ColorCycle ColorCycle
+}
+
+func (self Room) PaletteLength() int {
+	return len(self.Palette)
+}
+
+func (self Room) BoxCount() int {
+	return len(self.Boxes)
+}
+
+func (self Room) LocalScriptCount() int {
+	return len(self.LocalScripts)
 }
 
 func NewRoom(data []byte) *Room {
