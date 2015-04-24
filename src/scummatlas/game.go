@@ -142,22 +142,28 @@ func (self *Game) ProcessAllRooms(outputdir string) {
 	for i, offset := range roomOffsets {
 		l.Log("game", "Parsing room %v", i)
 		room := mainScumm.ParseRoom(offset.Offset)
-		if len(self.RoomNames) > 0 {
-			room.Name = self.RoomNames[i].Name
-			room.Number = self.RoomNames[i].Number
-		}
 		self.Rooms[i] = room
+	}
+	for _, roomName := range self.RoomNames {
+		l.Log("game", "Assigning room number %v",
+			roomName.Number)
+		self.Rooms[roomName.Number-1].Name = roomName.Name
+		self.Rooms[roomName.Number-1].Number = roomName.Number
 	}
 }
 
-func (self *Game) ProcessSingleRoom(room int, outputdir string) {
+func (self *Game) ProcessSingleRoom(i int, outputdir string) {
 	mainScumm := self.processMainFile(outputdir)
 	roomOffsets := mainScumm.GetRoomsOffset()
-	l.Log("game", "Parsing room %v", room)
+	l.Log("game", "Parsing room %v", i)
 	for _, offset := range roomOffsets {
-		if offset.Number == room {
-			roomData := mainScumm.ParseRoom(offset.Offset)
-			self.Rooms[offset.Number-1] = roomData
+		if offset.Number == i {
+			room := mainScumm.ParseRoom(offset.Offset)
+			if len(self.RoomNames) >= i+2 {
+				room.Name = self.RoomNames[i-1].Name
+				room.Number = self.RoomNames[i-1].Number
+			}
+			self.Rooms[offset.Number-1] = room
 		}
 	}
 }

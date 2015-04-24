@@ -11,10 +11,6 @@ type RoomName struct {
 	Name   string
 }
 
-func (self RoomName) IndexNumber() string {
-	return fmt.Sprintf("%02d", self.Number)
-}
-
 type RoomIndex struct {
 	number int
 	offset []byte

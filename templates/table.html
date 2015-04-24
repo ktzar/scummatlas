@@ -9,8 +9,8 @@
     <div class="container">
         <h1>{{.Title}}</h1>
         <a href="index.html">Mosaic view</a>
-        <h2>List of rooms</h2>
-        <table class="table table-bordered">
+        <h2>Table of rooms</h2>
+        <table id="rooms-table" class="table table-bordered">
             <tr>
                 <th>Image</th>
                 <th>Name</th>
@@ -24,7 +24,7 @@
         {{range .Rooms}}
             <tr>
                 <td>
-                    <img src="img_bg/room{{.Number}}_bg.png"/>
+                    <img width="128px" src="img_bg/room{{.Number}}_bg.png"/>
                 </td>
                 <td>{{.Name}}</td>
                 <td>{{.Width}}</td>

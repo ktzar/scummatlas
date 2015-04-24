@@ -23,8 +23,14 @@ func ParsePalette(data []byte) color.Palette {
 }
 
 func ParseImage(data []byte, zBuffers int, width int, height int, pal color.Palette, transpIndex uint8) *image.RGBA {
-	if string(data[8:12]) != "SMAP" {
-		panic("No stripe table found")
+	blockName := string(data[8:12])
+
+	if blockName == "BOMP" {
+		l.Log("image", "BOMP not implemented yet")
+		return image.NewRGBA(image.Rect(0, 0, width, height))
+	}
+	if blockName != "SMAP" {
+		panic("No stripe table found, " + blockName + " found instead")
 	}
 
 	stripeCount := width / 8

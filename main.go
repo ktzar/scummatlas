@@ -62,12 +62,11 @@ func main() {
 	templates.WriteTable(game, outputdir)
 
 	copyStaticFiles(outputdir)
-	return
 
 	processRoom := func(i int, room scummatlas.Room) {
 		fmt.Println("Generate files for room ", i)
 		templates.WriteRoom(room, i, outputdir)
-		writeRoomBackground(i, room, outputdir)
+		writeRoomBackground(room, outputdir)
 		createRoomObjectImages(i, room, outputdir)
 		for _, obj := range room.Objects {
 			obj.PrintVerbs()
@@ -88,9 +87,9 @@ func copyStaticFiles(outputdir string) {
 	fileutils.CopyDir("./static", outputdir+"/static")
 }
 
-func writeRoomBackground(id int, room scummatlas.Room, outputdir string) {
-	backgroundFile := fmt.Sprintf("%v/img_bg/room%02d_bg.png", outputdir, id)
-	l.Log("template", "\nWriting room %v background in %v\n", id, backgroundFile)
+func writeRoomBackground(room scummatlas.Room, outputdir string) {
+	backgroundFile := fmt.Sprintf("%v/img_bg/room%02d_bg.png", outputdir, room.Number)
+	l.Log("template", "\nWriting room %v background in %v\n", room.Number, backgroundFile)
 	pngFile, err := os.Create(backgroundFile)
 	if err != nil {
 		panic("Error creating " + backgroundFile)

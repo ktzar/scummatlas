@@ -11,7 +11,6 @@ import (
 
 type roomData struct {
 	Index      string
-	Title      string
 	Background string
 	Boxes      [][4]scummatlas.Point
 	scummatlas.Room
@@ -68,7 +67,6 @@ func WriteRoom(room scummatlas.Room, index int, outputdir string) {
 
 	data := roomData{
 		fmt.Sprintf("%02d", index),
-		"A room",
 		bgPath,
 		boxes,
 		room,

@@ -13,3 +13,8 @@
     height: 16px;
     display: inline-block;
 }
+
+#rooms-table img {
+    width: 128px;
+    max-height: 64px;
+}

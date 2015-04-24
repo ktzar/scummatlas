@@ -10,7 +10,7 @@ import (
 
 type IndexData struct {
 	Title string
-	Rooms []scummatlas.RoomName
+	Rooms []scummatlas.Room
 }
 
 type TableData struct {
@@ -20,8 +20,6 @@ type TableData struct {
 
 func WriteIndex(game *scummatlas.Game, outdir string) {
 
-	roomNames := game.RoomNames
-
 	//TODO Cache that for the future
 	indexTpl, err := ioutil.ReadFile("./templates/index.html")
 	if err != nil {
@@ -30,7 +28,7 @@ func WriteIndex(game *scummatlas.Game, outdir string) {
 
 	data := IndexData{
 		"A game",
-		roomNames,
+		game.Rooms,
 	}
 	t := template.Must(template.New("index").Parse(string(indexTpl)))
 
