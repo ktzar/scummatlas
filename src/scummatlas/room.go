@@ -5,6 +5,7 @@ import (
 	"fmt"
 	goimage "image"
 	"image/color"
+	"os"
 	b "scummatlas/binaryutils"
 	l "scummatlas/condlog"
 	"scummatlas/image"
@@ -101,6 +102,9 @@ func (r *Room) parseLSCR() {
 	scriptId := int(r.data[r.offset+8])
 	scriptBlock := r.data[r.offset+9 : r.offset+r.getBlockSize()]
 	script := parseScriptBlock(scriptBlock)
+	dumpScript("LSCR_"+fmt.Sprintf("%02x", scriptId),
+		r.data[r.offset:r.offset+r.getBlockSize()])
+
 	r.LocalScripts[scriptId] = script
 	if len(script) == 0 {
 		l.Log("script", "DUMP from %x", r.offset+9)
@@ -140,6 +144,13 @@ func (r *Room) parseOBCD() {
 
 func (r *Room) parseENCD() {
 	r.EntryScript = parseScriptBlock(r.data[r.offset+8 : r.offset+r.getBlockSize()])
+}
+
+func dumpScript(name string, data []byte) {
+	return
+	f, _ := os.Create("./out/" + name + ".dump")
+	defer f.Close()
+	f.Write(data)
 }
 
 func (r *Room) parseEPAL() {

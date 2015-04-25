@@ -37,9 +37,12 @@ func (p *ScriptParser) parseNext() string {
 
 	switch opcodeName {
 	case "animateActor":
-		opCodeLength = 5
+		opCodeLength = 3
+		actor := p.data[p.offset+1]
+		anim := p.data[p.offset+2]
+		instruction += fmt.Sprintf("actor=%d, anim=%d", actor, anim)
 	case "putActor":
-		opCodeLength = 7
+		opCodeLength = 6
 		actor := p.data[p.offset+1]
 		x := b.LE16(p.data, p.offset+2)
 		y := b.LE16(p.data, p.offset+4)
@@ -198,7 +201,10 @@ func (p *ScriptParser) parseNext() string {
 	case "cursorCommand":
 		opCodeLength = varLen
 	case "putActorInRoom":
-		opCodeLength = 5
+		opCodeLength = 3
+		actor := p.data[p.offset+1]
+		room := p.data[p.offset+2]
+		instruction += fmt.Sprintf("actor=%d, room=%d", actor, room)
 	case "delay":
 		opCodeLength = 6
 	case "ifNotState":
@@ -297,7 +303,7 @@ func (p *ScriptParser) parseNext() string {
 	case "freezeScripts":
 		opCodeLength = 3
 	case "stopScript":
-		opCodeLength = 3
+		opCodeLength = 2
 	case "getActorFacing":
 		opCodeLength = 5
 	case "getClosestObjActor":
