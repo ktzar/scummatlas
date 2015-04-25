@@ -4,6 +4,7 @@
         <title>Room {{$RoomNumber}}-{{.Name}}</title>
 		<link href="./static/style.css" rel="stylesheet" type="text/css"/>
 		<link href="./static/bootstrap.min.css" rel="stylesheet" type="text/css"/>
+		<script src="./static/zepto.min.js"></script>
 		<script src="./static/script.js"></script>
     </head>
     <body id="room-page">
@@ -15,7 +16,7 @@
         </div>
         <div class="row text-center">
             <h2>Walking boxes</h2>
-            <svg width="{{.SvgWidth}}" height="{{.SvgHeight}}" viewBox="{{.ViewBox}}">
+            <svg class="room-boxes__nobg room-boxes" style="background-image: url({{.Background}})" width="{{.SvgWidth}}" height="{{.SvgHeight}}" viewBox="{{.ViewBox}}">
             {{range .Objects}}
               <rect id="{{.Id}}" x="{{.X}}" y="{{.Y}}" width="{{.Width}}" height="{{.Height}}" fill="rgba(255,0,0,0.5)" stroke="white" stroke-width=".5"/>
               <text id="text_{{.Id}}" x="{{.X}}" y="{{.Y}}" font-size="0.4em" fill="black" font-family="monospace">{{.Name}}</text>
@@ -26,6 +27,7 @@
               " style="fill:rgba(128,128,128,0.5);stroke:black;stroke-width:.5" />
             {{end}}
             </svg>
+            <button class="toggle-svg-bg">Toggle background</button>
 
         </div>
         <div class="row">
