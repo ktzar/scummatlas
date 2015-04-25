@@ -10,4 +10,6 @@ TODO
 - Fix issues with some types of stripes
 - Parse costumes
 - Have a game detector
-- Add a table view of all the rooms with ordering capabilities
+- Add ordering capabilities to table view
+- Entry script and exit scripts
+- Use c64 font in some places like titles

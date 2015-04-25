@@ -63,21 +63,21 @@ func main() {
 
 	copyStaticFiles(outputdir)
 
-	processRoom := func(i int, room scummatlas.Room) {
-		fmt.Println("Generate files for room ", i)
-		templates.WriteRoom(room, i, outputdir)
+	processRoom := func(room scummatlas.Room) {
+		fmt.Println("Generate files for room ", room.Number)
+		templates.WriteRoom(room, outputdir)
 		writeRoomBackground(room, outputdir)
-		createRoomObjectImages(i, room, outputdir)
+		createRoomObjectImages(room, outputdir)
 		for _, obj := range room.Objects {
 			obj.PrintVerbs()
 		}
 	}
 
 	if singleRoom > 0 {
-		processRoom(singleRoom, game.Rooms[singleRoom])
+		processRoom(game.Rooms[singleRoom])
 	} else {
-		for i, room := range game.Rooms {
-			processRoom(i, room)
+		for _, room := range game.Rooms {
+			processRoom(room)
 		}
 	}
 
@@ -97,7 +97,7 @@ func writeRoomBackground(room scummatlas.Room, outputdir string) {
 	png.Encode(pngFile, room.Image)
 }
 
-func createRoomObjectImages(id int, r scummatlas.Room, outputdir string) {
+func createRoomObjectImages(r scummatlas.Room, outputdir string) {
 	for _, object := range r.Objects {
 		if len(object.Image.Frames) == 0 {
 			//fmt.Printf("Obj %v does not have an image\n", object.Id)
@@ -108,7 +108,7 @@ func createRoomObjectImages(id int, r scummatlas.Room, outputdir string) {
 			imagePath := fmt.Sprintf(
 				"%v/img_obj/room%02d_obj_%02x_%02d.png",
 				outputdir,
-				id,
+				r.Number,
 				object.Id,
 				frameIndex)
 

@@ -1,6 +1,7 @@
 <html>
     <head>
-        <title>Room {{.Index}}</title>
+        {{$RoomNumber := .TwoDigitNumber}}
+        <title>Room {{$RoomNumber}}-{{.Name}}</title>
 		<link href="./static/style.css" rel="stylesheet" type="text/css"/>
 		<link href="./static/bootstrap.min.css" rel="stylesheet" type="text/css"/>
 		<script src="./static/script.js"></script>
@@ -45,7 +46,7 @@
                     <td>{{.Name}}</td>
                     <td>
                     {{range .Image.FramesIndexes}}
-                    <img class="pixelart" height="64px" src="img_obj/room{{$.Index}}_obj_{{$curObjId}}_{{.}}.png"/>
+                    <img class="pixelart" height="64px" src="img_obj/room{{$RoomNumber}}_obj_{{$curObjId}}_{{.}}.png"/>
                     {{end}}
                     </td>
                     <td>{{.X}},{{.Y}}</td>

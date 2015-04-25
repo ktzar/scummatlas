@@ -147,8 +147,12 @@ func (self *Game) ProcessAllRooms(outputdir string) {
 	for _, roomName := range self.RoomNames {
 		l.Log("game", "Assigning room number %v",
 			roomName.Number)
-		self.Rooms[roomName.Number-1].Name = roomName.Name
-		self.Rooms[roomName.Number-1].Number = roomName.Number
+		if roomName.Number < len(self.Rooms) {
+			self.Rooms[roomName.Number-1].Name = roomName.Name
+			self.Rooms[roomName.Number-1].Number = roomName.Number
+		} else {
+			l.Log("game", "Room %v out of range", roomName.Number)
+		}
 	}
 }
 

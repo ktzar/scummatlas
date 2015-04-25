@@ -18,3 +18,11 @@
     width: 128px;
     max-height: 64px;
 }
+
+.screenshot{
+    text-align: center;
+    margin: 4px;
+    padding: 4px;
+    background: white;
+    box-shadow: 0px 2px 12px rgba(0,0,0,0.5);
+}

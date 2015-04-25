@@ -10,7 +10,6 @@ import (
 )
 
 type roomData struct {
-	Index      string
 	Background string
 	Boxes      [][4]scummatlas.Point
 	scummatlas.Room
@@ -42,7 +41,7 @@ func (self roomData) SvgHeight() int {
 	return self.Height * 2
 }
 
-func WriteRoom(room scummatlas.Room, index int, outputdir string) {
+func WriteRoom(room scummatlas.Room, outputdir string) {
 
 	roomTpl, err := ioutil.ReadFile("./templates/room.html")
 	if err != nil {
@@ -51,8 +50,8 @@ func WriteRoom(room scummatlas.Room, index int, outputdir string) {
 
 	t := template.Must(template.New("index").Parse(string(roomTpl)))
 
-	bgPath := fmt.Sprintf("./img_bg/room%02d_bg.png", index)
-	htmlPath := fmt.Sprintf("%v/room%02d.html", outputdir, index)
+	bgPath := fmt.Sprintf("./img_bg/room%02d_bg.png", room.Number)
+	htmlPath := fmt.Sprintf("%v/room%02d.html", outputdir, room.Number)
 	file, err := os.Create(htmlPath)
 	l.Log("template", "Create "+htmlPath)
 	if err != nil {
@@ -66,7 +65,6 @@ func WriteRoom(room scummatlas.Room, index int, outputdir string) {
 	}
 
 	data := roomData{
-		fmt.Sprintf("%02d", index),
 		bgPath,
 		boxes,
 		room,

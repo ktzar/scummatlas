@@ -32,6 +32,10 @@ type Room struct {
 	//ColorCycle ColorCycle
 }
 
+func (self Room) TwoDigitNumber() string {
+	return fmt.Sprintf("%02d", self.Number)
+}
+
 func (self Room) PaletteLength() int {
 	return len(self.Palette)
 }
