@@ -205,6 +205,9 @@ func (p *ScriptParser) parseNext() (string, error) {
 		instruction += fmt.Sprintf("object=0x%x, room=0x%x, x=%d, y=%d", object, room, x, y)
 	case "pickupObject":
 		opCodeLength = 5
+		object := b.LE16(p.data, p.offset+1)
+		room := p.data[p.offset+3]
+		instruction += fmt.Sprintf("object=0x%x, room=0x%x", object, room)
 	case "setVarRange":
 		opCodeLength = endsList
 	case "stringOps":
@@ -347,7 +350,9 @@ func (p *ScriptParser) parseNext() (string, error) {
 		instruction = fmt.Sprintf("unless (0x%x == %v) goto 0x%x", value, variable, target)
 		instructionFinished = true
 	case "soundKludge":
-		opCodeLength = endsList
+		items := p.parseList(p.offset + 1)
+		opCodeLength = 2 + len(items)*3
+		instruction += fmt.Sprintf("%v", items)
 	case "actorFollowCamera":
 		opCodeLength = 3
 	case "setObjectName":

@@ -203,8 +203,8 @@ func filterObjectName(in []byte) (out string) {
 func getVerbName(code uint8) (name string) {
 
 	verbNames := map[uint8]string{
-		2:    "Open",
-		3:    "Close",
+		2:    "Close",
+		3:    "Open",
 		0x5a: "Go to",
 		5:    "Pull",
 		6:    "Push",
