@@ -76,7 +76,7 @@
 
             <h3>Local scripts</h3>
             {{range $index, $element := .LocalScripts}}
-            <h4>{{printf "0x%x" $index}}</h4>
+            <h4>{{printf "%d" $index}}</h4>
             <pre>{{$element.Print}}</pre>
             {{end}}
 

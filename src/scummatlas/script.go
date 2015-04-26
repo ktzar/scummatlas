@@ -22,13 +22,13 @@ type ScriptParser struct {
 
 func (p *ScriptParser) parseList(offset int) (values []int) {
 	for p.data[offset] != 0xFF {
-		fmt.Printf("%x \n", p.data[offset])
 		//TODO the first byte is supposed to always be 1 ???
 		values = append(values, b.LE16(p.data, offset+1))
-		fmt.Printf("%x\n", values)
 		offset += 3
+		if len(p.data) > offset {
+			break
+		}
 	}
-	fmt.Println("length", len(values))
 	return
 }
 
@@ -76,19 +76,36 @@ func (p *ScriptParser) parseNext() (string, error) {
 		instruction = fmt.Sprintf("unless (0x%x >= %v) goto 0x%x", value, variable, target)
 	case "drawObject":
 		opCodeLength = varLen
-		l.Log("script", "drawObject subcode 0x%x\n", subopcode)
+		object := b.LE16(p.data, p.offset+1)
+		action := ""
+		params := ""
+
+		subopcode = p.data[p.offset+3]
 		switch subopcode {
 		case 0x01:
-			opCodeLength = 6
+			opCodeLength = 8
+			action = "drawAt"
+			params = fmt.Sprintf(", x = %d, y = %d",
+				b.LE16(p.data, p.offset+4),
+				b.LE16(p.data, p.offset+6))
 		case 0x02:
 			opCodeLength = 6
+			action = "setState"
+			params = fmt.Sprintf(", state = %d",
+				b.LE16(p.data, p.offset+4))
 		case 0xff:
 			opCodeLength = 4
+			action = "draw"
 		}
+		instruction = fmt.Sprintf("drawObject.%v(object = %02x%v)", action, object, params)
+		instructionFinished = true
 	case "getActorElevation":
 		opCodeLength = 5
 	case "setState":
-		opCodeLength = 5
+		opCodeLength = 4
+		object := b.LE16(p.data, p.offset+1)
+		state := p.data[p.offset+3]
+		instruction += fmt.Sprintf("object = %d, state = %d", object, state)
 	case "isNotEqual":
 		opCodeLength = 7
 		variable := varName(p.data[p.offset+1])
@@ -101,19 +118,22 @@ func (p *ScriptParser) parseNext() (string, error) {
 		opCodeLength = 2
 		script := p.data[p.offset+1]
 
-		list := p.parseList(p.offset + 3)
+		list := p.parseList(p.offset + 2)
 		opCodeLength = 3 + len(list)*3
 		instruction += fmt.Sprintf("script=%d, %v", script, list)
 	case "getVerbEntryPoint":
 		opCodeLength = 7
 	case "resourceRoutines":
-		opCodeLength = 2
+		opCodeLength = 3
 		switch subopcode {
 		case 0x11:
 			opCodeLength = 1
 		case 0x14:
 			opCodeLength = 4
 		}
+		instruction = fmt.Sprintf("resourceRoutines.%v(",
+			resourceRoutines[subopcode])
+
 	case "walkActorToActor":
 		opCodeLength = 6
 	case "putActorAtObject":
@@ -158,7 +178,7 @@ func (p *ScriptParser) parseNext() (string, error) {
 		opCodeLength = 5
 		result := b.LE16(p.data, p.offset+1)
 		value := b.LE16(p.data, p.offset+3)
-		instruction = fmt.Sprintf("*(0x%x) := %d", result, value)
+		instruction = fmt.Sprintf("var(%d) := %d", result, value)
 		instructionFinished = true
 	case "multiply":
 		opCodeLength = 5
@@ -167,7 +187,7 @@ func (p *ScriptParser) parseNext() (string, error) {
 	case "ifClassOfIs":
 		opCodeLength = varLen
 	case "walkActorTo":
-		opCodeLength = 7
+		opCodeLength = 6
 	case "isActorInBox":
 		opCodeLength = 7
 	case "stopMusic":
@@ -207,13 +227,35 @@ func (p *ScriptParser) parseNext() (string, error) {
 		opCodeLength = 3
 	case "cursorCommand":
 		opCodeLength = varLen
+		if subopcode < 0x0a {
+			opCodeLength = 2
+			switch subopcode {
+			case 0x01:
+				instruction = "cursorOn()"
+			case 0x02:
+				instruction = "cursorOff()"
+			case 0x03:
+				instruction = "userInputOn()"
+			case 0x04:
+				instruction = "userInputOff()"
+			case 0x05:
+				instruction = "softCursorOn()"
+			case 0x06:
+				instruction = "softCursorOff()"
+			case 0x07:
+				instruction = "softUserInputOn()"
+			case 0x08:
+				instruction = "softUserInputOff()"
+			}
+			instructionFinished = true
+		}
 	case "putActorInRoom":
 		opCodeLength = 3
 		actor := p.data[p.offset+1]
 		room := p.data[p.offset+2]
 		instruction += fmt.Sprintf("actor=%d, room=%d", actor, room)
 	case "delay":
-		opCodeLength = 6
+		opCodeLength = 4
 		delay := b.LE24(p.data, p.offset+1)
 		instruction += fmt.Sprintf("%d", delay)
 	case "ifNotState":
@@ -229,8 +271,32 @@ func (p *ScriptParser) parseNext() (string, error) {
 	case "setCameraAt":
 		opCodeLength = 3
 	case "roomOps":
-		l.Log("script", " subops 0x%x\n", subopcode)
 		opCodeLength = varLen
+		switch subopcode {
+		case 0x01:
+			opCodeLength = 6
+			instruction = fmt.Sprintf(
+				"roomOps.scroll(minX = %d, maxX = %d)",
+				b.LE16(p.data, p.offset+2),
+				b.LE16(p.data, p.offset+4))
+		case 0x03:
+			opCodeLength = 6
+			instruction = fmt.Sprintf(
+				"roomOps.screen(b = %d, h = %d)",
+				b.LE16(p.data, p.offset+2),
+				b.LE16(p.data, p.offset+4))
+		case 0x06:
+			opCodeLength = 2
+			instruction = "roomOps.ShakeOff()"
+		case 0x05:
+			opCodeLength = 2
+			instruction = "roomOps.ShakeOn()"
+		case 0x0A:
+			opCodeLength = 4
+			instruction = fmt.Sprintf("roomOps.effect(%v)",
+				b.LE16(p.data, p.offset+2))
+		}
+		instructionFinished = true
 	case "getDist":
 		opCodeLength = 7
 	case "findObject":
@@ -280,10 +346,16 @@ func (p *ScriptParser) parseNext() (string, error) {
 		opCodeLength = 5
 	case "isLess":
 		opCodeLength = 7
+		variable := varName(p.data[p.offset+1])
+		value := b.LE16(p.data, p.offset+2)
+		target := b.LE16(p.data, p.offset+4)
+		instruction = fmt.Sprintf("unless (0x%x < %v) goto 0x%x", value, variable, target)
+		instructionFinished = true
 	case "increment":
 		opCodeLength = 3
 		variable := b.LE16(p.data, p.offset+1)
 		instruction = fmt.Sprintf("Var[%d]++", variable)
+		instructionFinished = true
 	case "isEqual":
 		opCodeLength = 7
 		variable := varName(p.data[p.offset+1])
@@ -296,7 +368,14 @@ func (p *ScriptParser) parseNext() (string, error) {
 	case "actorFollowCamera":
 		opCodeLength = 3
 	case "setObjectName":
-		opCodeLength = varLen
+		opCodeLength = 3
+		object := b.LE16(p.data, p.offset+1)
+		name := ""
+		for p.data[p.offset+opCodeLength] != 0x00 {
+			name += string(p.data[p.offset+opCodeLength])
+			opCodeLength++
+		}
+		instruction += fmt.Sprintf("object = %d, text = \"%v\"", object, name)
 	case "getActorMoving":
 		opCodeLength = 5
 	case "or":
@@ -312,12 +391,13 @@ func (p *ScriptParser) parseNext() (string, error) {
 	case "actorSetClass":
 		object := b.LE16(p.data, p.offset+1)
 		list := p.parseList(p.offset + 3)
-		opCodeLength = 3 + len(list)*3
+		opCodeLength = 4 + len(list)*3
 		instruction += fmt.Sprintf("object=%d, %v", object, list)
 	case "freezeScripts":
 		opCodeLength = 3
 	case "stopScript":
 		opCodeLength = 2
+		instruction += fmt.Sprintf("%x", p.data[p.offset+1])
 	case "getActorFacing":
 		opCodeLength = 5
 	case "getClosestObjActor":
@@ -379,7 +459,11 @@ func (p *ScriptParser) parseNext() (string, error) {
 	case "wait":
 		opCodeLength = 2
 		if subopcode == 0x01 {
-			opCodeLength = 4
+			opCodeLength = 3
+			instruction = fmt.Sprintf("wait.forActor(%d)",
+				p.data[p.offset+2])
+			instructionFinished = true
+
 		}
 	case "cutscene":
 		list := p.parseList(p.offset + 1)
@@ -419,6 +503,11 @@ func (p *ScriptParser) parseNext() (string, error) {
 }
 
 func parseScriptBlock(data []byte) Script {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Recovered in f", r)
+		}
+	}()
 	parser := new(ScriptParser)
 	parser.data = data
 	parser.offset = 0
@@ -536,6 +625,7 @@ var opCodesNames = map[byte]string{
 	0x7a: "verbOps",
 	0x7b: "getActorWalkBox",
 	0x7c: "isSoundRunning",
+	0x7e: "walkActorTo",
 	0x80: "breakHere",
 	0x98: "systemOps",
 	0xa0: "stopObjectCode",
@@ -550,6 +640,7 @@ var opCodesNames = map[byte]string{
 	0xd8: "printEgo",
 
 	//from ScummVM sourcecode
+	0x2a: "startScript",
 	0x59: "doSentence",
 	0x61: "putActor",
 	0x64: "loadRoomWithEgo",
@@ -558,12 +649,14 @@ var opCodesNames = map[byte]string{
 	0x6d: "putActorInRoom",
 	0x74: "getDist",
 	0x77: "startObject",
+	0x85: "drawObject",
 	0x8c: "resourceRoutines",
 	0x8f: "getObjectState",
 	0x91: "animateActor",
 	0x93: "getInventoryCount",
 	0x9a: "move",
 	0xa3: "getActorY",
+	0xad: "putActorInRoom",
 	0xba: "subtract",
 	0xc3: "getActorX",
 	0xc8: "isEqual",
@@ -604,6 +697,29 @@ var actorOps = map[byte]string{
 	0x15: "follow_boxes",
 	0x16: "animation_speed",
 	0x17: "shadow",
+}
+
+var resourceRoutines = map[byte]string{
+	0x01: "load_script",
+	0x02: "load_sound",
+	0x03: "load_costume",
+	0x04: "load_room",
+	0x05: "nuke_script",
+	0x06: "nuke_sound",
+	0x07: "nuke_costume",
+	0x08: "nuke_room",
+	0x09: "lock_script",
+	0x0a: "lock_sound",
+	0x0b: "lock_costume",
+	0x0c: "lock_room",
+	0x0d: "unlock_script",
+	0x0e: "unlock_sound",
+	0x0f: "unlock_costume",
+	0x10: "unlock_room",
+	0x11: "clear_heap",
+	0x12: "load_charset",
+	0x13: "nuke_charset",
+	0x14: "load_object",
 }
 
 var varNames = map[byte]string{

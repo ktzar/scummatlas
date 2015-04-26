@@ -1,9 +1,6 @@
 package scummatlas
 
-import "fmt"
-
 func parsePrintOpcode(data []byte, offset int) (say string, length int) {
-	fmt.Println("parsePrintOpcode at @", offset)
 	// Process subinstructions
 	var subinst byte
 	subinst = 0x0f
@@ -26,7 +23,6 @@ func parsePrintOpcode(data []byte, offset int) (say string, length int) {
 			break
 		}
 	}
-	fmt.Println("Say: ", say)
 	return say, length
 }
 
@@ -58,6 +54,5 @@ func parseString(data []byte, offset int) (say string, length int) {
 			panic("Invalid character in print")
 		}
 	}
-	fmt.Println("Parsed string", say)
 	return say, offset - originalOffset
 }

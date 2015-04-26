@@ -102,9 +102,9 @@ func (r *Room) parseLSCR() {
 	scriptId := int(r.data[r.offset+8])
 	scriptBlock := r.data[r.offset+9 : r.offset+r.getBlockSize()]
 	l.Log("script", "\nLocal ScriptID %02x, size %d", scriptId, r.getBlockSize())
-	script := parseScriptBlock(scriptBlock)
 	dumpScript("LSCR_"+fmt.Sprintf("%02x", scriptId),
 		r.data[r.offset:r.offset+r.getBlockSize()])
+	script := parseScriptBlock(scriptBlock)
 
 	r.LocalScripts[scriptId] = script
 	if len(script) == 0 {
