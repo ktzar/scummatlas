@@ -1,6 +1,7 @@
 package scummatlas
 
 import (
+	"errors"
 	"fmt"
 	b "scummatlas/binaryutils"
 	l "scummatlas/condlog"
@@ -19,21 +20,33 @@ type ScriptParser struct {
 	script Script
 }
 
-func (p *ScriptParser) parseNext() string {
+func (p *ScriptParser) parseList(offset int) (values []int) {
+	for p.data[offset] != 0xFF {
+		fmt.Printf("%x \n", p.data[offset])
+		//TODO the first byte is supposed to always be 1 ???
+		values = append(values, b.LE16(p.data, offset+1))
+		fmt.Printf("%x\n", values)
+		offset += 3
+	}
+	fmt.Println("length", len(values))
+	return
+}
+
+func (p *ScriptParser) parseNext() (string, error) {
 	opcode := p.data[p.offset]
 	subopcode := p.data[p.offset+1]
 	opcodeName, ok := opCodesNames[opcode]
 
 	if !ok {
 		l.Log("script", "0x%x is not a known code\n", opcode)
-		panic("Unknown code")
+		return "", errors.New(fmt.Sprintf("Unknown code %02x", opcode))
 	}
-	l.Log("script", "Opcode 0x%x -> %v\n", opcode, opcodeName)
+	l.Log("script", "[%04x] (%02x) %v", p.offset, opcode, opcodeName)
 
 	instruction := opcodeName + "("
 	instructionFinished := false
 
-	var opCodeLength byte
+	var opCodeLength int
 
 	switch opcodeName {
 	case "animateActor":
@@ -86,17 +99,11 @@ func (p *ScriptParser) parseNext() string {
 		opCodeLength = 5
 	case "startScript":
 		opCodeLength = 2
-		instruction += fmt.Sprintf("0x%x", p.data[p.offset+1])
-		for p.data[p.offset+int(opCodeLength)] != 0xff {
-			l := int(opCodeLength)
-			instruction += fmt.Sprintf(", 0x%x",
-				p.data[p.offset+l:p.offset+l+1])
-			opCodeLength += 2
-			if opCodeLength > 100 {
-				panic("Too many script params, there's something wrong here")
-			}
-		}
-		opCodeLength++
+		script := p.data[p.offset+1]
+
+		list := p.parseList(p.offset + 3)
+		opCodeLength = 3 + len(list)*3
+		instruction += fmt.Sprintf("script=%d, %v", script, list)
 	case "getVerbEntryPoint":
 		opCodeLength = 7
 	case "resourceRoutines":
@@ -131,7 +138,7 @@ func (p *ScriptParser) parseNext() string {
 		for p.data[p.offset+int(opCodeLength)] != 0xff {
 			opCodeLength++
 			if opCodeLength > 200 {
-				panic("cutscene too long")
+				return "", errors.New("cutscene too long")
 			}
 		}
 		opCodeLength++
@@ -151,7 +158,7 @@ func (p *ScriptParser) parseNext() string {
 		opCodeLength = 5
 		result := b.LE16(p.data, p.offset+1)
 		value := b.LE16(p.data, p.offset+3)
-		instruction = fmt.Sprintf("*(0x%x) := 0x%x", result, value)
+		instruction = fmt.Sprintf("*(0x%x) := %d", result, value)
 		instructionFinished = true
 	case "multiply":
 		opCodeLength = 5
@@ -207,6 +214,8 @@ func (p *ScriptParser) parseNext() string {
 		instruction += fmt.Sprintf("actor=%d, room=%d", actor, room)
 	case "delay":
 		opCodeLength = 6
+		delay := b.LE24(p.data, p.offset+1)
+		instruction += fmt.Sprintf("%d", delay)
 	case "ifNotState":
 		opCodeLength = 6
 	case "matrixOp":
@@ -272,7 +281,9 @@ func (p *ScriptParser) parseNext() string {
 	case "isLess":
 		opCodeLength = 7
 	case "increment":
-		opCodeLength = 2
+		opCodeLength = 3
+		variable := b.LE16(p.data, p.offset+1)
+		instruction = fmt.Sprintf("Var[%d]++", variable)
 	case "isEqual":
 		opCodeLength = 7
 		variable := varName(p.data[p.offset+1])
@@ -291,7 +302,7 @@ func (p *ScriptParser) parseNext() string {
 	case "or":
 		opCodeLength = 5
 	case "override":
-		opCodeLength = varLen
+		opCodeLength = 2
 	case "add":
 		opCodeLength = 5
 	case "divide":
@@ -299,7 +310,10 @@ func (p *ScriptParser) parseNext() string {
 	case "oldRoomEffect":
 		opCodeLength = 4
 	case "actorSetClass":
-		opCodeLength = endsList
+		object := b.LE16(p.data, p.offset+1)
+		list := p.parseList(p.offset + 3)
+		opCodeLength = 3 + len(list)*3
+		instruction += fmt.Sprintf("object=%d, %v", object, list)
 	case "freezeScripts":
 		opCodeLength = 3
 	case "stopScript":
@@ -311,10 +325,11 @@ func (p *ScriptParser) parseNext() string {
 	case "getStringWidth":
 		opCodeLength = 5
 	case "getScriptRunning":
-		opCodeLength = 5
-		//result := b.LE16(p.data, p.offset+1)
-		script := b.LE16(p.data, p.offset+3)
-		instruction += fmt.Sprintf("0x%x", script)
+		opCodeLength = 4
+		//result := p.data, p.offset + 1
+		script := b.LE16(p.data, p.offset+2)
+		instruction = fmt.Sprintf("VAR_RESULT = isScriptRunning(%02x);", script)
+		instructionFinished = true
 	case "debug":
 		opCodeLength = 3
 	case "getActorWidth":
@@ -360,70 +375,38 @@ func (p *ScriptParser) parseNext() string {
 		for p.data[p.offset+int(opCodeLength)] != 0xff {
 			opCodeLength++
 		}
+		opCodeLength++
 	case "wait":
 		opCodeLength = 2
 		if subopcode == 0x01 {
 			opCodeLength = 4
 		}
 	case "cutscene":
-		opCodeLength = 1
-		for p.data[p.offset+int(opCodeLength)] != 0xff {
-			opCodeLength++
-			if opCodeLength > 200 {
-				panic("cutscene too long")
-			}
-		}
-		opCodeLength++
+		list := p.parseList(p.offset + 1)
+		opCodeLength = 2 + len(list)*3
+		instruction += fmt.Sprintf("%v", list)
 	case "endCutScene":
 		opCodeLength = 1
 	case "decrement":
-		opCodeLength = 2
+		opCodeLength = 3
+		variable := b.LE16(p.data, p.offset+1)
+		instruction = fmt.Sprintf("Var[%d]--", variable)
 	case "pseudoRoom":
 		opCodeLength = varLen
 	case "print", "printEgo":
-		opCodeLength = varLen
-		switch subopcode {
-		case 0x0F:
+		if opcodeName == "print" {
+			instruction += fmt.Sprintf("actor = %d, ", p.data[p.offset+1])
 			opCodeLength = 2
-			say := ""
-			for {
-				currChar := p.data[p.offset+int(opCodeLength)]
-				if currChar == 0xff {
-					escapeChar := p.data[p.offset+int(opCodeLength+1)]
-					switch {
-					case 0x01 <= escapeChar && escapeChar <= 0x03:
-						opCodeLength += 2
-					case 0x04 <= escapeChar && escapeChar <= 0x0e:
-						opCodeLength += 4
-					}
-				} else if currChar >= 0x20 && currChar <= 0x7e { //printable ascii char
-					opCodeLength++
-					say += string(currChar)
-				} else if currChar >= 0x00 {
-					opCodeLength++
-					break
-				} else {
-					panic("Invalid character in print")
-				}
-				if opCodeLength > 200 {
-					break
-				}
-			}
-			if opCodeLength > 200 {
-				panic("print too long")
-			}
-			instruction += fmt.Sprintf("\"%v\"", say)
-		case 0x01, 0x02:
-			opCodeLength = 4
-		case 0x00, 0x03, 0x08:
-			opCodeLength = 6
-		case 0x04, 0x06, 0x07:
-			opCodeLength = 2
+		} else {
+			opCodeLength = 1
 		}
+		say, length := parsePrintOpcode(p.data, p.offset+opCodeLength)
+		opCodeLength += length
+		instruction += fmt.Sprintf("\"%v\"", say)
 	}
 
 	if opCodeLength == varLen {
-		panic("Variable length opcode " + fmt.Sprintf("%x", opcode) + ", cannot proceed")
+		return "", errors.New("Variable length opcode " + fmt.Sprintf("%x", opcode) + ", cannot proceed")
 	}
 
 	p.offset += int(opCodeLength)
@@ -432,22 +415,20 @@ func (p *ScriptParser) parseNext() string {
 	}
 
 	p.script = append(p.script, instruction)
-	return opcodeName
+	return opcodeName, nil
 }
 
 func parseScriptBlock(data []byte) Script {
 	parser := new(ScriptParser)
-	defer func() {
-		if r := recover(); r != nil {
-			parser.script = append(parser.script, "error, stopped parsing")
-			l.Log("script", "Recovered in ", r)
-		}
-	}()
 	parser.data = data
 	parser.offset = 0
 	i := 0
 	for parser.offset+1 < len(data) {
-		parser.parseNext()
+		_, err := parser.parseNext()
+		if err != nil {
+			parser.script = append(parser.script, "error, "+err.Error())
+			return parser.script
+		}
 		i++
 		if i > 1000 {
 			break
@@ -457,9 +438,9 @@ func parseScriptBlock(data []byte) Script {
 }
 
 const notDefined byte = 0xFF
-const varLen byte = 0xFE
+const varLen int = 0xFE
 const multi byte = 0xFD
-const endsList byte = 0xFC
+const endsList int = 0xFC
 
 var opCodesNames = map[byte]string{
 	0x00: "stopObjectCode",

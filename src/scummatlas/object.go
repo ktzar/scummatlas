@@ -167,9 +167,13 @@ func parseVerbBlock(data []byte) (out []Verb) {
 			data:   data,
 			offset: verb.offset,
 		}
+		var err error
 		ranOpcode := ""
 		for ranOpcode != "stopObjectCode" {
-			ranOpcode = parser.parseNext()
+			ranOpcode, err = parser.parseNext()
+			if err != nil {
+				break
+			}
 		}
 		verb.Script = parser.script
 

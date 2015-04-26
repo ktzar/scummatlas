@@ -101,6 +101,7 @@ func NewRoom(data []byte) *Room {
 func (r *Room) parseLSCR() {
 	scriptId := int(r.data[r.offset+8])
 	scriptBlock := r.data[r.offset+9 : r.offset+r.getBlockSize()]
+	l.Log("script", "\nLocal ScriptID %02x, size %d", scriptId, r.getBlockSize())
 	script := parseScriptBlock(scriptBlock)
 	dumpScript("LSCR_"+fmt.Sprintf("%02x", scriptId),
 		r.data[r.offset:r.offset+r.getBlockSize()])
@@ -110,7 +111,23 @@ func (r *Room) parseLSCR() {
 		l.Log("script", "DUMP from %x", r.offset+9)
 		l.Log("script", "%x", scriptBlock)
 	}
-	l.Log("script", "\nLocal ScriptID 0x%02x, size %d, script %v", scriptId, r.getBlockSize(), script)
+	l.Log("script", "\nScript: %v", script)
+}
+
+func (r *Room) parseENCD() {
+	r.EntryScript = parseScriptBlock(r.data[r.offset+8 : r.offset+r.getBlockSize()])
+	dumpScript("ENCD", r.data[r.offset:r.offset+r.getBlockSize()])
+}
+
+func (r *Room) parseEXCD() {
+	r.ExitScript = parseScriptBlock(r.data[r.offset+8 : r.offset+r.getBlockSize()])
+	dumpScript("EXCD", r.data[r.offset:r.offset+r.getBlockSize()])
+}
+
+func dumpScript(name string, data []byte) {
+	f, _ := os.Create("./out/" + name + ".dump")
+	defer f.Close()
+	f.Write(data)
 }
 
 func (r *Room) parseTRNS() {
@@ -142,17 +159,6 @@ func (r *Room) parseOBCD() {
 	r.Objects[object.Id] = object
 }
 
-func (r *Room) parseENCD() {
-	r.EntryScript = parseScriptBlock(r.data[r.offset+8 : r.offset+r.getBlockSize()])
-}
-
-func dumpScript(name string, data []byte) {
-	return
-	f, _ := os.Create("./out/" + name + ".dump")
-	defer f.Close()
-	f.Write(data)
-}
-
 func (r *Room) parseEPAL() {
 	l.Log("palette", "EGA palette, not used")
 	return
@@ -179,10 +185,6 @@ func (r *Room) parseCLUT() {
 		l.Log("palette", " %x%x%x", r8, g8, b8)
 	}
 	l.Log("palette", "")
-}
-
-func (r *Room) parseEXCD() {
-	r.ExitScript = parseScriptBlock(r.data[r.offset+8 : r.offset+r.getBlockSize()])
 }
 
 func (r *Room) parseRMIM() {
