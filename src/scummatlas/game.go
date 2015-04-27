@@ -15,6 +15,7 @@ type Game struct {
 	RoomCount int
 	RoomNames []RoomName
 	Rooms     []Room
+	Scripts   []Script
 	gamedir   string
 	indexFile string
 	mainFile  string
@@ -128,6 +129,8 @@ func (self *Game) processMainFile(outputdir string) MainScummData {
 
 	mainScumm := MainScummData{data}
 
+	self.Scripts = mainScumm.GetScripts()
+
 	self.RoomCount = mainScumm.GetRoomCount()
 	l.Log("structure", "Room count", self.RoomCount)
 
@@ -141,7 +144,7 @@ func (self *Game) ProcessAllRooms(outputdir string) {
 	roomOffsets := mainScumm.GetRoomsOffset()
 	for i, offset := range roomOffsets {
 		l.Log("game", "Parsing room %v", i)
-		room := mainScumm.ParseRoom(offset.Offset)
+		room := mainScumm.ParseRoom(offset.Offset, i)
 		self.Rooms[i] = room
 	}
 	for _, roomName := range self.RoomNames {
@@ -162,7 +165,7 @@ func (self *Game) ProcessSingleRoom(i int, outputdir string) {
 	l.Log("game", "Parsing room %v", i)
 	for _, offset := range roomOffsets {
 		if offset.Number == i {
-			room := mainScumm.ParseRoom(offset.Offset)
+			room := mainScumm.ParseRoom(offset.Offset, i)
 			if len(self.RoomNames) >= i+2 {
 				room.Name = self.RoomNames[i-1].Name
 				room.Number = self.RoomNames[i-1].Number

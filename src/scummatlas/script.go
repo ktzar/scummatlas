@@ -20,12 +20,13 @@ type ScriptParser struct {
 	script Script
 }
 
-func (p *ScriptParser) parseList(offset int) (values []int) {
+func (p ScriptParser) parseList(offset int) (values []int) {
 	for p.data[offset] != 0xFF {
 		//TODO the first byte is supposed to always be 1 ???
-		values = append(values, b.LE16(p.data, offset+1))
+		value := b.LE16(p.data, offset+1)
+		values = append(values, value)
 		offset += 3
-		if len(p.data) > offset {
+		if offset > len(p.data) {
 			break
 		}
 	}
@@ -33,8 +34,14 @@ func (p *ScriptParser) parseList(offset int) (values []int) {
 }
 
 func (p *ScriptParser) parseNext() (string, error) {
+	if p.offset >= len(p.data) {
+		return "", errors.New("Script finished")
+	}
 	opcode := p.data[p.offset]
-	subopcode := p.data[p.offset+1]
+	var subopcode byte
+	if p.offset >= len(p.data)+1 {
+		subopcode = p.data[p.offset+1]
+	}
 	opcodeName, ok := opCodesNames[opcode]
 
 	if !ok {
@@ -119,7 +126,7 @@ func (p *ScriptParser) parseNext() (string, error) {
 		script := p.data[p.offset+1]
 
 		list := p.parseList(p.offset + 2)
-		opCodeLength = 3 + len(list)*3
+		opCodeLength = 2 + len(list)*3 + 1
 		instruction += fmt.Sprintf("script=%d, %v", script, list)
 	case "getVerbEntryPoint":
 		opCodeLength = 7
@@ -165,7 +172,11 @@ func (p *ScriptParser) parseNext() (string, error) {
 	case "actorFromPos":
 		opCodeLength = 5
 	case "getRandomNumber":
-		opCodeLength = 5
+		opCodeLength = 4
+		result := b.LE16(p.data, p.offset+1)
+		seed := p.data[p.offset+3]
+		instruction = fmt.Sprintf("var(%d) := getRandomNumber(%d)", result, seed)
+		instructionFinished = true
 	case "and":
 		opCodeLength = 5
 	case "jumpRelative":
@@ -197,12 +208,12 @@ func (p *ScriptParser) parseNext() (string, error) {
 	case "getActorY":
 		opCodeLength = 5
 	case "loadRoomWithEgo":
-		opCodeLength = 9
+		opCodeLength = 8
 		object := b.LE16(p.data, p.offset+1)
 		room := p.data[p.offset+3]
 		x := b.LE16(p.data, p.offset+4)
 		y := b.LE16(p.data, p.offset+6)
-		instruction += fmt.Sprintf("object=0x%x, room=0x%x, x=%d, y=%d", object, room, x, y)
+		instruction += fmt.Sprintf("object=0x%x, room=%d, x=%d, y=%d", object, room, x, y)
 	case "pickupObject":
 		opCodeLength = 5
 		object := b.LE16(p.data, p.offset+1)

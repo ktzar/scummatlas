@@ -195,7 +195,8 @@ var resourceRoutines = map[byte]string{
 }
 
 var varNames = map[byte]string{
-	0:  "KEYPRESS",
+	//0:  "KEYPRESS",
+	0:  "RESULT",
 	1:  "EGO",
 	2:  "CAMERA_POS_X",
 	3:  "HAVE_MSG",

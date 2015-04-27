@@ -102,7 +102,7 @@ func (r *Room) parseLSCR() {
 	scriptId := int(r.data[r.offset+8])
 	scriptBlock := r.data[r.offset+9 : r.offset+r.getBlockSize()]
 	l.Log("script", "\nLocal ScriptID %02x, size %d", scriptId, r.getBlockSize())
-	dumpScript("LSCR_"+fmt.Sprintf("%02x", scriptId),
+	dumpBlock("LSCR_"+fmt.Sprintf("%d", scriptId),
 		r.data[r.offset:r.offset+r.getBlockSize()])
 	script := parseScriptBlock(scriptBlock)
 
@@ -116,15 +116,15 @@ func (r *Room) parseLSCR() {
 
 func (r *Room) parseENCD() {
 	r.EntryScript = parseScriptBlock(r.data[r.offset+8 : r.offset+r.getBlockSize()])
-	dumpScript("ENCD", r.data[r.offset:r.offset+r.getBlockSize()])
+	dumpBlock("ENCD", r.data[r.offset:r.offset+r.getBlockSize()])
 }
 
 func (r *Room) parseEXCD() {
 	r.ExitScript = parseScriptBlock(r.data[r.offset+8 : r.offset+r.getBlockSize()])
-	dumpScript("EXCD", r.data[r.offset:r.offset+r.getBlockSize()])
+	dumpBlock("EXCD", r.data[r.offset:r.offset+r.getBlockSize()])
 }
 
-func dumpScript(name string, data []byte) {
+func dumpBlock(name string, data []byte) {
 	f, _ := os.Create("./out/" + name + ".dump")
 	defer f.Close()
 	f.Write(data)

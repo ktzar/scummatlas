@@ -1,6 +1,7 @@
 package scummatlas
 
 func parsePrintOpcode(data []byte, offset int) (say string, length int) {
+	originalOffset := offset
 	// Process subinstructions
 	var subinst byte
 	subinst = 0x0f
@@ -10,6 +11,7 @@ func parsePrintOpcode(data []byte, offset int) (say string, length int) {
 		case 0x0F:
 			say, length = parseString(data, offset+1)
 			offset += length
+			return say, offset - originalOffset
 		case 0x01, 0x02:
 			//TODO encode color, right
 			offset += 2
@@ -23,11 +25,11 @@ func parsePrintOpcode(data []byte, offset int) (say string, length int) {
 			break
 		}
 	}
-	return say, length
+	return say, offset - originalOffset
 }
 
 func parseString(data []byte, offset int) (say string, length int) {
-	originalOffset := offset - 2
+	originalOffset := offset
 	i := 0
 	say = ""
 	for {
@@ -36,7 +38,7 @@ func parseString(data []byte, offset int) (say string, length int) {
 			break
 		}
 		currChar := data[offset]
-		if currChar == 0xff {
+		if currChar == 0xFF {
 			escapeChar := data[offset+1]
 			switch {
 			case 0x01 <= escapeChar && escapeChar <= 0x03:

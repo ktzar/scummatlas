@@ -1,6 +1,7 @@
 package scummatlas
 
 import (
+	"fmt"
 	b "scummatlas/binaryutils"
 	l "scummatlas/condlog"
 )
@@ -52,7 +53,11 @@ func (d *MainScummData) GetRoomsOffset() (offsets []RoomOffset) {
 	return out
 }
 
-func (d *MainScummData) ParseRoom(offset int) Room {
+func (d MainScummData) GetScripts() []Script {
+	return []Script{}
+}
+
+func (d *MainScummData) ParseRoom(offset int, order int) Room {
 	blockName := d.fourChars(offset)
 	blockSize := b.BE32(d.Data, offset+4)
 	if blockName != "ROOM" {
@@ -60,6 +65,8 @@ func (d *MainScummData) ParseRoom(offset int) Room {
 	}
 	l.Log("room", "Room of size", blockSize)
 
-	room := NewRoom(d.Data[offset : offset+blockSize])
+	data := d.Data[offset : offset+blockSize]
+	dumpBlock(fmt.Sprintf("ROOM_%d", order), data)
+	room := NewRoom(data)
 	return *room
 }

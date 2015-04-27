@@ -147,10 +147,16 @@ func NewObjectFromOBCD(data []byte) Object {
 	return obj
 }
 
+var objCount int
+var verbCount int
+
 func parseVerbBlock(data []byte) (out []Verb) {
+	//dumpBlock(fmt.Sprintf("VERB_%d", verbCount), data)
+	verbCount++
 	currentOffset := 8
 	defer func() {
 		if err := recover(); err != nil {
+			fmt.Println("ERROR: ", err)
 		}
 	}()
 	for currentOffset <= len(data) {
@@ -168,11 +174,12 @@ func parseVerbBlock(data []byte) (out []Verb) {
 			offset: verb.offset,
 		}
 		var err error
+		stop := false
 		ranOpcode := ""
-		for ranOpcode != "stopObjectCode" {
+		for ranOpcode != "stopObjectCode" && stop == false {
 			ranOpcode, err = parser.parseNext()
 			if err != nil {
-				break
+				stop = true
 			}
 		}
 		verb.Script = parser.script
