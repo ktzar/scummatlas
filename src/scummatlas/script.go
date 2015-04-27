@@ -185,6 +185,10 @@ func (p *ScriptParser) parseNext() (string, error) {
 		instruction += fmt.Sprintf("0x%x", target)
 	case "doSentence":
 		opCodeLength = 7
+		verb := p.data[p.offset+1]
+		objA := b.LE16(p.data, p.offset+2)
+		objB := b.LE16(p.data, p.offset+4)
+		instruction += fmt.Sprintf("verb=%02x, objA=%02x, objB=%02x", verb, objA, objB)
 	case "move":
 		opCodeLength = 5
 		result := b.LE16(p.data, p.offset+1)
@@ -391,7 +395,7 @@ func (p *ScriptParser) parseNext() (string, error) {
 		object := b.LE16(p.data, p.offset+1)
 		list := p.parseList(p.offset + 3)
 		opCodeLength = 4 + len(list)*3
-		instruction += fmt.Sprintf("object=%d, %v", object, list)
+		instruction += fmt.Sprintf("actor=%d, %v", object, list)
 	case "freezeScripts":
 		opCodeLength = 3
 	case "stopScript":
