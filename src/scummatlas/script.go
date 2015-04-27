@@ -39,7 +39,7 @@ func (p *ScriptParser) parseNext() (string, error) {
 	}
 	opcode := p.data[p.offset]
 	var subopcode byte
-	if p.offset >= len(p.data)+1 {
+	if p.offset <= len(p.data)+1 {
 		subopcode = p.data[p.offset+1]
 	}
 	opcodeName, ok := opCodesNames[opcode]
