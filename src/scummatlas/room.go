@@ -188,7 +188,7 @@ func (r *Room) parseCLUT() {
 }
 
 func (r *Room) parseRMIM() {
-	if string(r.data[r.offset+8:r.offset+12]) != "RMIH" {
+	if b.FourCharString(r.data, r.offset+8) != "RMIH" {
 		panic("Not room image header")
 	}
 	headerSize := b.BE32(r.data, r.offset+12)
@@ -203,13 +203,15 @@ func (r *Room) parseRMIM() {
 	imageSize := b.BE32(r.data, imageOffset+4)
 	l.Log("image", b.FourCharString(r.data, imageOffset), imageSize)
 
-	r.Image = image.ParseImage(
+	images := image.ParseImage(
 		r.data[imageOffset:imageOffset+4+imageSize],
 		zBuffers,
 		r.Width,
 		r.Height,
 		r.Palette,
 		r.TranspIndex)
+
+	r.Image = images[0]
 }
 
 func (r *Room) parseBOXD() {
