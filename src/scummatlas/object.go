@@ -109,7 +109,11 @@ func imageStateHeader(state int) string {
 	return fmt.Sprintf("IM%02X", state)
 }
 
+var objCount int
+
 func NewObjectFromOBCD(data []byte) Object {
+	dumpScript(fmt.Sprintf("OBCD_%x", objCount), data)
+	objCount++
 	headerOffset := 8
 	if b.FourCharString(data, headerOffset) != "CDHD" {
 		panic("No object header")
