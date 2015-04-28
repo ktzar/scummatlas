@@ -105,11 +105,11 @@ func NewObjectImageFromOBIM(data []byte, r *Room) (objImg ObjectImage, id int) {
 	return
 }
 
-func imageStateHeader(state int) string {
-	return fmt.Sprintf("IM%02X", state)
-}
+var objCount int
 
 func NewObjectFromOBCD(data []byte) Object {
+	dumpScript(fmt.Sprintf("OBCD_%x", objCount), data)
+	objCount++
 	headerOffset := 8
 	if b.FourCharString(data, headerOffset) != "CDHD" {
 		panic("No object header")
@@ -208,22 +208,25 @@ func filterObjectName(in []byte) (out string) {
 }
 
 func getVerbName(code uint8) (name string) {
-
-	verbNames := map[uint8]string{
-		2:    "Close",
-		3:    "Open",
-		0x5a: "Go to",
-		5:    "Pull",
-		6:    "Push",
-		7:    "Use",
-		8:    "Look",
-		9:    "Pick up",
-		0xa:  "Talk to",
-	}
-
 	name = verbNames[code]
 	if name == "" {
 		name = fmt.Sprintf("0x%x", code)
 	}
 	return
+}
+
+var verbNames = map[uint8]string{
+	2:    "Close",
+	3:    "Open",
+	0x5a: "Go to",
+	5:    "Pull",
+	6:    "Push",
+	7:    "Use",
+	8:    "Look",
+	9:    "Pick up",
+	0xa:  "Talk to",
+}
+
+func imageStateHeader(state int) string {
+	return fmt.Sprintf("IM%02X", state)
 }
