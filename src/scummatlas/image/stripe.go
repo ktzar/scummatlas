@@ -1,6 +1,7 @@
 package image
 
 import (
+	"errors"
 	"fmt"
 	"image"
 	"image/color"
@@ -22,7 +23,11 @@ const (
 
 func drawStripe(img *image.RGBA, stripNumber int, data []byte, pal color.Palette, transpIndex uint8) {
 
-	stripeType := getCompressionMethod(stripNumber, data[0])
+	stripeType, err := getCompressionMethod(stripNumber, data[0])
+	if err != nil {
+		l.Log("image", "Error getting compression method "+err.Error())
+		return
+	}
 
 	height := img.Rect.Size().Y
 	totalPixels := 8 * height
@@ -105,7 +110,7 @@ type StripeType struct {
 	paletteLength uint8
 }
 
-func getCompressionMethod(stripNumber int, code byte) StripeType {
+func getCompressionMethod(stripNumber int, code byte) (StripeType, error) {
 	stripe := StripeType{
 		direction:     HORIZONTAL,
 		method:        METHOD_UNKNOWN,
@@ -140,11 +145,19 @@ func getCompressionMethod(stripNumber int, code byte) StripeType {
 		}
 	}
 
-	return stripe
+	if stripe.method == METHOD_UNKNOWN {
+		return stripe, errors.New(fmt.Sprintf("Unknown method for code %x", code))
+	}
+
+	return stripe, nil
 }
 
 func printStripeInfo(stripNumber int, code byte) {
-	stripeType := getCompressionMethod(stripNumber, code)
+	stripeType, err := getCompressionMethod(stripNumber, code)
+	if err != nil {
+		l.Log("image", fmt.Sprintf("Error with stripe %d: %v", stripNumber, err.Error()))
+		return
+	}
 
 	out := fmt.Sprintf("%v\t0x%X\t", stripNumber, code)
 	if stripeType.method == METHOD_ONE {

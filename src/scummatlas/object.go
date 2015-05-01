@@ -95,8 +95,8 @@ func NewObjectImageFromOBIM(data []byte, r *Room) (objImg ObjectImage, id int) {
 			}
 			imageSize := b.BE32(data, imageOffset+4)
 
-			imgs := image.ParseImage(data[imageOffset:imageOffset+imageSize], objImg.Planes, objImg.Width, objImg.Height, r.Palette, r.TranspIndex)
-			objImg.Frames = append(objImg.Frames, imgs[0])
+			img, _ := image.ParseImage(data[imageOffset:imageOffset+imageSize], objImg.Planes, objImg.Width, objImg.Height, r.Palette, r.TranspIndex)
+			objImg.Frames = append(objImg.Frames, img)
 			imageOffset += imageSize
 		}
 
