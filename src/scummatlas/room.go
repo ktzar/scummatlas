@@ -24,6 +24,7 @@ type Room struct {
 	TranspIndex  uint8
 	Palette      color.Palette
 	Image        *goimage.RGBA
+	Zplane       *goimage.RGBA
 	Boxes        []Box
 	BoxMatrix    BoxMatrix
 	ExitScript   Script
