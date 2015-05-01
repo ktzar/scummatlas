@@ -2,6 +2,20 @@ package binaryutils
 
 import "testing"
 
+func TestByteToBits(t *testing.T) {
+	expected := [8]uint8{0, 1, 1, 0, 0, 1, 1, 0}
+	calculated := ByteToBits(0x66)
+	if calculated != expected {
+		t.Errorf("%v not equals %v", calculated, expected)
+	}
+
+	expected = [8]uint8{0, 0, 1, 0, 0, 1, 1, 1}
+	calculated = ByteToBits(0x27)
+	if calculated != expected {
+		t.Errorf("%v not equals %v", calculated, expected)
+	}
+}
+
 func TestOneByte(t *testing.T) {
 	expected := "01100110"
 	data := []byte{0x66}

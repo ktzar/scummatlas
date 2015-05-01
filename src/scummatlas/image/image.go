@@ -1,7 +1,6 @@
 package image
 
 import (
-	"fmt"
 	"image"
 	"image/color"
 	b "scummatlas/binaryutils"
@@ -42,10 +41,9 @@ func ParseImage(data []byte, zBuffers int, width int, height int, pal color.Pale
 	image = parseStripesIntoImage(data, offsets, 8, width, height, pal, transpIndex)
 
 	if b.FourCharString(data, 8+blockSize) == "ZP01" {
-		fmt.Println("ZP01 found")
+		l.Log("image", "ZP01 found")
 	}
 	offsets = parseStripeTable(data, 16+blockSize, stripeCount, 2)
-	fmt.Println("ZP01 offsets")
 	zplane = parseZplaneStripesIntoImage(data, offsets, 8+blockSize, height)
 
 	l.Log("image", "image decoded\n")
@@ -53,71 +51,13 @@ func ParseImage(data []byte, zBuffers int, width int, height int, pal color.Pale
 }
 
 func parseZplaneStripesIntoImage(data []byte, offsets []int, initialOffset int, height int) *image.RGBA {
-	fmt.Println("Height", height)
 	width := len(offsets) * 8
 	img := image.NewRGBA(image.Rect(0, 0, width, height))
 
 	for stripeNumber, offset := range offsets {
-		bitmap := make([]byte, height)
-
-		fmt.Printf("Offset: %d: %x\n", stripeNumber, offset)
-		linesLeft := height
-		fmt.Println("Count\tValue")
-		for linesLeft > 0 {
-			count := data[initialOffset+offset]
-			if count&0x80 > 0 {
-				count = count & 0x7f
-				value := data[initialOffset+offset+1]
-				offset += 2
-				fmt.Printf("Write %d times %x\n", count, value)
-				for count > 0 && linesLeft > 0 {
-					bitmap = append(bitmap, value)
-					linesLeft--
-					count--
-				}
-			} else {
-				offset += 1
-				for count > 0 && linesLeft > 0 {
-					value := data[initialOffset+offset]
-					fmt.Printf("Write 1 time %x\n", value)
-					bitmap = append(bitmap, value)
-					offset += 1
-					linesLeft--
-					count--
-				}
-			}
-		}
-		drawStripeMask(img, stripeNumber, bitmap)
-		fmt.Printf("BITMAP: %x\n", bitmap)
+		drawStripeMask(img, stripeNumber, data, initialOffset+offset, height)
 	}
 	return img
-}
-
-func drawStripeMask(img *image.RGBA, stripeNumber int, bitmap []byte) {
-	var black = color.RGBA{0, 0, 0, 255}
-	var white = color.RGBA{255, 255, 255, 255}
-
-	drawSingleColorLine := func(y int, color color.RGBA) {
-		for x := 0; x < 8; x++ {
-			img.Set(stripeNumber*8+x, y, color)
-		}
-	}
-
-	for y, value := range bitmap {
-		if value == 0x00 {
-			drawSingleColorLine(y, black)
-		} else if value == 0xFF {
-			drawSingleColorLine(y, white)
-		} else {
-			for x := 0; x < 8; x++ {
-				color := black
-				if value&(0x01<<uint8(x)) == 1 {
-					color = white
-				}
-				img.Set(stripeNumber*8+x, y, color)
-			}
-		}
-	}
 }
 
 func parseStripesIntoImage(data []byte, offsets []int, initialOffset int, width int, height int, pal color.Palette, transpIndex uint8) *image.RGBA {
