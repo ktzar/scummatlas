@@ -96,12 +96,13 @@ func writeRoomBackground(room scummatlas.Room, outputdir string) {
 	}
 	png.Encode(pngFile, room.Image)
 
-	if room.Zplane != nil {
-		pngFile, err := os.Create(backgroundFile + "-zplane.png")
+	for i, zplane := range room.Zplanes {
+		filename := fmt.Sprintf("%v-zplane%d.png", backgroundFile, i+1)
+		pngFile, err := os.Create(filename)
 		if err != nil {
-			panic("Error creating " + backgroundFile + "-zplane.png")
+			panic("Error creating " + filename)
 		}
-		png.Encode(pngFile, room.Zplane)
+		png.Encode(pngFile, zplane)
 	}
 }
 

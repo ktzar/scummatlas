@@ -22,7 +22,7 @@ func ParsePalette(data []byte) color.Palette {
 	return palette
 }
 
-func ParseImage(data []byte, zBuffers int, width int, height int, pal color.Palette, transpIndex uint8) (image *image.RGBA, zplane *image.RGBA) {
+func ParseImage(data []byte, zBuffers int, width int, height int, pal color.Palette, transpIndex uint8) (image *image.RGBA, zplanes []*image.RGBA) {
 	blockName := string(data[8:12])
 
 	if blockName == "BOMP" {
@@ -40,11 +40,17 @@ func ParseImage(data []byte, zBuffers int, width int, height int, pal color.Pale
 	//fmt.Println("offsets", offsets)
 	image = parseStripesIntoImage(data, offsets, 8, width, height, pal, transpIndex)
 
-	if b.FourCharString(data, 8+blockSize) == "ZP01" {
-		l.Log("image", "ZP01 found")
+	ZPOffset := 8 + blockSize
+	for b.FourCharString(data, ZPOffset)[0:2] == "ZP" {
+		blockName := b.FourCharString(data, ZPOffset)
+		blockSize := b.BE32(data, ZPOffset+4)
+		l.Log("image", blockName+" found")
+
+		offsets = parseStripeTable(data, ZPOffset+8, stripeCount, 2)
+		zplane := parseZplaneStripesIntoImage(data, offsets, ZPOffset, height)
+		zplanes = append(zplanes, zplane)
+		ZPOffset += blockSize
 	}
-	offsets = parseStripeTable(data, 16+blockSize, stripeCount, 2)
-	zplane = parseZplaneStripesIntoImage(data, offsets, 8+blockSize, height)
 
 	l.Log("image", "image decoded\n")
 	return

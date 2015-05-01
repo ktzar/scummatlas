@@ -24,7 +24,7 @@ type Room struct {
 	TranspIndex  uint8
 	Palette      color.Palette
 	Image        *goimage.RGBA
-	Zplane       *goimage.RGBA
+	Zplanes      []*goimage.RGBA
 	Boxes        []Box
 	BoxMatrix    BoxMatrix
 	ExitScript   Script
@@ -204,7 +204,7 @@ func (r *Room) parseRMIM() {
 	imageSize := b.BE32(r.data, imageOffset+4)
 	l.Log("image", b.FourCharString(r.data, imageOffset), imageSize)
 
-	image, zplane := image.ParseImage(
+	image, zplanes := image.ParseImage(
 		r.data[imageOffset:imageOffset+4+imageSize],
 		zBuffers,
 		r.Width,
@@ -213,7 +213,7 @@ func (r *Room) parseRMIM() {
 		r.TranspIndex)
 
 	r.Image = image
-	r.Zplane = zplane
+	r.Zplanes = zplanes
 }
 
 func (r *Room) parseBOXD() {

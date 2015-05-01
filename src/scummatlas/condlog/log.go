@@ -6,7 +6,7 @@ var Logflags = map[string]bool{
 	"script":    false,
 	"palette":   false,
 	"box":       false,
-	"image":     true,
+	"image":     false,
 	"game":      false,
 	"room":      false,
 	"structure": false,

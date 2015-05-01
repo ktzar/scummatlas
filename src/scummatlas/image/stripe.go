@@ -192,7 +192,7 @@ func drawStripeMask(img *image.RGBA, stripeNumber int, data []byte, offset int, 
 	bitmap := make([]byte, 0, height)
 
 	linesLeft := height
-	for linesLeft > 0 && offset < len(data) {
+	for linesLeft > 0 {
 		count := data[offset]
 		if count&0x80 > 0 {
 			count = count & 0x7f
@@ -205,7 +205,7 @@ func drawStripeMask(img *image.RGBA, stripeNumber int, data []byte, offset int, 
 			}
 		} else {
 			offset++
-			for count > 0 && linesLeft > 0 && offset < len(data) {
+			for count > 0 && linesLeft > 0 {
 				value := data[offset]
 				bitmap = append(bitmap, value)
 				offset++
