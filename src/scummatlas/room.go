@@ -204,7 +204,7 @@ func (r *Room) parseRMIM() {
 	imageSize := b.BE32(r.data, imageOffset+4)
 	l.Log("image", b.FourCharString(r.data, imageOffset), imageSize)
 
-	image, _ := image.ParseImage(
+	image, zplane := image.ParseImage(
 		r.data[imageOffset:imageOffset+4+imageSize],
 		zBuffers,
 		r.Width,
@@ -213,6 +213,7 @@ func (r *Room) parseRMIM() {
 		r.TranspIndex)
 
 	r.Image = image
+	r.Zplane = zplane
 }
 
 func (r *Room) parseBOXD() {

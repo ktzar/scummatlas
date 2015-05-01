@@ -95,6 +95,14 @@ func writeRoomBackground(room scummatlas.Room, outputdir string) {
 		panic("Error creating " + backgroundFile + ".png")
 	}
 	png.Encode(pngFile, room.Image)
+
+	if room.Zplane != nil {
+		pngFile, err := os.Create(backgroundFile + "-zplane.png")
+		if err != nil {
+			panic("Error creating " + backgroundFile + "-zplane.png")
+		}
+		png.Encode(pngFile, room.Zplane)
+	}
 }
 
 func createRoomObjectImages(r scummatlas.Room, outputdir string) {
