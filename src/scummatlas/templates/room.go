@@ -15,6 +15,13 @@ type roomData struct {
 	scummatlas.Room
 }
 
+func (self roomData) ZplanesUrl() (urls []string) {
+	for i, _ := range self.Zplanes {
+		urls = append(urls, fmt.Sprintf("img_bg/room%02d_bg-zplane%d.png", self.Number, i+1))
+	}
+	return
+}
+
 func (self roomData) PaletteHex() []string {
 	var hexes []string
 	hexes = make([]string, len(self.Palette))

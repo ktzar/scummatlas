@@ -24,6 +24,7 @@ type Room struct {
 	TranspIndex  uint8
 	Palette      color.Palette
 	Image        *goimage.RGBA
+	Zplanes      []*goimage.RGBA
 	Boxes        []Box
 	BoxMatrix    BoxMatrix
 	ExitScript   Script
@@ -188,7 +189,7 @@ func (r *Room) parseCLUT() {
 }
 
 func (r *Room) parseRMIM() {
-	if string(r.data[r.offset+8:r.offset+12]) != "RMIH" {
+	if b.FourCharString(r.data, r.offset+8) != "RMIH" {
 		panic("Not room image header")
 	}
 	headerSize := b.BE32(r.data, r.offset+12)
@@ -203,13 +204,16 @@ func (r *Room) parseRMIM() {
 	imageSize := b.BE32(r.data, imageOffset+4)
 	l.Log("image", b.FourCharString(r.data, imageOffset), imageSize)
 
-	r.Image = image.ParseImage(
+	image, zplanes := image.ParseImage(
 		r.data[imageOffset:imageOffset+4+imageSize],
 		zBuffers,
 		r.Width,
 		r.Height,
 		r.Palette,
 		r.TranspIndex)
+
+	r.Image = image
+	r.Zplanes = zplanes
 }
 
 func (r *Room) parseBOXD() {

@@ -51,3 +51,14 @@ func (b *BitStream) GetBits(length uint8) (value uint8) {
 	}
 	return
 }
+
+func ByteToBits(in byte) (out [8]uint8) {
+	for x := 0; x < 8; x++ {
+		if in&(0x80>>uint8(x)) != 0 {
+			out[x] = 1
+		} else {
+			out[x] = 0
+		}
+	}
+	return
+}

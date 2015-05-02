@@ -88,13 +88,22 @@ func copyStaticFiles(outputdir string) {
 }
 
 func writeRoomBackground(room scummatlas.Room, outputdir string) {
-	backgroundFile := fmt.Sprintf("%v/img_bg/room%02d_bg.png", outputdir, room.Number)
-	l.Log("template", "\nWriting room %v background in %v\n", room.Number, backgroundFile)
-	pngFile, err := os.Create(backgroundFile)
+	backgroundFile := fmt.Sprintf("%v/img_bg/room%02d_bg", outputdir, room.Number)
+	l.Log("template", "\nWriting room %v background in %v\n", room.Number, backgroundFile+".png")
+	pngFile, err := os.Create(backgroundFile + ".png")
 	if err != nil {
-		panic("Error creating " + backgroundFile)
+		panic("Error creating " + backgroundFile + ".png")
 	}
 	png.Encode(pngFile, room.Image)
+
+	for i, zplane := range room.Zplanes {
+		filename := fmt.Sprintf("%v-zplane%d.png", backgroundFile, i+1)
+		pngFile, err := os.Create(filename)
+		if err != nil {
+			panic("Error creating " + filename)
+		}
+		png.Encode(pngFile, zplane)
+	}
 }
 
 func createRoomObjectImages(r scummatlas.Room, outputdir string) {

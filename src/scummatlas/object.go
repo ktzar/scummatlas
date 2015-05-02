@@ -95,7 +95,7 @@ func NewObjectImageFromOBIM(data []byte, r *Room) (objImg ObjectImage, id int) {
 			}
 			imageSize := b.BE32(data, imageOffset+4)
 
-			img := image.ParseImage(data[imageOffset:imageOffset+imageSize], objImg.Planes, objImg.Width, objImg.Height, r.Palette, r.TranspIndex)
+			img, _ := image.ParseImage(data[imageOffset:imageOffset+imageSize], objImg.Planes, objImg.Width, objImg.Height, r.Palette, r.TranspIndex)
 			objImg.Frames = append(objImg.Frames, img)
 			imageOffset += imageSize
 		}
@@ -105,10 +105,7 @@ func NewObjectImageFromOBIM(data []byte, r *Room) (objImg ObjectImage, id int) {
 	return
 }
 
-var objCount int
-
 func NewObjectFromOBCD(data []byte) Object {
-	dumpScript(fmt.Sprintf("OBCD_%x", objCount), data)
 	objCount++
 	headerOffset := 8
 	if b.FourCharString(data, headerOffset) != "CDHD" {

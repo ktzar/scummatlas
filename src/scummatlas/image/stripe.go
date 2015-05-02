@@ -1,6 +1,7 @@
 package image
 
 import (
+	"errors"
 	"fmt"
 	"image"
 	"image/color"
@@ -20,9 +21,16 @@ const (
 	NO_TRANSP
 )
 
+var black = color.RGBA{0, 0, 0, 255}
+var white = color.RGBA{255, 255, 255, 255}
+
 func drawStripe(img *image.RGBA, stripNumber int, data []byte, pal color.Palette, transpIndex uint8) {
 
-	stripeType := getCompressionMethod(stripNumber, data[0])
+	stripeType, err := getCompressionMethod(stripNumber, data[0])
+	if err != nil {
+		l.Log("image", "Error getting compression method "+err.Error())
+		return
+	}
 
 	height := img.Rect.Size().Y
 	totalPixels := 8 * height
@@ -105,7 +113,7 @@ type StripeType struct {
 	paletteLength uint8
 }
 
-func getCompressionMethod(stripNumber int, code byte) StripeType {
+func getCompressionMethod(stripNumber int, code byte) (StripeType, error) {
 	stripe := StripeType{
 		direction:     HORIZONTAL,
 		method:        METHOD_UNKNOWN,
@@ -140,11 +148,19 @@ func getCompressionMethod(stripNumber int, code byte) StripeType {
 		}
 	}
 
-	return stripe
+	if stripe.method == METHOD_UNKNOWN {
+		return stripe, errors.New(fmt.Sprintf("Unknown method for code %x", code))
+	}
+
+	return stripe, nil
 }
 
 func printStripeInfo(stripNumber int, code byte) {
-	stripeType := getCompressionMethod(stripNumber, code)
+	stripeType, err := getCompressionMethod(stripNumber, code)
+	if err != nil {
+		l.Log("image", fmt.Sprintf("Error with stripe %d: %v", stripNumber, err.Error()))
+		return
+	}
 
 	out := fmt.Sprintf("%v\t0x%X\t", stripNumber, code)
 	if stripeType.method == METHOD_ONE {
@@ -164,4 +180,54 @@ func printStripeInfo(stripNumber int, code byte) {
 		out += "\tNo"
 	}
 	l.Log("image", out)
+}
+
+func drawStripeMask(img *image.RGBA, stripeNumber int, data []byte, offset int, height int) {
+	drawSingleColorLine := func(y int, color color.RGBA) {
+		for x := 0; x < 8; x++ {
+			img.Set(stripeNumber*8+x, y, color)
+		}
+	}
+
+	bitmap := make([]byte, 0, height)
+
+	linesLeft := height
+	for linesLeft > 0 {
+		count := data[offset]
+		if count&0x80 > 0 {
+			count = count & 0x7f
+			value := data[offset+1]
+			offset += 2
+			for count > 0 && linesLeft > 0 {
+				bitmap = append(bitmap, value)
+				linesLeft--
+				count--
+			}
+		} else {
+			offset++
+			for count > 0 && linesLeft > 0 {
+				value := data[offset]
+				bitmap = append(bitmap, value)
+				offset++
+				linesLeft--
+				count--
+			}
+		}
+	}
+
+	for y, value := range bitmap {
+		if value == 0x00 {
+			drawSingleColorLine(y, black)
+		} else if value == 0xFF {
+			drawSingleColorLine(y, white)
+		} else {
+			for x, bit := range b.ByteToBits(value) {
+				color := black
+				if bit > 0 {
+					color = white
+				}
+				img.Set(stripeNumber*8+x, y, color)
+			}
+		}
+	}
 }
