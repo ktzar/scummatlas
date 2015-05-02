@@ -21,7 +21,7 @@ const (
 	NO_TRANSP
 )
 
-var black = color.RGBA{0, 0, 0, 255}
+var black = color.RGBA{0, 0, 0, 0}
 var white = color.RGBA{255, 255, 255, 255}
 
 func drawStripe(img *image.RGBA, stripNumber int, data []byte, pal color.Palette, transpIndex uint8) {

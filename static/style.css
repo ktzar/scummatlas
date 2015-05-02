@@ -34,3 +34,21 @@
 .room-boxes__nobg {
     background-image: none !important;
 }
+
+.zplanes-container {
+    position: relative;
+    margin: 0 auto;
+    margin-bottom: 32px;
+}
+
+img.zplane {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+#zPlane-rotation {
+    width: 256px;
+    margin: 0 auto;
+}
+}
