@@ -12,13 +12,19 @@
         <div class="row text-center">
             <h1>{{.Name}}</h1>
             <h2>Background</h2>
-            <img class="pixelart zplane" height="{{.DoubleHeight}}px" src="{{.Background}}"/>
+            {{$background := .Background}}
+            <img class="pixelart" height="{{.DoubleHeight}}px" src="{{.Background}}"/>
         </div>
         <div class="row text-center">
             <h2>Z-Planes</h2>
-            {{range .ZplanesUrl}}
-                <img class="pixelart" src="{{.}}"/>
-            {{end}}
+            <div class="zplanes-container" style="width: {{.Width}}px; height: {{.Height}}px">
+                <img class="pixelart zplane" src="{{$background}}"/>
+                {{range .ZplanesUrl}}
+                    <img class="pixelart zplane" style="-webkit-mask-image: url({{.}})" src="{{$background}}"/>
+                {{end}}
+            </div>
+            <label>Rotate</label><br/>
+            <input type="range" min="-80" max="80" step="5" id="zPlane-rotation"/>
             <h2>Walking boxes</h2>
             <svg class="room-boxes__nobg room-boxes" style="background-image: url({{.Background}})" width="{{.SvgWidth}}" height="{{.SvgHeight}}" viewBox="{{.ViewBox}}">
             {{range .Objects}}
