@@ -12,9 +12,13 @@
         <div class="row text-center">
             <h1>{{.Name}}</h1>
             <h2>Background</h2>
-            <img class="pixelart" height="{{.DoubleHeight}}px" src="{{.Background}}"/>
+            <img class="pixelart zplane" height="{{.DoubleHeight}}px" src="{{.Background}}"/>
         </div>
         <div class="row text-center">
+            <h2>Z-Planes</h2>
+            {{range .ZplanesUrl}}
+                <img class="pixelart" src="{{.}}"/>
+            {{end}}
             <h2>Walking boxes</h2>
             <svg class="room-boxes__nobg room-boxes" style="background-image: url({{.Background}})" width="{{.SvgWidth}}" height="{{.SvgHeight}}" viewBox="{{.ViewBox}}">
             {{range .Objects}}
