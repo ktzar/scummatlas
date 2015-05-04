@@ -2,7 +2,7 @@ package condlog
 
 import "fmt"
 
-var Logflags = map[string]bool{
+var Flags = map[string]bool{
 	"script":    false,
 	"palette":   false,
 	"box":       false,
@@ -15,7 +15,7 @@ var Logflags = map[string]bool{
 }
 
 func Log(section string, format string, v ...interface{}) {
-	if Logflags[section] {
+	if Flags[section] {
 		fmt.Printf(format, v...)
 		fmt.Println()
 	}

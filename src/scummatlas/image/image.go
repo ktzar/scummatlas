@@ -78,7 +78,7 @@ func parseStripesIntoImage(data []byte, offsets []int, initialOffset int, width 
 		if i < len(offsets)-1 {
 			size = offsets[i+1] - offsets[i]
 		}
-		if l.Logflags["image"] {
+		if l.Flags["image"] {
 			printStripeInfo(i, data[initialOffset+offset])
 		}
 		if len(data) < initialOffset+offset+size {
