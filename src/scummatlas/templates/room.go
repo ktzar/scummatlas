@@ -15,39 +15,6 @@ type roomData struct {
 	scummatlas.Room
 }
 
-func (self roomData) ZplanesUrl() (urls []string) {
-	for i, _ := range self.Zplanes {
-		urls = append(urls, fmt.Sprintf("img_bg/room%02d_bg-zplane%d.png", self.Number, i+1))
-	}
-	return
-}
-
-func (self roomData) PaletteHex() []string {
-	var hexes []string
-	hexes = make([]string, len(self.Palette))
-	for i, color := range self.Palette {
-		r, g, b, _ := color.RGBA()
-		hexes[i] = fmt.Sprintf("%02x%02x%02x", uint8(r), uint8(g), uint8(b))
-	}
-	return hexes
-}
-
-func (self roomData) DoubleHeight() int {
-	return self.Height * 2
-}
-
-func (self roomData) ViewBox() string {
-	return fmt.Sprintf("-10 -10 %v %v", self.Width+10, self.Height+10)
-}
-
-func (self roomData) SvgWidth() int {
-	return self.Width * 2
-}
-
-func (self roomData) SvgHeight() int {
-	return self.Height * 2
-}
-
 func WriteRoom(room scummatlas.Room, outputdir string) {
 
 	roomTpl, err := ioutil.ReadFile("./templates/room.html")
@@ -77,4 +44,35 @@ func WriteRoom(room scummatlas.Room, outputdir string) {
 		room,
 	}
 	t.Execute(file, data)
+}
+
+/* Helper functions */
+
+func (self roomData) ZplanesUrl() (urls []string) {
+	for i := len(self.Zplanes); i > 0; i-- {
+		urls = append(urls, fmt.Sprintf("img_bg/room%02d_bg-zplane%d.png", self.Number, i))
+	}
+	return
+}
+
+func (self roomData) PaletteHex() []string {
+	var hexes []string
+	hexes = make([]string, len(self.Palette))
+	for i, color := range self.Palette {
+		r, g, b, _ := color.RGBA()
+		hexes[i] = fmt.Sprintf("%02x%02x%02x", uint8(r), uint8(g), uint8(b))
+	}
+	return hexes
+}
+
+func (self roomData) DoubleHeight() int {
+	return self.Height * 2
+}
+
+func (self roomData) ViewBox() string {
+	return fmt.Sprintf("-10 -10 %v %v", self.Width+10, self.Height+10)
+}
+
+func (self roomData) DoubleWidth() int {
+	return self.Width * 2
 }
