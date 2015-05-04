@@ -2,6 +2,7 @@ package main
 
 import (
 	"fileutils"
+	"flag"
 	"fmt"
 	"image/png"
 	"io/ioutil"
@@ -10,41 +11,32 @@ import (
 	"scummatlas"
 	l "scummatlas/condlog"
 	"scummatlas/templates"
-	"strconv"
 )
 
-func helpAndDie(msg string) {
-	fmt.Println(msg)
-	fmt.Println("Usage: scummatlas [options] gamedir outputdir")
-	fmt.Println("Options:")
-	fmt.Println("  --room roomNumber\tProcess a single room")
-	os.Exit(0)
-}
-
 func main() {
+	var gamedir string
+	var outputdir string
 	var singleRoom int
+	var noimages bool
+	flag.StringVar(&gamedir, "gamedir", "", "Directory with the game files")
+	flag.StringVar(&outputdir, "outputdir", "", "Directory to put the generated files in")
+	flag.IntVar(&singleRoom, "room", 0, "Only parse one room")
+	flag.BoolVar(&noimages, "noimages", false, "Don't create images")
+	flag.Parse()
 
-	paramsOffset := 1
-	if os.Args[1] == "--room" {
-		paramsOffset = 3
-		room, err := strconv.Atoi(os.Args[2])
-		if err != nil {
-			panic("Room needs to be a number")
-		}
-		singleRoom = room
+	//Check for values
+	if outputdir == "" || gamedir == "" {
+		flag.PrintDefaults()
+		os.Exit(1)
 	}
-	if len(os.Args) < paramsOffset+2 {
-		helpAndDie("Not enough arguments")
-	}
-	gamedir := os.Args[paramsOffset]
-	outputdir := os.Args[paramsOffset+1]
 	log.SetFlags(0)
 
 	_, err := ioutil.ReadDir(outputdir)
 	if err != nil {
 		err := os.Mkdir(outputdir, 0755)
 		if err != nil {
-			helpAndDie("Output directory doesn't exist and I can't create it.")
+			fmt.Println("Output directory doesn't exist and I can't create it.")
+			os.Exit(1)
 		}
 	}
 	os.MkdirAll(outputdir+"/img_obj", 0755)
@@ -66,6 +58,9 @@ func main() {
 	processRoom := func(room scummatlas.Room) {
 		fmt.Println("Generate files for room ", room.Number)
 		templates.WriteRoom(room, outputdir)
+		if noimages {
+			return
+		}
 		writeRoomBackground(room, outputdir)
 		createRoomObjectImages(room, outputdir)
 		for _, obj := range room.Objects {
