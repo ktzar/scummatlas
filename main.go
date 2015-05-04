@@ -6,30 +6,22 @@ import (
 	"fmt"
 	"image/png"
 	"io/ioutil"
-	"log"
 	"os"
 	"scummatlas"
 	l "scummatlas/condlog"
 	"scummatlas/templates"
+	"strings"
 )
 
-func main() {
-	var gamedir string
-	var outputdir string
-	var singleRoom int
-	var noimages bool
-	flag.StringVar(&gamedir, "gamedir", "", "Directory with the game files")
-	flag.StringVar(&outputdir, "outputdir", "", "Directory to put the generated files in")
-	flag.IntVar(&singleRoom, "room", 0, "Only parse one room")
-	flag.BoolVar(&noimages, "noimages", false, "Don't create images")
-	flag.Parse()
+const REQUIRED string = "REQUIRED"
 
-	//Check for values
-	if outputdir == "" || gamedir == "" {
-		flag.PrintDefaults()
-		os.Exit(1)
-	}
-	log.SetFlags(0)
+var gamedir string
+var outputdir string
+var singleRoom int
+var noimages bool
+
+func main() {
+	loadOptions()
 
 	_, err := ioutil.ReadDir(outputdir)
 	if err != nil {
@@ -53,20 +45,7 @@ func main() {
 	templates.WriteIndex(game, outputdir)
 	templates.WriteTable(game, outputdir)
 
-	copyStaticFiles(outputdir)
-
-	processRoom := func(room scummatlas.Room) {
-		fmt.Println("Generate files for room ", room.Number)
-		templates.WriteRoom(room, outputdir)
-		if noimages {
-			return
-		}
-		writeRoomBackground(room, outputdir)
-		createRoomObjectImages(room, outputdir)
-		for _, obj := range room.Objects {
-			obj.PrintVerbs()
-		}
-	}
+	copyStaticFiles()
 
 	if singleRoom > 0 {
 		processRoom(game.Rooms[singleRoom])
@@ -78,7 +57,46 @@ func main() {
 
 }
 
-func copyStaticFiles(outputdir string) {
+func loadOptions() {
+	var logflags string
+
+	logkeys := make([]string, 0, len(l.Flags))
+	for k := range l.Flags {
+		logkeys = append(logkeys, k)
+	}
+	flag.StringVar(&gamedir, "gamedir", REQUIRED, "Directory with the game files")
+	flag.StringVar(&outputdir, "outputdir", REQUIRED, "Directory to put the generated files in")
+	flag.IntVar(&singleRoom, "room", 0, "Only parse one room")
+	flag.BoolVar(&noimages, "noimages", false, "Don't create images")
+	flag.StringVar(&logflags, "logflags", "", "Comma separated list of log flags. Available flags: "+strings.Join(logkeys, ", "))
+	flag.Parse()
+
+	if outputdir == REQUIRED || gamedir == REQUIRED {
+		fmt.Println("outputdir and gamedir are not optional\n")
+		flag.PrintDefaults()
+		os.Exit(1)
+	}
+
+	flags := strings.Split(logflags, ",")
+	for _, flag := range flags {
+		l.Flags[flag] = true
+	}
+}
+
+func processRoom(room scummatlas.Room) {
+	fmt.Println("Generate files for room ", room.Number)
+	templates.WriteRoom(room, outputdir)
+	if noimages {
+		return
+	}
+	writeRoomBackground(room, outputdir)
+	createRoomObjectImages(room)
+	for _, obj := range room.Objects {
+		obj.PrintVerbs()
+	}
+}
+
+func copyStaticFiles() {
 	fileutils.CopyDir("./static", outputdir+"/static")
 }
 
@@ -101,7 +119,7 @@ func writeRoomBackground(room scummatlas.Room, outputdir string) {
 	}
 }
 
-func createRoomObjectImages(r scummatlas.Room, outputdir string) {
+func createRoomObjectImages(r scummatlas.Room) {
 	for _, object := range r.Objects {
 		if len(object.Image.Frames) == 0 {
 			//fmt.Printf("Obj %v does not have an image\n", object.Id)
