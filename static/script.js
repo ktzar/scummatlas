@@ -1,15 +1,19 @@
 function setZplanePerspective(angle) {
-    var distance = 40;
+    var distance = 40, zOffset, perspective;
     angle *= -1;
     $('.zplane').each(function (i, el) {
         zOffset = i * distance;
+        perspective = 900;
         if (i === 0) {
-            console.log(0.01 * angle)
             $(el).css('opacity', 1 - Math.abs(0.01 * angle));
         }
         $(el).css(
             'transform',
-            'perspective(600px) rotateY(' + angle + 'deg) translateZ(' + zOffset + 'px)'
+            [
+                'perspective(' + perspective + 'px)',
+                'rotateY(' + angle + 'deg)',
+                'translateZ(' + zOffset + 'px)'
+            ].join(" ")
         );
     });
 }

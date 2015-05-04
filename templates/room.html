@@ -24,7 +24,7 @@
                 {{end}}
             </div>
             <label>Rotate</label><br/>
-            <input type="range" min="-80" max="80" step="5" id="zPlane-rotation"/>
+            <input type="range" min="-80" max="80" step="1" id="zPlane-rotation"/>
             <h2>Walking boxes</h2>
             <svg class="room-boxes__nobg room-boxes" style="background-image: url({{.Background}})" width="{{.DoubleWidth}}" height="{{.DoubleHeight}}" viewBox="{{.ViewBox}}">
             {{range .Objects}}

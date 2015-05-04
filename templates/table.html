@@ -3,6 +3,7 @@
         <title>Room Index</title>
 		<link href="./static/style.css" rel="stylesheet" type="text/css"/>
 		<link href="./static/bootstrap.min.css" rel="stylesheet" type="text/css"/>
+		<script src="./static/zepto.min.js"></script>
 		<script src="./static/script.js"></script>
     </head>
     <body id="index-page">
@@ -16,10 +17,11 @@
                 <th>Name</th>
                 <th>Width</th>
                 <th>Height</th>
-                <th>Number of objects</th>
-                <th>Palette length</th>
-                <th>Number of boxes</th>
-                <th>Number of local scripts</th>
+                <th>Objects</th>
+                <th>Zplanes</th>
+                <th>Palette</th>
+                <th>Boxes</th>
+                <th>Local scripts</th>
             </tr>
         {{range .Rooms}}
             <tr>
@@ -32,6 +34,7 @@
                 <td>{{.Width}}</td>
                 <td>{{.Height}}</td>
                 <td>{{.ObjCount}}</td>
+                <td>{{len .Zplanes}}</td>
                 <td>{{.PaletteLength}}</td>
                 <td>{{.BoxCount}}</td>
                 <td>{{.LocalScriptCount}}</td>
