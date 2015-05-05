@@ -2,7 +2,6 @@ package scummatlas
 
 import (
 	"fmt"
-	"io/ioutil"
 	b "scummatlas/binaryutils"
 )
 
@@ -19,14 +18,6 @@ type RoomIndex struct {
 type ScriptIndex struct {
 	roomNumber int
 	roomOffset int
-}
-
-func ReadXoredFile(fileName string, code byte) (out []byte, err error) {
-	out, err = ioutil.ReadFile(fileName)
-	for i, _ := range out {
-		out[i] = out[i] ^ 0x69
-	}
-	return out, err
 }
 
 func complementaryString(in []byte) string {

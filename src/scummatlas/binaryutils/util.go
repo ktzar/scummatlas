@@ -2,6 +2,7 @@ package binaryutils
 
 import (
 	"encoding/binary"
+	"io/ioutil"
 )
 
 func BE32(data []byte, index int) int {
@@ -29,4 +30,12 @@ func LE16(data []byte, index int) int {
 
 func FourCharString(data []byte, index int) string {
 	return string(data[index : index+4])
+}
+
+func ReadXoredFile(fileName string, code byte) (out []byte, err error) {
+	out, err = ioutil.ReadFile(fileName)
+	for i, _ := range out {
+		out[i] = out[i] ^ 0x69
+	}
+	return out, err
 }

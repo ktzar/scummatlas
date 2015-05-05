@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	b "scummatlas/binaryutils"
 	l "scummatlas/condlog"
 	"strings"
 )
@@ -59,7 +60,7 @@ func (self *Game) ProcessIndex(outputdir string) error {
 		return errors.New("No index file")
 	}
 
-	data, err := ReadXoredFile(self.gamedir+"/"+self.indexFile, V5_KEY)
+	data, err := b.ReadXoredFile(self.gamedir+"/"+self.indexFile, V5_KEY)
 	if DEBUG_SAVE_DECODED {
 		if err != nil {
 			panic("Can't read " + self.indexFile)
@@ -117,7 +118,7 @@ func (self *Game) processMainFile(outputdir string) MainScummData {
 		panic("No main file")
 	}
 
-	data, err := ReadXoredFile(self.gamedir+"/"+self.mainFile, V5_KEY)
+	data, err := b.ReadXoredFile(self.gamedir+"/"+self.mainFile, V5_KEY)
 	if DEBUG_SAVE_DECODED {
 		if err != nil {
 			panic("Can't read " + self.indexFile)
