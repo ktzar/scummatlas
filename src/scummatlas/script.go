@@ -288,12 +288,22 @@ func (p *ScriptParser) parseNext() (string, error) {
 				"roomOps.screen(b = %d, h = %d)",
 				b.LE16(p.data, p.offset+2),
 				b.LE16(p.data, p.offset+4))
-		case 0x06:
-			opCodeLength = 2
-			instruction = "roomOps.ShakeOff()"
+		case 0x04:
+			opCodeLength = 10
+			r := b.LE16(p.data, p.offset+2)
+			g := b.LE16(p.data, p.offset+4)
+			b := b.LE16(p.data, p.offset+6)
+			palette := p.data[p.offset+9]
+			instruction = fmt.Sprintf(
+				"roomOps.setPalette(r = %d, g = %d, b = %d, index = %d)",
+				r, g, b, palette)
 		case 0x05:
 			opCodeLength = 2
 			instruction = "roomOps.ShakeOn()"
+		case 0x06:
+			opCodeLength = 2
+			instruction = "roomOps.ShakeOff()"
+		//TODO
 		case 0x0A:
 			opCodeLength = 4
 			instruction = fmt.Sprintf("roomOps.effect(%v)",
