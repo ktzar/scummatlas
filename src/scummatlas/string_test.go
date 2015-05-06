@@ -8,7 +8,7 @@ func TestStringOpcode(t *testing.T) {
 	if str != "ABCD" {
 		t.Errorf("String %v is not right", str)
 	}
-	if length != 7 {
+	if length != 5 {
 		t.Errorf("Length %d is not right", length)
 	}
 
@@ -18,7 +18,7 @@ func TestStringOpcode(t *testing.T) {
 	if str != "ABCD" {
 		t.Errorf("String %v is not right", str)
 	}
-	if length != 7 {
+	if length != 5 {
 		t.Errorf("Length %d is not right", length)
 	}
 
