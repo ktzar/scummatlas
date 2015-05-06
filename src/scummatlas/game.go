@@ -12,15 +12,20 @@ import (
 )
 
 type Game struct {
-	Name      string
-	RoomCount int
-	RoomNames []RoomName
-	Rooms     []Room
-	Scripts   []Script
-	gamedir   string
-	indexFile string
-	mainFile  string
+	Name        string
+	RoomOffsets []RoomOffset
+	RoomNames   []RoomName
+	RoomIndexes []int
+	Rooms       []Room
+	Scripts     []Script
+	Costumes    []Costume
+	gamedir     string
+	indexFile   string
+	mainFile    string
+	mainData    MainScummData
 }
+
+type Costume interface{}
 
 const DEBUG_SAVE_DECODED = true
 const V5_KEY = 0x69
@@ -46,28 +51,85 @@ func NewGame(gamedir string) *Game {
 				game.indexFile = file.Name()
 			}
 
-			if extension == ".001" { // MAIN FILE
+			if extension == ".001" {
 				game.mainFile = file.Name()
 			}
 		}
 	}
-
+	game.processIndex()
+	game.processMainFile()
 	return &game
 }
 
-func (self *Game) ProcessIndex(outputdir string) error {
+func (self *Game) ProcessAllRooms(outputdir string) {
+	for i, offset := range self.RoomOffsets {
+		l.Log("game", "Parsing room %d with Id: %x", i, offset.Id)
+		room := self.mainData.ParseRoom(offset.Offset, i)
+		room.Id = offset.Id
+		room.Name = self.RoomNames[i].Name
+		self.Rooms[i] = room
+	}
+}
+
+func (self *Game) ProcessSingleRoom(i int, outputdir string) {
+	offset := self.RoomOffsets[i]
+	l.Log("game", "Parsing room %d with Id: %x", i, offset.Id)
+	room := self.mainData.ParseRoom(offset.Offset, i)
+	if len(self.RoomNames) > i {
+		room.Id = offset.Id
+		room.Name = self.RoomNames[i].Name
+	}
+	self.Rooms[i] = room
+}
+
+func (self *Game) DumpDecoded(outputdir string) {
+	if self.indexFile != "" {
+		self.dumpFile(self.indexFile, outputdir)
+		self.dumpFile(self.mainFile, outputdir)
+	}
+}
+
+func (self *Game) processMainFile() {
+	if self.mainFile == "" {
+		panic("No main file")
+	}
+
+	data, err := b.ReadXoredFile(self.gamedir+"/"+self.mainFile, V5_KEY)
+	if err != nil {
+		panic("Cannot read main file")
+	}
+
+	self.mainData = MainScummData{data}
+	self.Scripts = self.mainData.GetScripts()
+	self.RoomOffsets = self.mainData.GetRoomsOffset()
+	self.Rooms = make([]Room, len(self.RoomOffsets))
+
+	l.Log("structure", "Room count", len(self.RoomOffsets))
+}
+
+func (self Game) dumpFile(file string, outputdir string) error {
+	if file == "" {
+		return errors.New("File does not exist")
+	}
+	data, err := b.ReadXoredFile(self.gamedir+"/"+file, V5_KEY)
+	if err != nil {
+		panic("Can't read " + file)
+	}
+	f, _ := os.Create(outputdir + "/" + file + ".decoded")
+	defer f.Close()
+	f.Write(data)
+
+	return nil
+}
+
+func (self *Game) processIndex() error {
 	if self.indexFile == "" {
 		return errors.New("No index file")
 	}
 
 	data, err := b.ReadXoredFile(self.gamedir+"/"+self.indexFile, V5_KEY)
-	if DEBUG_SAVE_DECODED {
-		if err != nil {
-			panic("Can't read " + self.indexFile)
-		}
-		f, _ := os.Create(outputdir + "/" + self.indexFile + ".decoded")
-		defer f.Close()
-		f.Write(data)
+	if err != nil {
+		return err
 	}
 
 	currIndex := 0
@@ -77,8 +139,6 @@ func (self *Game) ProcessIndex(outputdir string) error {
 		currBlock := data[currIndex : currIndex+blockSize]
 
 		currIndex += blockSize
-		//TODO Remove
-		//continue
 		l.Log("structure", "Parse Block", blockName)
 		switch blockName {
 		case "RNAM":
@@ -111,67 +171,4 @@ func (self *Game) ProcessIndex(outputdir string) error {
 	}
 
 	return nil
-}
-
-func (self *Game) processMainFile(outputdir string) MainScummData {
-	if self.mainFile == "" {
-		panic("No main file")
-	}
-
-	data, err := b.ReadXoredFile(self.gamedir+"/"+self.mainFile, V5_KEY)
-	if DEBUG_SAVE_DECODED {
-		if err != nil {
-			panic("Can't read " + self.indexFile)
-		}
-		f, _ := os.Create(outputdir + "/" + self.indexFile + ".decoded")
-		defer f.Close()
-		f.Write(data)
-	}
-
-	mainScumm := MainScummData{data}
-
-	self.Scripts = mainScumm.GetScripts()
-
-	self.RoomCount = mainScumm.GetRoomCount()
-	l.Log("structure", "Room count", self.RoomCount)
-
-	self.Rooms = make([]Room, self.RoomCount)
-
-	return mainScumm
-}
-
-func (self *Game) ProcessAllRooms(outputdir string) {
-	mainScumm := self.processMainFile(outputdir)
-	roomOffsets := mainScumm.GetRoomsOffset()
-	for i, offset := range roomOffsets {
-		l.Log("game", "Parsing room %v", i)
-		room := mainScumm.ParseRoom(offset.Offset, i)
-		self.Rooms[i] = room
-	}
-	for _, roomName := range self.RoomNames {
-		l.Log("game", "Assigning room number %v",
-			roomName.Number)
-		if roomName.Number < len(self.Rooms) {
-			self.Rooms[roomName.Number-1].Name = roomName.Name
-			self.Rooms[roomName.Number-1].Number = roomName.Number
-		} else {
-			l.Log("game", "Room %v out of range", roomName.Number)
-		}
-	}
-}
-
-func (self *Game) ProcessSingleRoom(i int, outputdir string) {
-	mainScumm := self.processMainFile(outputdir)
-	roomOffsets := mainScumm.GetRoomsOffset()
-	l.Log("game", "Parsing room %v", i)
-	for _, offset := range roomOffsets {
-		if offset.Number == i {
-			room := mainScumm.ParseRoom(offset.Offset, i)
-			if len(self.RoomNames) >= i+2 {
-				room.Name = self.RoomNames[i-1].Name
-				room.Number = self.RoomNames[i-1].Number
-			}
-			self.Rooms[offset.Number-1] = room
-		}
-	}
 }

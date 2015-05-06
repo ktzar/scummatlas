@@ -24,8 +24,8 @@ func WriteRoom(room scummatlas.Room, outputdir string) {
 
 	t := template.Must(template.New("index").Parse(string(roomTpl)))
 
-	bgPath := fmt.Sprintf("./img_bg/room%02d_bg.png", room.Number)
-	htmlPath := fmt.Sprintf("%v/room%02d.html", outputdir, room.Number)
+	bgPath := fmt.Sprintf("./img_bg/room%02d_bg.png", room.Id)
+	htmlPath := fmt.Sprintf("%v/room%02d.html", outputdir, room.Id)
 	file, err := os.Create(htmlPath)
 	l.Log("template", "Create "+htmlPath)
 	if err != nil {
@@ -50,7 +50,7 @@ func WriteRoom(room scummatlas.Room, outputdir string) {
 
 func (self roomData) ZplanesUrl() (urls []string) {
 	for i := len(self.Zplanes); i > 0; i-- {
-		urls = append(urls, fmt.Sprintf("img_bg/room%02d_bg-zplane%d.png", self.Number, i))
+		urls = append(urls, fmt.Sprintf("img_bg/room%02d_bg-zplane%d.png", self.Id, i))
 	}
 	return
 }

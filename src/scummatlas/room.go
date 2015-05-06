@@ -16,7 +16,7 @@ type BoxMatrix bool
 type Room struct {
 	data         []byte
 	offset       int
-	Number       int
+	Id           int
 	Name         string
 	Width        int
 	Height       int
@@ -35,7 +35,7 @@ type Room struct {
 }
 
 func (self Room) TwoDigitNumber() string {
-	return fmt.Sprintf("%02d", self.Number)
+	return fmt.Sprintf("%02d", self.Id)
 }
 
 func (self Room) PaletteLength() int {

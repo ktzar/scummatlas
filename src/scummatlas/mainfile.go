@@ -15,11 +15,25 @@ func (d *MainScummData) fourChars(offset int) string {
 }
 
 type RoomOffset struct {
-	Number int
+	Id     int
 	Offset int
 }
 
-func (d *MainScummData) GetRoomCount() int {
+func (d *MainScummData) GetRoomsOffset() (offsets []RoomOffset) {
+	count := d.getRoomCount()
+	currentOffset := 17
+	var out []RoomOffset
+	for i := 0; i < count; i++ {
+		count := int(d.Data[currentOffset])
+		offset := b.LE32(d.Data, currentOffset+1)
+		roomOffset := RoomOffset{count, offset}
+		out = append(out, roomOffset)
+		currentOffset += 5
+	}
+	return out
+}
+
+func (d *MainScummData) getRoomCount() int {
 	blockName := d.fourChars(0)
 	blockSize := b.BE32(d.Data, 4)
 	l.Log("structure", blockName)
@@ -37,20 +51,6 @@ func (d *MainScummData) GetRoomCount() int {
 	l.Log("room", "%v (%v bytes)\t", blockName, blockSize)
 	l.Log("room", "roomCount: %v", roomCount)
 	return roomCount
-}
-
-func (d *MainScummData) GetRoomsOffset() (offsets []RoomOffset) {
-	count := d.GetRoomCount()
-	currentOffset := 17
-	var out []RoomOffset
-	for i := 0; i < count; i++ {
-		count := int(d.Data[currentOffset])
-		offset := b.LE32(d.Data, currentOffset+1)
-		roomOffset := RoomOffset{count, offset}
-		out = append(out, roomOffset)
-		currentOffset += 5
-	}
-	return out
 }
 
 func (d MainScummData) GetScripts() []Script {

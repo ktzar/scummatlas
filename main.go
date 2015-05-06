@@ -35,11 +35,10 @@ func main() {
 	os.MkdirAll(outputdir+"/img_bg", 0755)
 
 	game := scummatlas.NewGame(gamedir)
-	game.ProcessIndex(outputdir)
 	if singleRoom < 1 {
 		game.ProcessAllRooms(outputdir)
 	} else {
-		game.ProcessSingleRoom(singleRoom+1, outputdir)
+		game.ProcessSingleRoom(singleRoom, outputdir)
 	}
 
 	templates.WriteIndex(game, outputdir)
@@ -84,7 +83,7 @@ func loadOptions() {
 }
 
 func processRoom(room scummatlas.Room) {
-	fmt.Println("Generate files for room ", room.Number)
+	fmt.Println("Generate files for room ", room.Id)
 	templates.WriteRoom(room, outputdir)
 	if noimages {
 		return
@@ -101,8 +100,8 @@ func copyStaticFiles() {
 }
 
 func writeRoomBackground(room scummatlas.Room, outputdir string) {
-	backgroundFile := fmt.Sprintf("%v/img_bg/room%02d_bg", outputdir, room.Number)
-	l.Log("template", "\nWriting room %v background in %v\n", room.Number, backgroundFile+".png")
+	backgroundFile := fmt.Sprintf("%v/img_bg/room%02d_bg", outputdir, room.Id)
+	l.Log("template", "\nWriting room %v background in %v\n", room.Id, backgroundFile+".png")
 	pngFile, err := os.Create(backgroundFile + ".png")
 	if err != nil {
 		panic("Error creating " + backgroundFile + ".png")
@@ -127,10 +126,13 @@ func createRoomObjectImages(r scummatlas.Room) {
 		}
 
 		for frameIndex, frame := range object.Image.Frames {
+			if frame == nil {
+				continue
+			}
 			imagePath := fmt.Sprintf(
 				"%v/img_obj/room%02d_obj_%02x_%02d.png",
 				outputdir,
-				r.Number,
+				r.Id,
 				object.Id,
 				frameIndex)
 
