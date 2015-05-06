@@ -13,8 +13,8 @@ const (
 	_ = iota
 	METHOD_UNKNOWN
 	METHOD_UNCOMPRESSED
-	METHOD_ONE
-	METHOD_TWO
+	METHOD_ONE //ScummVM's UnkB
+	METHOD_TWO //ScummVM's UnkA
 	HORIZONTAL
 	VERTICAL
 	TRANSP
@@ -23,6 +23,14 @@ const (
 
 var transparent = color.RGBA{0, 0, 0, 0}
 var opaque = color.RGBA{0, 0, 0, 255}
+
+type StripeType struct {
+	code          byte
+	method        int
+	direction     int
+	transparent   int
+	paletteLength uint8
+}
 
 func drawStripe(img *image.RGBA, stripNumber int, data []byte, pal color.Palette, transpIndex uint8) {
 
@@ -37,8 +45,8 @@ func drawStripe(img *image.RGBA, stripNumber int, data []byte, pal color.Palette
 	currentPixel := 0
 
 	curPal := uint8(data[1])
-
 	curSubs := uint8(1)
+	bs := b.NewBitStream(data[2:])
 
 	setColor := func() {
 		var x, y int
@@ -52,7 +60,7 @@ func drawStripe(img *image.RGBA, stripNumber int, data []byte, pal color.Palette
 		x += 8 * stripNumber
 		if curPal >= 0 {
 			if stripeType.transparent == TRANSP && curPal == transpIndex {
-				img.Set(x, y, color.RGBA{0, 0, 0, 0})
+				img.Set(x, y, transparent)
 			} else {
 				img.Set(x, y, pal[curPal])
 			}
@@ -62,56 +70,48 @@ func drawStripe(img *image.RGBA, stripNumber int, data []byte, pal color.Palette
 		currentPixel++
 	}
 
-	bs := b.NewBitStream(data[2:])
+	readPaletteColor := func() {
+		curPal = bs.GetBits(stripeType.paletteLength)
+	}
 
 	setColor()
+
 	if stripeType.method == METHOD_TWO {
 		for currentPixel < totalPixels {
 			if bs.GetBit() == 1 {
 				if bs.GetBit() == 1 {
 					palShift := bs.GetBits(3) - 4
-					if palShift == 0 {
+					if palShift > 0 {
+						curPal += palShift
+					} else {
 						length := int(bs.GetBits(8))
 						for i := 0; i < length-1; i++ {
 							setColor()
 						}
-					} else {
-						curPal += palShift
 					}
-				} else { // 10 Read new palette index
-					curPal = bs.GetBits(stripeType.paletteLength)
+				} else {
+					readPaletteColor()
 				}
-			} else { // 0 Draw next pixel with current palette index
-			}
-			setColor()
-		}
-	} else {
-		for currentPixel < totalPixels {
-			if bs.GetBit() == 1 {
-				if bs.GetBit() == 1 {
-					if bs.GetBit() == 1 {
-						//Negate the subtraction variable. Subtract it from the palette index, and draw the next pixel.
-						curSubs = -curSubs
-					}
-					//Subtract the subtraction variable from the palette index, and draw the next pixel.
-					curPal -= curSubs
-				} else { //10, read new palette index
-					curPal = bs.GetBits(stripeType.paletteLength)
-					curSubs = 1
-				}
-			} else { // 0, draw next pixel with current palette index
 			}
 			setColor()
 		}
 	}
-}
-
-type StripeType struct {
-	code          byte
-	method        int
-	direction     int
-	transparent   int
-	paletteLength uint8
+	if stripeType.method == METHOD_ONE {
+		for currentPixel < totalPixels {
+			if bs.GetBit() == 1 {
+				if bs.GetBit() == 1 {
+					if bs.GetBit() == 1 {
+						curSubs = -curSubs
+					}
+					curPal -= curSubs
+				} else {
+					readPaletteColor()
+					curSubs = 1
+				}
+			}
+			setColor()
+		}
+	}
 }
 
 func getCompressionMethod(stripNumber int, code byte) (StripeType, error) {
