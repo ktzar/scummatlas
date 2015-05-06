@@ -70,7 +70,7 @@ func (p *ScriptParser) parseNext() (string, error) {
 	case "startMusic":
 		opCodeLength = 3
 	case "getActorRoom":
-		opCodeLength = 5
+		opCodeLength = 4
 		result := b.LE16(p.data, p.offset+1)
 		actor := p.data[p.offset+3]
 		instruction = fmt.Sprintf("0x%x = getActorRoom(actor=0x%x)", result, actor)
@@ -155,6 +155,8 @@ func (p *ScriptParser) parseNext() (string, error) {
 		instruction += fmt.Sprintf("object=0x%x", object)
 	case "panCameraTo":
 		opCodeLength = 3
+		x := b.LE16(p.data, p.offset+1)
+		instruction += fmt.Sprintf("x=%d", x)
 	case "actorOps":
 		opCodeLength = 4
 		subopcode = p.data[p.offset+3]
@@ -265,7 +267,7 @@ func (p *ScriptParser) parseNext() (string, error) {
 		if subopcode == 0x04 {
 			opCodeLength = 2
 		} else {
-			opCodeLength = 6
+			opCodeLength = 4
 		}
 	case "getInventoryCount":
 		opCodeLength = 5
@@ -400,7 +402,7 @@ func (p *ScriptParser) parseNext() (string, error) {
 		opCodeLength = 3
 	case "stopScript":
 		opCodeLength = 2
-		instruction += fmt.Sprintf("%x", p.data[p.offset+1])
+		instruction += fmt.Sprintf("%d", p.data[p.offset+1])
 	case "getActorFacing":
 		opCodeLength = 5
 	case "getClosestObjActor":

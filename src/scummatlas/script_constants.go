@@ -124,6 +124,7 @@ var opCodesNames = map[byte]string{
 	0x91: "animateActor",
 	0x93: "getInventoryCount",
 	0x9a: "move",
+	0x9c: "startSound",
 	0xa3: "getActorY",
 	0xad: "putActorInRoom",
 	0xba: "subtract",
@@ -131,6 +132,7 @@ var opCodesNames = map[byte]string{
 	0xc8: "isEqual",
 	0xd6: "getActorMoving",
 	0xe1: "putActor",
+	0xfc: "isSoundRunning",
 	0xff: "drawBox",
 }
 
