@@ -97,6 +97,7 @@ func drawStripe(img *image.RGBA, stripNumber int, data []byte, pal color.Palette
 					curPal -= curSubs
 				} else { //10, read new palette index
 					curPal = bs.GetBits(stripeType.paletteLength)
+					curSubs = 1
 				}
 			} else { // 0, draw next pixel with current palette index
 			}
