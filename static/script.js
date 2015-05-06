@@ -1,6 +1,5 @@
 function setZplanePerspective(angle) {
     var distance = 40, zOffset, perspective;
-    angle *= -1;
     $('.zplane').each(function (i, el) {
         zOffset = i * distance;
         perspective = 900;
