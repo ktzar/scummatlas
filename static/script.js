@@ -22,6 +22,14 @@ $(function () {
         $('.room-boxes').toggleClass('room-boxes__nobg');
     });
 
+    $('.zplanes-container').on('wheel', function (evt) {
+        var control = $('#zPlane-rotation'), newVal;
+        evt.preventDefault();
+        newVal = parseInt(control.val(), 10) + evt.wheelDelta;
+        control.val(newVal);
+        setZplanePerspective(control.val());
+    });
+
     if ($('.zplane').length > 0) {
         setZplanePerspective(0);
         $('#zPlane-rotation').on('input', function () {
