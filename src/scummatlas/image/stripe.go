@@ -21,8 +21,8 @@ const (
 	NO_TRANSP
 )
 
-var black = color.RGBA{0, 0, 0, 0}
-var white = color.RGBA{255, 255, 255, 255}
+var transparent = color.RGBA{0, 0, 0, 0}
+var opaque = color.RGBA{0, 0, 0, 255}
 
 func drawStripe(img *image.RGBA, stripNumber int, data []byte, pal color.Palette, transpIndex uint8) {
 
@@ -217,14 +217,14 @@ func drawStripeMask(img *image.RGBA, stripeNumber int, data []byte, offset int, 
 
 	for y, value := range bitmap {
 		if value == 0x00 {
-			drawSingleColorLine(y, black)
+			drawSingleColorLine(y, transparent)
 		} else if value == 0xFF {
-			drawSingleColorLine(y, white)
+			drawSingleColorLine(y, opaque)
 		} else {
 			for x, bit := range b.ByteToBits(value) {
-				color := black
+				color := transparent
 				if bit > 0 {
-					color = white
+					color = opaque
 				}
 				img.Set(stripeNumber*8+x, y, color)
 			}
