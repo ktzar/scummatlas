@@ -42,7 +42,7 @@ func parseString(data []byte, offset int) (say string, length int) {
 			escapeChar := data[offset+1]
 			switch {
 			case 0x01 <= escapeChar && escapeChar <= 0x03:
-				offset += 1
+				offset++
 			case 0x04 <= escapeChar && escapeChar <= 0x0e:
 				offset += 4
 			}

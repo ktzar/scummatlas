@@ -19,7 +19,7 @@
             <h2>Z-Planes</h2>
             <div class="zplanes-container" style="width: {{.Width}}px; height: {{.Height}}px">
                 <img class="pixelart zplane" src="{{$background}}"/>
-                {{range .ZplanesUrl}}
+                {{range .ZplanesURL}}
                     <img class="pixelart zplane" style="-webkit-mask-image: url({{.}})" src="{{$background}}"/>
                 {{end}}
             </div>

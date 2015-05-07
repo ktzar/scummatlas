@@ -10,8 +10,8 @@ import (
 
 type Script []string
 
-func (self Script) Print() string {
-	return strings.Join(self, ";\n")
+func (script Script) Print() string {
+	return strings.Join(script, ";\n")
 }
 
 type ScriptParser struct {
@@ -46,7 +46,7 @@ func (p *ScriptParser) parseNext() (string, error) {
 
 	if !ok {
 		l.Log("script", "0x%x is not a known code\n", opcode)
-		return "", errors.New(fmt.Sprintf("Unknown code %02x", opcode))
+		return "", fmt.Errorf("Unknown code %02x", opcode)
 	}
 	l.Log("script", "[%04x] (%02x) %v", p.offset, opcode, opcodeName)
 

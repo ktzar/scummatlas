@@ -48,31 +48,31 @@ func WriteRoom(room scummatlas.Room, outputdir string) {
 
 /* Helper functions */
 
-func (self roomData) ZplanesUrl() (urls []string) {
-	for i := len(self.Zplanes); i > 0; i-- {
-		urls = append(urls, fmt.Sprintf("img_bg/room%02d_bg-zplane%d.png", self.Id, i))
+func (room roomData) ZplanesURL() (urls []string) {
+	for i := len(room.Zplanes); i > 0; i-- {
+		urls = append(urls, fmt.Sprintf("img_bg/room%02d_bg-zplane%d.png", room.Id, i))
 	}
 	return
 }
 
-func (self roomData) PaletteHex() []string {
+func (room roomData) PaletteHex() []string {
 	var hexes []string
-	hexes = make([]string, len(self.Palette))
-	for i, color := range self.Palette {
+	hexes = make([]string, len(room.Palette))
+	for i, color := range room.Palette {
 		r, g, b, _ := color.RGBA()
 		hexes[i] = fmt.Sprintf("%02x%02x%02x", uint8(r), uint8(g), uint8(b))
 	}
 	return hexes
 }
 
-func (self roomData) DoubleHeight() int {
-	return self.Height * 2
+func (room roomData) DoubleHeight() int {
+	return room.Height * 2
 }
 
-func (self roomData) ViewBox() string {
-	return fmt.Sprintf("-10 -10 %v %v", self.Width+10, self.Height+10)
+func (room roomData) ViewBox() string {
+	return fmt.Sprintf("-10 -10 %v %v", room.Width+10, room.Height+10)
 }
 
-func (self roomData) DoubleWidth() int {
-	return self.Width * 2
+func (room roomData) DoubleWidth() int {
+	return room.Width * 2
 }

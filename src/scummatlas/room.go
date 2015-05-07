@@ -1,7 +1,6 @@
 package scummatlas
 
 import (
-	_ "bufio"
 	"fmt"
 	goimage "image"
 	"image/color"
@@ -34,20 +33,20 @@ type Room struct {
 	//ColorCycle ColorCycle
 }
 
-func (self Room) TwoDigitNumber() string {
-	return fmt.Sprintf("%02d", self.Id)
+func (r Room) TwoDigitNumber() string {
+	return fmt.Sprintf("%02d", r.Id)
 }
 
-func (self Room) PaletteLength() int {
-	return len(self.Palette)
+func (r Room) PaletteLength() int {
+	return len(r.Palette)
 }
 
-func (self Room) BoxCount() int {
-	return len(self.Boxes)
+func (r Room) BoxCount() int {
+	return len(r.Boxes)
 }
 
-func (self Room) LocalScriptCount() int {
-	return len(self.LocalScripts)
+func (r Room) LocalScriptCount() int {
+	return len(r.LocalScripts)
 }
 
 func NewRoom(data []byte) *Room {

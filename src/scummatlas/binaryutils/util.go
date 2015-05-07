@@ -34,7 +34,7 @@ func FourCharString(data []byte, index int) string {
 
 func ReadXoredFile(fileName string, code byte) (out []byte, err error) {
 	out, err = ioutil.ReadFile(fileName)
-	for i, _ := range out {
+	for i := range out {
 		out[i] = out[i] ^ 0x69
 	}
 	return out, err

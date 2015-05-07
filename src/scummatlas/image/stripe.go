@@ -1,7 +1,6 @@
 package image
 
 import (
-	"errors"
 	"fmt"
 	"image"
 	"image/color"
@@ -11,14 +10,14 @@ import (
 
 const (
 	_ = iota
-	METHOD_UNKNOWN
-	METHOD_UNCOMPRESSED
-	METHOD_ONE //ScummVM's UnkB
-	METHOD_TWO //ScummVM's UnkA
-	HORIZONTAL
-	VERTICAL
-	TRANSP
-	NO_TRANSP
+	MethodUnknown
+	MethodUncompressed
+	MethodOne //ScummVM's UnkB
+	MethodTwo //ScummVM's UnkA
+	Horizontal
+	Vertical
+	Transp
+	NoTransp
 )
 
 var transparent = color.RGBA{0, 0, 0, 0}
@@ -50,7 +49,7 @@ func drawStripe(img *image.RGBA, stripNumber int, data []byte, pal color.Palette
 
 	setColor := func() {
 		var x, y int
-		if stripeType.direction == HORIZONTAL {
+		if stripeType.direction == Horizontal {
 			x = (currentPixel) % 8
 			y = (currentPixel) / 8
 		} else {
@@ -59,7 +58,7 @@ func drawStripe(img *image.RGBA, stripNumber int, data []byte, pal color.Palette
 		}
 		x += 8 * stripNumber
 		if curPal >= 0 {
-			if stripeType.transparent == TRANSP && curPal == transpIndex {
+			if stripeType.transparent == Transp && curPal == transpIndex {
 				img.Set(x, y, transparent)
 			} else {
 				img.Set(x, y, pal[curPal])
@@ -76,7 +75,7 @@ func drawStripe(img *image.RGBA, stripNumber int, data []byte, pal color.Palette
 
 	setColor()
 
-	if stripeType.method == METHOD_TWO {
+	if stripeType.method == MethodTwo {
 		for currentPixel < totalPixels {
 			if bs.GetBit() == 1 {
 				if bs.GetBit() == 1 {
@@ -96,7 +95,7 @@ func drawStripe(img *image.RGBA, stripNumber int, data []byte, pal color.Palette
 			setColor()
 		}
 	}
-	if stripeType.method == METHOD_ONE {
+	if stripeType.method == MethodOne {
 		for currentPixel < totalPixels {
 			if bs.GetBit() == 1 {
 				if bs.GetBit() == 1 {
@@ -116,28 +115,28 @@ func drawStripe(img *image.RGBA, stripNumber int, data []byte, pal color.Palette
 
 func getCompressionMethod(stripNumber int, code byte) (StripeType, error) {
 	stripe := StripeType{
-		direction:     HORIZONTAL,
-		method:        METHOD_UNKNOWN,
-		transparent:   NO_TRANSP,
+		direction:     Horizontal,
+		method:        MethodUnknown,
+		transparent:   NoTransp,
 		paletteLength: 255,
 	}
 
 	if code == 0x01 {
-		stripe.method = METHOD_UNCOMPRESSED
+		stripe.method = MethodUncompressed
 	} else if code >= 0x0e && code <= 0x30 {
-		stripe.method = METHOD_ONE
+		stripe.method = MethodOne
 	} else if code >= 0x40 && code <= 0x80 {
-		stripe.method = METHOD_TWO
+		stripe.method = MethodTwo
 	}
 
 	if (code >= 0x03 && code <= 0x12) ||
 		(code >= 0x22 && code <= 0x26) {
-		stripe.direction = VERTICAL
+		stripe.direction = Vertical
 	}
 
 	if (code >= 0x22 && code <= 0x30) ||
 		(code >= 0x54 && code <= 0x6c) {
-		stripe.transparent = TRANSP
+		stripe.transparent = Transp
 	}
 
 	codes := []uint8{0x0e, 0x18, 0x22, 0x2c, 0x40, 0x54, 0x68, 0x7c}
@@ -149,8 +148,8 @@ func getCompressionMethod(stripNumber int, code byte) (StripeType, error) {
 		}
 	}
 
-	if stripe.method == METHOD_UNKNOWN {
-		return stripe, errors.New(fmt.Sprintf("Unknown method for code %x", code))
+	if stripe.method == MethodUnknown {
+		return stripe, fmt.Errorf("Unknown method for code %x", code)
 	}
 
 	return stripe, nil
@@ -164,18 +163,18 @@ func printStripeInfo(stripNumber int, code byte) {
 	}
 
 	out := fmt.Sprintf("%v\t0x%X\t", stripNumber, code)
-	if stripeType.method == METHOD_ONE {
+	if stripeType.method == MethodOne {
 		out += "   1"
-	} else if stripeType.method == METHOD_TWO {
+	} else if stripeType.method == MethodTwo {
 		out += "   2"
 	}
-	if stripeType.direction == VERTICAL {
+	if stripeType.direction == Vertical {
 		out += "\tVert"
 	} else {
 		out += "\tHoriz"
 	}
 	out += "\t" + string(stripeType.paletteLength)
-	if stripeType.transparent == TRANSP {
+	if stripeType.transparent == Transp {
 		out += "\tYes"
 	} else {
 		out += "\tNo"
