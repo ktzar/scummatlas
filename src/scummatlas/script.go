@@ -63,9 +63,14 @@ func (p *ScriptParser) parseNext() (string, error) {
 		instruction += fmt.Sprintf("actor=%d, anim=%d", actor, anim)
 	case "putActor":
 		opCodeLength = 6
-		actor := p.data[p.offset+1]
+		actor := int(p.data[p.offset+1])
 		x := b.LE16(p.data, p.offset+2)
 		y := b.LE16(p.data, p.offset+4)
+		if opcode&0x80 > 0 {
+			actor = b.LE16(p.data, p.offset+1)
+			x = b.LE16(p.data, p.offset+3)
+			y = b.LE16(p.data, p.offset+5)
+		}
 		instruction += fmt.Sprintf("actor=0x%x, x=%d, y=%d", actor, x, y)
 	case "startMusic":
 		opCodeLength = 3
@@ -73,7 +78,7 @@ func (p *ScriptParser) parseNext() (string, error) {
 		opCodeLength = 4
 		result := b.LE16(p.data, p.offset+1)
 		actor := p.data[p.offset+3]
-		instruction = fmt.Sprintf("0x%x = getActorRoom(actor=0x%x)", result, actor)
+		instruction = fmt.Sprintf("0x%x=getActorRoom(actor=0x%x)", result, actor)
 		instructionFinished = true
 	case "isGreaterEqual":
 		opCodeLength = 7
@@ -92,19 +97,19 @@ func (p *ScriptParser) parseNext() (string, error) {
 		case 0x01:
 			opCodeLength = 8
 			action = "drawAt"
-			params = fmt.Sprintf(", x = %d, y = %d",
+			params = fmt.Sprintf(", x=%d, y=%d",
 				b.LE16(p.data, p.offset+4),
 				b.LE16(p.data, p.offset+6))
 		case 0x02:
 			opCodeLength = 6
 			action = "setState"
-			params = fmt.Sprintf(", state = %d",
+			params = fmt.Sprintf(", state=%d",
 				b.LE16(p.data, p.offset+4))
 		case 0xff:
 			opCodeLength = 4
 			action = "draw"
 		}
-		instruction = fmt.Sprintf("drawObject.%v(object = %02x%v)", action, object, params)
+		instruction = fmt.Sprintf("drawObject.%v(object=%02x%v)", action, object, params)
 		instructionFinished = true
 	case "getActorElevation":
 		opCodeLength = 5
@@ -112,7 +117,7 @@ func (p *ScriptParser) parseNext() (string, error) {
 		opCodeLength = 4
 		object := b.LE16(p.data, p.offset+1)
 		state := p.data[p.offset+3]
-		instruction += fmt.Sprintf("object = %d, state = %d", object, state)
+		instruction += fmt.Sprintf("object=%d, state=%d", object, state)
 	case "isNotEqual":
 		opCodeLength = 7
 		variable := varName(p.data[p.offset+1])
@@ -159,9 +164,7 @@ func (p *ScriptParser) parseNext() (string, error) {
 		instruction += fmt.Sprintf("x=%d", x)
 	case "actorOps":
 		opCodeLength = 4
-		subopcode = p.data[p.offset+3]
 		actor := b.LE16(p.data, p.offset+1)
-		instructionFinished = true
 		command := actorOps[subopcode]
 		instruction = fmt.Sprintf("actorOps.%v(actor=0x%x)", command, actor)
 		for p.data[p.offset+int(opCodeLength)] != 0xff {
@@ -171,6 +174,7 @@ func (p *ScriptParser) parseNext() (string, error) {
 			}
 		}
 		opCodeLength++
+		instructionFinished = true
 	case "actorFromPos":
 		opCodeLength = 5
 	case "getRandomNumber":
@@ -253,9 +257,14 @@ func (p *ScriptParser) parseNext() (string, error) {
 			instructionFinished = true
 		}
 	case "putActorInRoom":
-		opCodeLength = 3
-		actor := p.data[p.offset+1]
-		room := p.data[p.offset+2]
+		opCodeLength = 4
+		actor := int(p.data[p.offset+2])
+		room := p.data[p.offset+3]
+		if opcode&0x80 > 0 {
+			opCodeLength++
+			actor = b.LE16(p.data, p.offset+1)
+			room = p.data[p.offset+3]
+		}
 		instruction += fmt.Sprintf("actor=%d, room=%d", actor, room)
 	case "delay":
 		opCodeLength = 4
@@ -275,17 +284,18 @@ func (p *ScriptParser) parseNext() (string, error) {
 		opCodeLength = 3
 	case "roomOps":
 		opCodeLength = varLen
+		instruction = "roomOps"
 		switch subopcode {
 		case 0x01:
 			opCodeLength = 6
-			instruction = fmt.Sprintf(
-				"roomOps.scroll(minX = %d, maxX = %d)",
+			instruction += fmt.Sprintf(
+				".scroll(minX=%d, maxX=%d)",
 				b.LE16(p.data, p.offset+2),
 				b.LE16(p.data, p.offset+4))
 		case 0x03:
 			opCodeLength = 6
-			instruction = fmt.Sprintf(
-				"roomOps.screen(b = %d, h = %d)",
+			instruction += fmt.Sprintf(
+				".screen(b=%d, h=%d)",
 				b.LE16(p.data, p.offset+2),
 				b.LE16(p.data, p.offset+4))
 		case 0x04:
@@ -294,20 +304,60 @@ func (p *ScriptParser) parseNext() (string, error) {
 			g := b.LE16(p.data, p.offset+4)
 			b := b.LE16(p.data, p.offset+6)
 			palette := p.data[p.offset+9]
-			instruction = fmt.Sprintf(
-				"roomOps.setPalette(r = %d, g = %d, b = %d, index = %d)",
+			instruction += fmt.Sprintf(
+				".setPalette(r=%d, g=%d, b=%d, index=%d)",
 				r, g, b, palette)
 		case 0x05:
 			opCodeLength = 2
-			instruction = "roomOps.ShakeOn()"
+			instruction += ".ShakeOn()"
 		case 0x06:
 			opCodeLength = 2
-			instruction = "roomOps.ShakeOff()"
-		//TODO
+			instruction += ".ShakeOff()"
+		case 0x07:
+			opCodeLength = 7
+			scale1 := p.data[p.offset+2]
+			y1 := p.data[p.offset+3]
+			scale2 := p.data[p.offset+4]
+			y2 := p.data[p.offset+5]
+			slot := p.data[p.offset+6]
+			instruction += fmt.Sprintf(".scale(scale1=%d,y1=%d,scale2=%d,y2=%d,slot=%d)",
+				scale1, y1, scale2, y2, slot, instruction)
+		case 0x08:
+		case 0x88:
+			opCodeLength = 7
+			scale := b.LE16(p.data, p.offset+2)
+			startcolor := p.data[p.offset+4]
+			endcolor := p.data[p.offset+5]
+			instruction += fmt.Sprintf(".intensity(scale=%d,startcolor=%d,endcolor=%d",
+				scale, startcolor, endcolor)
+		case 0x09:
+			opCodeLength = 4
+			flag := p.data[p.offset+2]
+			slot := p.data[p.offset+3]
+			instruction += fmt.Sprintf(".savegame(flag=%d,slot=%d", flag, slot)
 		case 0x0A:
 			opCodeLength = 4
-			instruction = fmt.Sprintf("roomOps.effect(%v)",
+			instruction += fmt.Sprintf(".effect(%v)",
 				b.LE16(p.data, p.offset+2))
+		case 0x0B:
+		case 0x0C:
+			opCodeLength = 10
+			r := b.LE16(p.data, p.offset+2)
+			g := b.LE16(p.data, p.offset+4)
+			b := b.LE16(p.data, p.offset+6)
+			startcolor := p.data[p.offset+8]
+			endcolor := p.data[p.offset+9]
+			subinstruction := "intensity"
+			if subopcode == 0x0C {
+				subinstruction = "shadow"
+			}
+			instruction += fmt.Sprintf(".%v(r=%d, g=%d, b=%d, "+
+				"startColor=%02x, endColor=%02x)",
+				subinstruction, r, g, b, startcolor, endcolor)
+		case 0x0D: //Save string
+		case 0x0E: //Load string
+		case 0x0F: //Transform
+		case 0x10: //Cycle speed
 		}
 		instructionFinished = true
 	case "getDist":
@@ -332,7 +382,7 @@ func (p *ScriptParser) parseNext() (string, error) {
 		opCodeLength = 5
 		result := b.LE16(p.data, p.offset+1)
 		value := p.data[p.offset+3]
-		instruction = fmt.Sprintf("0x%x = 0x%x - 0x%x)", result, result, value)
+		instruction = fmt.Sprintf("0x%x=0x%x - 0x%x)", result, result, value)
 		instructionFinished = true
 	case "getActorScale":
 		opCodeLength = 5
@@ -390,7 +440,7 @@ func (p *ScriptParser) parseNext() (string, error) {
 			name += string(p.data[p.offset+opCodeLength])
 			opCodeLength++
 		}
-		instruction += fmt.Sprintf("object = %d, text = \"%v\"", object, name)
+		instruction += fmt.Sprintf("object=%d, text=\"%v\"", object, name)
 	case "getActorMoving":
 		opCodeLength = 5
 	case "or":
@@ -494,7 +544,7 @@ func (p *ScriptParser) parseNext() (string, error) {
 		opCodeLength = varLen
 	case "print", "printEgo":
 		if opcodeName == "print" {
-			instruction += fmt.Sprintf("actor = %d, ", p.data[p.offset+1])
+			instruction += fmt.Sprintf("actor=%d, ", p.data[p.offset+1])
 			opCodeLength = 2
 		} else {
 			opCodeLength = 1

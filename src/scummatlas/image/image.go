@@ -37,7 +37,6 @@ func ParseImage(data []byte, zBuffers int, width int, height int, pal color.Pale
 
 	stripeCount := width / 8
 	offsets := parseStripeTable(data, 16, stripeCount, 4)
-	//fmt.Println("offsets", offsets)
 	image = parseStripesIntoImage(data, offsets, 8, width, height, pal, transpIndex)
 
 	ZPOffset := 8 + blockSize
@@ -80,9 +79,6 @@ func parseStripesIntoImage(data []byte, offsets []int, initialOffset int, width 
 		}
 		if l.Flags["image"] {
 			printStripeInfo(i, data[initialOffset+offset])
-		}
-		if len(data) < initialOffset+offset+size {
-			return img
 		}
 		drawStripe(
 			img,
