@@ -3,7 +3,6 @@ package main
 import (
 	"fileutils"
 	"flag"
-	"sync"
 	"fmt"
 	"image/png"
 	"io/ioutil"
@@ -12,6 +11,7 @@ import (
 	l "scummatlas/condlog"
 	"scummatlas/templates"
 	"strings"
+	"sync"
 )
 
 const REQUIRED string = "REQUIRED"
@@ -51,23 +51,16 @@ func main() {
 		processRoom(game.Rooms[singleRoom])
 	} else {
 		var wg sync.WaitGroup
-		messages := make(chan int)
-		wg.Add(len(game.Rooms))
 		for _, room := range game.Rooms {
+			wg.Add(1)
 			go func(room scummatlas.Room) {
-				defer wg.Done()
 				processRoom(room)
-				messages <- room.Id
+				fmt.Printf("Room %v processed\n", room.Id)
+				wg.Done()
 			}(room)
 		}
-		go func() {
-			for i := range messages {
-				fmt.Printf("Room %v processed\n",i)
-			}
-		}()
 		wg.Wait()
 	}
-
 }
 
 func loadOptions() {
@@ -106,6 +99,7 @@ func processRoom(room scummatlas.Room) {
 	for _, obj := range room.Objects {
 		obj.PrintVerbs()
 	}
+	fmt.Printf("Files for %d generated\n", room.Id)
 }
 
 func copyStaticFiles() {

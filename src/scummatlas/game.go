@@ -62,12 +62,23 @@ func NewGame(gamedir string) *Game {
 }
 
 func (self *Game) ProcessAllRooms(outputdir string) {
+	roomDone := make(chan int)
+
 	for i, offset := range self.RoomOffsets {
-		l.Log("game", "Parsing room %d with Id: %x", i, offset.Id)
-		room := self.mainData.ParseRoom(offset.Offset, i)
-		room.Id = offset.Id
-		room.Name = self.RoomNames[i].Name
-		self.Rooms[i] = room
+		go func(i int, offset RoomOffset) {
+			l.Log("game", "Parsing room %d with Id: %x", i, offset.Id)
+			room := self.mainData.ParseRoom(offset.Offset, i)
+			room.Id = offset.Id
+			room.Name = self.RoomNames[i].Name
+			self.Rooms[i] = room
+			roomDone <- room.Id
+		}(i, offset)
+	}
+	roomsDone := 0
+	for roomsDone < len(self.RoomOffsets) {
+		i := <-roomDone
+		l.Log("game", "Room %d finished processing\n", i)
+		roomsDone++
 	}
 }
 
