@@ -49,11 +49,19 @@ func main() {
 	if singleRoom > 0 {
 		processRoom(game.Rooms[singleRoom])
 	} else {
+		roomDone := make(chan int)
 		for _, room := range game.Rooms {
-			processRoom(room)
+			go func(room scummatlas.Room) {
+				processRoom(room)
+				roomDone <- room.Id
+			}(room)
+		}
+		roomsDone := 0
+		for roomsDone < len(game.Rooms) {
+			<-roomDone
+			roomsDone++
 		}
 	}
-
 }
 
 func loadOptions() {
@@ -83,7 +91,6 @@ func loadOptions() {
 }
 
 func processRoom(room scummatlas.Room) {
-	fmt.Println("Generate files for room ", room.Id)
 	templates.WriteRoom(room, outputdir)
 	if noimages {
 		return
@@ -93,6 +100,7 @@ func processRoom(room scummatlas.Room) {
 	for _, obj := range room.Objects {
 		obj.PrintVerbs()
 	}
+	fmt.Printf("Files for %d generated\n", room.Id)
 }
 
 func copyStaticFiles() {
