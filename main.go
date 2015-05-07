@@ -3,6 +3,7 @@ package main
 import (
 	"fileutils"
 	"flag"
+	"sync"
 	"fmt"
 	"image/png"
 	"io/ioutil"
@@ -49,9 +50,22 @@ func main() {
 	if singleRoom > 0 {
 		processRoom(game.Rooms[singleRoom])
 	} else {
+		var wg sync.WaitGroup
+		messages := make(chan int)
+		wg.Add(len(game.Rooms))
 		for _, room := range game.Rooms {
-			processRoom(room)
+			go func(room scummatlas.Room) {
+				defer wg.Done()
+				processRoom(room)
+				messages <- room.Id
+			}(room)
 		}
+		go func() {
+			for i := range messages {
+				fmt.Printf("Room %v processed\n",i)
+			}
+		}()
+		wg.Wait()
 	}
 
 }
@@ -83,7 +97,6 @@ func loadOptions() {
 }
 
 func processRoom(room scummatlas.Room) {
-	fmt.Println("Generate files for room ", room.Id)
 	templates.WriteRoom(room, outputdir)
 	if noimages {
 		return
