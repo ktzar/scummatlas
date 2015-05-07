@@ -28,3 +28,7 @@ out
 *.swn
 *.swm
 *.swlt
+
+bin
+src/github.com/*
+scummatlas
