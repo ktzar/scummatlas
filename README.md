@@ -1,4 +1,7 @@
 # scummatlas
+
+<img src="https://api.travis-ci.org/ktzar/scummatlas.svg?branch=master"/>
+
 Scumm games parser and HTML Atlas generator written in Golang.
 
 The aim of this software is to provide an easy to understand, testable, and organised software that unpacks games using the SCUMM engine.
