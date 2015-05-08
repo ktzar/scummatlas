@@ -5,32 +5,72 @@ import (
 	"fmt"
 	b "scummatlas/binaryutils"
 	l "scummatlas/condlog"
-	"strings"
 )
 
-type Script []string
+type Script []Operation
+
+type Operation interface {
+	String() string
+}
+
+type assignmentOp struct {
+	dst string
+	val string
+}
+
+func (op assignmentOp) String() string {
+	return fmt.Sprintf("%v = %v", op.dst, op.val)
+}
+
+type conditionalOp struct {
+	op1 string
+	op  string //This could be an enum
+	op2 string
+	dst int
+}
+
+func (op conditionalOp) String() string {
+	return fmt.Sprintf("if (%v %v %v) goto %x", op.op1, op.op, op.op2, op.dst)
+}
+
+type callOp struct {
+	method      string
+	namedParams map[string]string
+	params      []string
+}
+
+func (op callOp) String() string {
+	params := ""
+	for _, param := range op.params {
+		if params != "" {
+			params += ", "
+		}
+		params += param
+	}
+	for paramName := range op.namedParams {
+		if params != "" {
+			params += ", "
+		}
+		params += paramName + "=" + op.namedParams[paramName]
+	}
+	return fmt.Sprintf("%v(%v)", op.method, params)
+}
 
 func (script Script) Print() string {
-	return strings.Join(script, ";\n")
+	out := ""
+	for i, op := range script {
+		if i > 0 {
+			out += ";\n"
+		}
+		out += op.String() + ";"
+	}
+	return out
 }
 
 type ScriptParser struct {
 	data   []byte
 	offset int
 	script Script
-}
-
-func (p ScriptParser) parseList(offset int) (values []int) {
-	for p.data[offset] != 0xFF {
-		//TODO the first byte is supposed to always be 1 ???
-		value := b.LE16(p.data, offset+1)
-		values = append(values, value)
-		offset += 3
-		if offset > len(p.data) {
-			break
-		}
-	}
-	return
 }
 
 func (p *ScriptParser) parseNext() (string, error) {
@@ -563,8 +603,21 @@ func (p *ScriptParser) parseNext() (string, error) {
 		instruction = instruction + ")"
 	}
 
-	p.script = append(p.script, instruction)
+	//p.script = append(p.script, instruction)
 	return opcodeName, nil
+}
+
+func (p ScriptParser) parseList(offset int) (values []int) {
+	for p.data[offset] != 0xFF {
+		//TODO the first byte is supposed to always be 1 ???
+		value := b.LE16(p.data, offset+1)
+		values = append(values, value)
+		offset += 3
+		if offset > len(p.data) {
+			break
+		}
+	}
+	return
 }
 
 func parseScriptBlock(data []byte) Script {
@@ -580,7 +633,12 @@ func parseScriptBlock(data []byte) Script {
 	for parser.offset+1 < len(data) {
 		_, err := parser.parseNext()
 		if err != nil {
-			parser.script = append(parser.script, "error, "+err.Error())
+			parser.script = append(parser.script, callOp{
+				"error",
+				nil,
+				[]string{
+					err.Error()},
+			})
 			return parser.script
 		}
 		i++

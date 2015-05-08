@@ -183,7 +183,7 @@ func parseVerbBlock(data []byte) (out []Verb) {
 
 		scriptLength := len(verb.Script)
 		if scriptLength > 0 &&
-			verb.Script[scriptLength-1] == "stopObjectCode()" {
+			verb.Script[scriptLength-1].String() == "stopObjectCode()" {
 			verb.Script = verb.Script[:scriptLength-1]
 		}
 
