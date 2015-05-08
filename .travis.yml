@@ -1,4 +1,7 @@
 language: go
 
+install:
+    export GOPATH=`pwd`
+
 script:
     go test scummatlas
