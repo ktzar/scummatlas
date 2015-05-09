@@ -1,5 +1,15 @@
 package scummatlas
 
+var condOpSymbols = map[string]string{
+	"isEqual":        "==",
+	"isNotEqual":     "!=",
+	"isGreater":      ">",
+	"lessOrEqual":    "<=",
+	"isGreaterEqual": ">=",
+	"notEqualZero":   "!=",
+	"equalZero":      "==",
+}
+
 var opCodesNames = map[byte]string{
 	0x00: "stopObjectCode",
 	0x01: "putActor",
