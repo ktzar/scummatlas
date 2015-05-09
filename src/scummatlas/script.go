@@ -296,76 +296,77 @@ func (p *ScriptParser) parseNext() (string, error) {
 	case "delay":
 		opCodeLength = 4
 		delay := b.LE24(p.data, p.offset+1)
-		op.addParam(delay)
-	case "ifNotState":
-		opCodeLength = 6
+		op.addParam(fmt.Sprintf("%d", delay))
 	case "matrixOp":
 		if subopcode == 0x04 {
 			opCodeLength = 2
 		} else {
 			opCodeLength = 4
 		}
-	case "getInventoryCount":
-		opCodeLength = 5
-	case "setCameraAt":
-		opCodeLength = 3
 	case "roomOps":
 		opCodeLength = varLen
-		instruction = "roomOps"
 		switch subopcode {
 		case 0x01:
 			opCodeLength = 6
-			instruction += fmt.Sprintf(
-				".scroll(minX=%d, maxX=%d)",
-				b.LE16(p.data, p.offset+2),
-				b.LE16(p.data, p.offset+4))
+			op.callMethod += ".scroll"
+			op.addNamedParam("minX", b.LE16(p.data, p.offset+2))
+			op.addNamedParam("maxX", b.LE16(p.data, p.offset+4))
 		case 0x03:
 			opCodeLength = 6
-			instruction += fmt.Sprintf(
-				".screen(b=%d, h=%d)",
-				b.LE16(p.data, p.offset+2),
-				b.LE16(p.data, p.offset+4))
+			op.callMethod += ".screen"
+			op.addNamedParam("b", b.LE16(p.data, p.offset+2))
+			op.addNamedParam("h", b.LE16(p.data, p.offset+4))
 		case 0x04:
 			opCodeLength = 10
+			op.callMethod += ".setPalette"
 			r := b.LE16(p.data, p.offset+2)
 			g := b.LE16(p.data, p.offset+4)
 			b := b.LE16(p.data, p.offset+6)
 			palette := p.data[p.offset+9]
-			instruction += fmt.Sprintf(
-				".setPalette(r=%d, g=%d, b=%d, index=%d)",
-				r, g, b, palette)
+			op.addNamedParam("r", r)
+			op.addNamedParam("g", g)
+			op.addNamedParam("b", b)
+			op.addNamedParam("paletteIndex", int(palette))
 		case 0x05:
 			opCodeLength = 2
-			instruction += ".ShakeOn()"
+			op.callMethod += ".shakeOn"
 		case 0x06:
 			opCodeLength = 2
-			instruction += ".ShakeOff()"
+			op.callMethod += ".shakeOff"
 		case 0x07:
 			opCodeLength = 7
-			scale1 := p.data[p.offset+2]
-			y1 := p.data[p.offset+3]
-			scale2 := p.data[p.offset+4]
-			y2 := p.data[p.offset+5]
-			slot := p.data[p.offset+6]
-			instruction += fmt.Sprintf(".scale(scale1=%d,y1=%d,scale2=%d,y2=%d,slot=%d)",
-				scale1, y1, scale2, y2, slot, instruction)
+			op.callMethod += ".scale"
+			scale1 := int(p.data[p.offset+2])
+			y1 := int(p.data[p.offset+3])
+			scale2 := int(p.data[p.offset+4])
+			y2 := int(p.data[p.offset+5])
+			slot := int(p.data[p.offset+6])
+			op.addNamedParam("scale1", scale1)
+			op.addNamedParam("y1", y1)
+			op.addNamedParam("scale2", scale2)
+			op.addNamedParam("y2", y2)
+			op.addNamedParam("slot", slot)
 		case 0x08:
 		case 0x88:
 			opCodeLength = 7
+			op.callMethod += ".intensity"
 			scale := b.LE16(p.data, p.offset+2)
 			startcolor := p.data[p.offset+4]
 			endcolor := p.data[p.offset+5]
-			instruction += fmt.Sprintf(".intensity(scale=%d,startcolor=%d,endcolor=%d",
-				scale, startcolor, endcolor)
+			op.addNamedParam("scale", scale)
+			op.addNamedParam("startcolor", int(startcolor))
+			op.addNamedParam("endcolor", int(endcolor))
 		case 0x09:
 			opCodeLength = 4
+			op.callMethod += ".savegame"
 			flag := p.data[p.offset+2]
 			slot := p.data[p.offset+3]
-			instruction += fmt.Sprintf(".savegame(flag=%d,slot=%d", flag, slot)
+			op.addNamedParam("flag", int(flag))
+			op.addNamedParam("slot", int(slot))
 		case 0x0A:
 			opCodeLength = 4
-			instruction += fmt.Sprintf(".effect(%v)",
-				b.LE16(p.data, p.offset+2))
+			op.callMethod += ".effect"
+			op.addParam(fmt.Sprintf("%d", b.LE16(p.data, p.offset+2)))
 		case 0x0B:
 		case 0x0C:
 			opCodeLength = 10
@@ -377,6 +378,9 @@ func (p *ScriptParser) parseNext() (string, error) {
 			subinstruction := "intensity"
 			if subopcode == 0x0C {
 				subinstruction = "shadow"
+				op.callMethod += ".shadow"
+			} else {
+				op.callMethod += ".intensity"
 			}
 			instruction += fmt.Sprintf(".%v(r=%d, g=%d, b=%d, "+
 				"startColor=%02x, endColor=%02x)",
@@ -473,6 +477,12 @@ func (p *ScriptParser) parseNext() (string, error) {
 		//result := p.data, p.offset + 1
 		script := b.LE16(p.data, p.offset+2)
 		instruction = fmt.Sprintf("VAR_RESULT = isScriptRunning(%02x);", script)
+	case "ifNotState":
+		opCodeLength = 6
+	case "getInventoryCount":
+		opCodeLength = 5
+	case "setCameraAt":
+		opCodeLength = 3
 	case "setVarRange":
 		opCodeLength = endsList
 	case "setOwnerOf":
