@@ -32,11 +32,8 @@ func parseString(data []byte, offset int) (say string, length int) {
 	originalOffset := offset
 	i := 0
 	say = ""
-	for {
+	for i <= 200 {
 		i++
-		if i > 200 {
-			break
-		}
 		currChar := data[offset]
 		if currChar == 0xFF {
 			escapeChar := data[offset+1]
