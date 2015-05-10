@@ -6,6 +6,7 @@ import (
 	b "scummatlas/binaryutils"
 	l "scummatlas/condlog"
 	"scummatlas/image"
+	s "scummatlas/script"
 	"strings"
 )
 
@@ -14,7 +15,7 @@ type Object struct {
 	Name   string
 	Flags  uint8
 	Parent uint8
-	Script Script
+	Script s.Script
 	Image  ObjectImage
 	X      int
 	Y      int
@@ -39,7 +40,7 @@ type Verb struct {
 	code   uint8
 	Name   string
 	offset int
-	Script Script
+	Script s.Script
 }
 
 func (self Verb) PrintScript() string {
@@ -166,20 +167,17 @@ func parseVerbBlock(data []byte) (out []Verb) {
 			offset: b.LE16(data, currentOffset+1),
 		}
 
-		parser := ScriptParser{
-			data:   data,
-			offset: verb.offset,
-		}
+		parser := s.NewScriptParser(data, verb.offset)
 		var err error
 		stop := false
-		var ranOpcode Operation
-		for ranOpcode.callMethod != "stopObjectCode" && stop == false {
-			ranOpcode, err = parser.parseNext()
+		var ranOpcode s.Operation
+		for ranOpcode.GetMethod() != "stopObjectCode" && stop == false {
+			ranOpcode, err = parser.ParseNext()
 			if err != nil {
 				stop = true
 			}
 		}
-		verb.Script = parser.script
+		verb.Script = parser.Script
 
 		scriptLength := len(verb.Script)
 		if scriptLength > 0 &&

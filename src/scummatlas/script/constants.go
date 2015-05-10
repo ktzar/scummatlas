@@ -1,4 +1,4 @@
-package scummatlas
+package script
 
 var condOpSymbols = map[string]string{
 	"isEqual":        "==",

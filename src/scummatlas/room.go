@@ -8,6 +8,7 @@ import (
 	b "scummatlas/binaryutils"
 	l "scummatlas/condlog"
 	"scummatlas/image"
+	s "scummatlas/script"
 )
 
 type BoxMatrix bool
@@ -26,9 +27,9 @@ type Room struct {
 	Zplanes      []*goimage.RGBA
 	Boxes        []Box
 	BoxMatrix    BoxMatrix
-	ExitScript   Script
-	EntryScript  Script
-	LocalScripts map[int]Script
+	ExitScript   s.Script
+	EntryScript  s.Script
+	LocalScripts map[int]s.Script
 	Objects      map[int]Object
 	//ColorCycle ColorCycle
 }
@@ -54,7 +55,7 @@ func NewRoom(data []byte) *Room {
 	room.data = data
 	room.offset = 0
 	room.Objects = make(map[int]Object)
-	room.LocalScripts = make(map[int]Script)
+	room.LocalScripts = make(map[int]s.Script)
 
 	blockName := room.getBlockName()
 	if blockName != "ROOM" {
@@ -104,7 +105,7 @@ func (r *Room) parseLSCR() {
 	l.Log("script", "\nLocal ScriptID %02x, size %d", scriptId, r.getBlockSize())
 	dumpBlock("LSCR_"+fmt.Sprintf("%d", scriptId),
 		r.data[r.offset:r.offset+r.getBlockSize()])
-	script := parseScriptBlock(scriptBlock)
+	script := s.ParseScriptBlock(scriptBlock)
 
 	r.LocalScripts[scriptId] = script
 	if len(script) == 0 {
@@ -115,12 +116,12 @@ func (r *Room) parseLSCR() {
 }
 
 func (r *Room) parseENCD() {
-	r.EntryScript = parseScriptBlock(r.data[r.offset+8 : r.offset+r.getBlockSize()])
+	r.EntryScript = s.ParseScriptBlock(r.data[r.offset+8 : r.offset+r.getBlockSize()])
 	dumpBlock("ENCD", r.data[r.offset:r.offset+r.getBlockSize()])
 }
 
 func (r *Room) parseEXCD() {
-	r.ExitScript = parseScriptBlock(r.data[r.offset+8 : r.offset+r.getBlockSize()])
+	r.ExitScript = s.ParseScriptBlock(r.data[r.offset+8 : r.offset+r.getBlockSize()])
 	dumpBlock("EXCD", r.data[r.offset:r.offset+r.getBlockSize()])
 }
 

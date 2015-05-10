@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	b "scummatlas/binaryutils"
 	l "scummatlas/condlog"
+	s "scummatlas/script"
 	"strings"
 )
 
@@ -17,7 +18,7 @@ type Game struct {
 	RoomNames   []RoomName
 	RoomIndexes []int
 	Rooms       []Room
-	Scripts     []Script
+	Scripts     []s.Script
 	Costumes    []Costume
 	gamedir     string
 	indexFile   string

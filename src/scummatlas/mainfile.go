@@ -4,6 +4,7 @@ import (
 	"fmt"
 	b "scummatlas/binaryutils"
 	l "scummatlas/condlog"
+	s "scummatlas/script"
 )
 
 type MainScummData struct {
@@ -53,8 +54,8 @@ func (d *MainScummData) getRoomCount() int {
 	return roomCount
 }
 
-func (d MainScummData) GetScripts() []Script {
-	return []Script{}
+func (d MainScummData) GetScripts() []s.Script {
+	return []s.Script{}
 }
 
 func (d *MainScummData) ParseRoom(offset int, order int) Room {

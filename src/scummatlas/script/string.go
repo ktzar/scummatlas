@@ -1,4 +1,4 @@
-package scummatlas
+package script
 
 func parsePrintOpcode(data []byte, offset int) (say string, length int) {
 	originalOffset := offset

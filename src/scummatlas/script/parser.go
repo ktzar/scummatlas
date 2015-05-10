@@ -1,4 +1,4 @@
-package scummatlas
+package script
 
 import (
 	"errors"
@@ -7,84 +7,19 @@ import (
 	l "scummatlas/condlog"
 )
 
-type Script []Operation
-
-const (
-	_ = iota
-	OpCall
-	OpConditional
-	OpAssignment
-)
-
-type Operation struct {
-	opType     int
-	assignDst  string
-	assignVal  string
-	condOp1    string
-	condOp     string
-	condOp2    string
-	condDst    int
-	callMethod string
-	callResult string
-	callMap    map[string]string
-	callParams []string
-}
-
-func (op *Operation) addNamedStringParam(paramName string, value string) {
-	op.callMap[paramName] = value
-}
-
-func (op *Operation) addNamedParam(paramName string, value int) {
-	op.callMap[paramName] = fmt.Sprintf("%d", value)
-}
-
-func (op *Operation) addParam(param string) {
-	op.callParams = append(op.callParams, param)
-}
-
-func (op Operation) String() string {
-	if op.opType == OpCall {
-		params := ""
-		for _, param := range op.callParams {
-			if params != "" {
-				params += ", "
-			}
-			params += param
-		}
-		for paramName := range op.callMap {
-			if params != "" {
-				params += ", "
-			}
-			params += paramName + "=" + op.callMap[paramName]
-		}
-		callResult := ""
-		if op.callResult != "" {
-			callResult += fmt.Sprintf("%v = ", op.callResult)
-		}
-		return fmt.Sprintf("%v%v(%v)", callResult, op.callMethod, params)
-	} else if op.opType == OpAssignment {
-		return fmt.Sprintf("%v = %v", op.assignDst, op.assignVal)
-	} else if op.opType == OpConditional {
-		return fmt.Sprintf("unless (%v %v %v) goto %x", op.condOp1, op.condOp, op.condOp2, op.condDst)
-	}
-	return ""
-}
-
-func (script Script) Print() string {
-	out := ""
-	for i, op := range script {
-		if i > 0 {
-			out += "\n"
-		}
-		out += op.String()
-	}
-	return out
-}
-
 type ScriptParser struct {
 	data   []byte
 	offset int
-	script Script
+	Script Script
+}
+
+func NewScriptParser(data []byte, offset int) ScriptParser {
+	parser := ScriptParser{
+		data,
+		offset,
+		Script{},
+	}
+	return parser
 }
 
 func (p ScriptParser) getWord(position int) int {
@@ -95,7 +30,7 @@ func (p ScriptParser) getByte(position int) int {
 	return int(p.data[p.offset+position])
 }
 
-func (p *ScriptParser) parseNext() (Operation, error) {
+func (p *ScriptParser) ParseNext() (Operation, error) {
 	if p.offset >= len(p.data) {
 		return Operation{}, errors.New("Script finished")
 	}
@@ -599,7 +534,7 @@ func (p *ScriptParser) parseNext() (Operation, error) {
 		panic("Opcode length can't be 0")
 	}
 	p.offset += int(opCodeLength)
-	p.script = append(p.script, op)
+	p.Script = append(p.Script, op)
 	return op, nil
 }
 
@@ -616,7 +551,7 @@ func (p ScriptParser) parseList(offset int) (values []int) {
 	return
 }
 
-func parseScriptBlock(data []byte) Script {
+func ParseScriptBlock(data []byte) Script {
 	defer func() {
 		if r := recover(); r != nil {
 			fmt.Println("Recovered in f", r)
@@ -627,20 +562,20 @@ func parseScriptBlock(data []byte) Script {
 	parser.offset = 0
 	i := 0
 	for parser.offset+1 < len(data) {
-		_, err := parser.parseNext()
+		_, err := parser.ParseNext()
 		if err != nil {
-			parser.script = append(parser.script, Operation{
+			parser.Script = append(parser.Script, Operation{
 				opType:     OpCall,
 				callMethod: "error_" + err.Error(),
 			})
-			return parser.script
+			return parser.Script
 		}
 		i++
 		if i > 1000 {
 			break
 		}
 	}
-	return parser.script
+	return parser.Script
 }
 
 const notDefined byte = 0xFF

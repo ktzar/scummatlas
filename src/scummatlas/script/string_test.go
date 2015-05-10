@@ -1,4 +1,4 @@
-package scummatlas
+package script
 
 import "testing"
 
