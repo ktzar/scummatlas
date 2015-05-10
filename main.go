@@ -20,6 +20,7 @@ var gamedir string
 var outputdir string
 var singleRoom int
 var noimages bool
+var multicpu bool
 
 func main() {
 	loadOptions()
@@ -52,12 +53,16 @@ func main() {
 	} else {
 		var wg sync.WaitGroup
 		for _, room := range game.Rooms {
-			wg.Add(1)
-			go func(room scummatlas.Room) {
+			if multicpu {
+				wg.Add(1)
+				go func(room scummatlas.Room) {
+					processRoom(room)
+					fmt.Printf("Room %v processed\n", room.Id)
+					wg.Done()
+				}(room)
+			} else {
 				processRoom(room)
-				fmt.Printf("Room %v processed\n", room.Id)
-				wg.Done()
-			}(room)
+			}
 		}
 		wg.Wait()
 	}
@@ -74,6 +79,7 @@ func loadOptions() {
 	flag.StringVar(&outputdir, "outputdir", REQUIRED, "Directory to put the generated files in")
 	flag.IntVar(&singleRoom, "room", 0, "Only parse one room")
 	flag.BoolVar(&noimages, "noimages", false, "Don't create images")
+	flag.BoolVar(&multicpu, "multicpu", false, "Use multiple processes")
 	flag.StringVar(&logflags, "logflags", "", "Comma separated list of log flags. Available flags: "+strings.Join(logkeys, ", "))
 	flag.Parse()
 

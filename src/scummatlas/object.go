@@ -172,8 +172,8 @@ func parseVerbBlock(data []byte) (out []Verb) {
 		}
 		var err error
 		stop := false
-		ranOpcode := ""
-		for ranOpcode != "stopObjectCode" && stop == false {
+		var ranOpcode Operation
+		for ranOpcode.callMethod != "stopObjectCode" && stop == false {
 			ranOpcode, err = parser.parseNext()
 			if err != nil {
 				stop = true

@@ -29,7 +29,7 @@ func WriteRoom(room scummatlas.Room, outputdir string) {
 	file, err := os.Create(htmlPath)
 	l.Log("template", "Create "+htmlPath)
 	if err != nil {
-		panic("Can't create room file")
+		panic("Can't create room file, " + err.Error())
 	}
 
 	var boxes [][4]scummatlas.Point

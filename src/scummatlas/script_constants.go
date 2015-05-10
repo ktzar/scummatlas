@@ -120,6 +120,7 @@ var opCodesNames = map[byte]string{
 
 	//from ScummVM sourcecode
 	0x2a: "startScript",
+	0x41: "putActor",
 	0x59: "doSentence",
 	0x61: "putActor",
 	0x64: "loadRoomWithEgo",
@@ -143,6 +144,7 @@ var opCodesNames = map[byte]string{
 	0xc8: "isEqual",
 	0xd6: "getActorMoving",
 	0xe1: "putActor",
+	0xfa: "verbOps",
 	0xfc: "isSoundRunning",
 	0xff: "drawBox",
 }
