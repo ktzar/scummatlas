@@ -147,7 +147,7 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		case 0x14:
 			opCodeLength = 4
 		}
-		op.callMethod += resourceRoutines[subopcode]
+		op.callMethod += "." + resourceRoutines[subopcode]
 	case "getObjectState":
 		opCodeLength = 5
 		object := p.getWord(3)
