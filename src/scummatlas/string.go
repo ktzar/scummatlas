@@ -47,8 +47,8 @@ func parseString(data []byte, offset int) (say string, length int) {
 				offset += 4
 			}
 		} else if currChar >= 0x20 && currChar <= 0x7e { //printable ascii char
-			offset++
 			say += string(currChar)
+			offset++
 		} else if currChar >= 0x00 {
 			offset++
 			break

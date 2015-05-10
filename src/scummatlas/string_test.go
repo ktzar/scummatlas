@@ -3,7 +3,10 @@ package scummatlas
 import "testing"
 
 func TestStringOpcode(t *testing.T) {
-	str, length := parsePrintOpcode([]byte{
+	var str string
+	var length int
+
+	str, length = parsePrintOpcode([]byte{
 		0x0F,
 		0x41, 0x42, 0x43, 0x44,
 		0x00, 0xAA, 0xAA}, 0)
@@ -28,18 +31,16 @@ func TestStringOpcode(t *testing.T) {
 
 	//ENCODINGS
 	str, length = parsePrintOpcode([]byte{
-		0x0F,
+		0xAA, 0x0F,
 		0x41, 0x42, 0x43,
 		0xFF, 0x03,
 		0x44, 0x00,
-		0xAA, 0xAA}, 2)
+		0xAA, 0xAA}, 0)
 	if str != "ABCD" {
 		t.Errorf("String %v is not right", str)
 	}
-	if length != 4 {
+	if length != 8 {
 		t.Errorf("Length %d is not right", length)
 	}
-
-	//TODO
 
 }
