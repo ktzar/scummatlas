@@ -5,6 +5,7 @@ import "fmt"
 type Operation struct {
 	opType     int
 	offset     int
+	opCode     byte
 	assignDst  string
 	assignVal  string
 	condOp1    string
