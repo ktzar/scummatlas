@@ -42,8 +42,13 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		subopcode = p.data[p.offset+1]
 	}
 	if !ok {
-		l.Log("script", "0x%x is not a known code\n", opcode)
-		return Operation{}, fmt.Errorf("Unknown code %02x", opcode)
+		opcodeName, ok = opCodesNames[opcode&0x7F]
+		if ok {
+			l.Log("script", "Code %0x not in table, using %0x instead", opcode, opcode&0x7F)
+		} else {
+			l.Log("script", "0x%x is not a known code\n", opcode)
+			return Operation{}, fmt.Errorf("Unknown code %02x", opcode)
+		}
 	}
 	l.Log("script", "[%04x] (%02x) %v", p.offset, opcode, opcodeName)
 
@@ -144,7 +149,8 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		opCodeLength = 4
 		op.addNamedParam("object", p.getWord(1))
 		op.addNamedParam("state", p.getByte(3))
-	case "startScript":
+	case "startScript", "chainScript":
+		opCodeLength = endsList
 		opCodeLength = 2
 		script := p.data[p.offset+1]
 		list := p.parseList(p.offset + 2)
@@ -254,8 +260,17 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 	case "matrixOp":
 		if subopcode == 0x04 {
 			opCodeLength = 2
+			op.callMethod += ".createBoxMatrix"
 		} else {
 			opCodeLength = 4
+			switch subopcode {
+			case 0x01:
+				op.callMethod += ".setBoxFlags"
+			case 0x02, 0x03:
+				op.callMethod += ".setBoxScale"
+			}
+			op.addNamedParam("box", p.getByte(2))
+			op.addNamedParam("value", p.getByte(3))
 		}
 	case "roomOps":
 		opCodeLength = varLen
@@ -451,8 +466,6 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		opCodeLength = 3
 	case "findInventory":
 		opCodeLength = 7
-	case "chainScript":
-		opCodeLength = endsList
 	case "getActorX":
 		opCodeLength = 5
 	case "getActorMoving":

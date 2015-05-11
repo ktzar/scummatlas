@@ -70,7 +70,7 @@ func (room roomData) DoubleHeight() int {
 }
 
 func (room roomData) ViewBox() string {
-	return fmt.Sprintf("-10 -10 %v %v", room.Width+10, room.Height+10)
+	return fmt.Sprintf("0 0 %v %v", room.Width, room.Height)
 }
 
 func (room roomData) DoubleWidth() int {
