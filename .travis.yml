@@ -4,4 +4,4 @@ install:
     export GOPATH=`pwd`
 
 script:
-    go test scummatlas
+    make test
