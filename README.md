@@ -10,9 +10,7 @@ It creates a bunch of HTML files that software that aim to show the inner aspect
 
 TODO
 - Improve parsing local and object scripts
-- Fix issues with some types of stripes
 - Parse costumes
 - Have a game detector
 - Add ordering capabilities to table view
-- Entry script and exit scripts
 - Use c64 font in some places like titles
