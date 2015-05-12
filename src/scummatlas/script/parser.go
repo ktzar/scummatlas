@@ -35,25 +35,34 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		return Operation{}, errors.New("Script finished")
 	}
 	opcode := p.data[p.offset]
+	opcodeName, ok := opCodesNames[opcode]
+
 	var subopcode byte
 	if p.offset+1 < len(p.data) {
 		subopcode = p.data[p.offset+1]
 	}
-	opcodeName, ok := opCodesNames[opcode]
-
 	if !ok {
-		l.Log("script", "0x%x is not a known code\n", opcode)
-		return Operation{}, fmt.Errorf("Unknown code %02x", opcode)
+		opcodeName, ok = opCodesNames[opcode&0x7F]
+		if ok {
+			l.Log("script", "Code %0x not in table, using %0x instead", opcode, opcode&0x7F)
+		} else {
+			l.Log("script", "0x%x is not a known code\n", opcode)
+			return Operation{}, fmt.Errorf("Unknown code %02x", opcode)
+		}
 	}
 	l.Log("script", "[%04x] (%02x) %v", p.offset, opcode, opcodeName)
 
 	var opCodeLength int
 	var op Operation
+	paramWord1 := opcode&0x80 > 0
+	//paramWord2 := opcode&0x40 > 0
+	//paramWord3 := opcode&0x20 > 0
 
 	//Default to a function call since those are the majority
 	op.opType = OpCall
 	op.callMethod = opcodeName
 	op.callMap = make(map[string]string)
+	op.opCode = opcode
 
 	switch opcodeName {
 	case "isGreaterEqual",
@@ -67,7 +76,7 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		value := p.getWord(2)
 		target := p.getWord(4)
 		op = Operation{
-			opType: OpConditional, condDst: target,
+			opType: OpConditional, condDst: target, opCode: opcode,
 			condOp1: fmt.Sprintf("%v", value),
 			condOp2: variable,
 			condOp:  condOpSymbols[opcodeName],
@@ -78,13 +87,21 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		variable := varName(p.data[p.offset+1])
 		target := p.getWord(2)
 		op = Operation{
-			opType: OpConditional, condDst: target,
+			opType: OpConditional, condDst: target, opCode: opcode,
 			condOp1: variable, condOp2: "0", condOp: condOpSymbols[opcodeName],
 		}
 	case "animateActor":
 		opCodeLength = 3
-		actor := p.getByte(1)
-		anim := p.getByte(2)
+		var actor int
+		var anim int
+		if paramWord1 {
+			actor = p.getWord(1)
+			anim = p.getByte(3)
+			opCodeLength++
+		} else {
+			actor = p.getByte(1)
+			anim = p.getByte(2)
+		}
 		op.addNamedParam("actor", actor)
 		op.addNamedParam("anim", anim)
 	case "putActor":
@@ -92,7 +109,7 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		actor := p.getByte(1)
 		x := p.getWord(2)
 		y := p.getWord(4)
-		if opcode&0x80 > 0 {
+		if paramWord1 {
 			actor = p.getWord(1)
 			x = p.getWord(3)
 			y = p.getWord(5)
@@ -132,7 +149,8 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		opCodeLength = 4
 		op.addNamedParam("object", p.getWord(1))
 		op.addNamedParam("state", p.getByte(3))
-	case "startScript":
+	case "startScript", "chainScript":
+		opCodeLength = endsList
 		opCodeLength = 2
 		script := p.data[p.offset+1]
 		list := p.parseList(p.offset + 2)
@@ -230,14 +248,9 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 			op.callMethod += cursorCommands[subopcode]
 		}
 	case "putActorInRoom":
-		opCodeLength = 4
+		opCodeLength = 3
 		actor := p.getByte(2)
-		room := p.data[p.offset+3]
-		if opcode&0x80 > 0 {
-			opCodeLength++
-			actor = p.getWord(1)
-			room = p.data[p.offset+3]
-		}
+		room := p.getByte(3)
 		op.addNamedParam("actor", actor)
 		op.addNamedParam("room", int(room))
 	case "delay":
@@ -247,8 +260,17 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 	case "matrixOp":
 		if subopcode == 0x04 {
 			opCodeLength = 2
+			op.callMethod += ".createBoxMatrix"
 		} else {
 			opCodeLength = 4
+			switch subopcode {
+			case 0x01:
+				op.callMethod += ".setBoxFlags"
+			case 0x02, 0x03:
+				op.callMethod += ".setBoxScale"
+			}
+			op.addNamedParam("box", p.getByte(2))
+			op.addNamedParam("value", p.getByte(3))
 		}
 	case "roomOps":
 		opCodeLength = varLen
@@ -409,7 +431,11 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 	case "getScriptRunning":
 		opCodeLength = 4
 		//result := p.data, p.offset + 1
-		script := p.getWord(2)
+		script := p.getByte(2)
+		if paramWord1 {
+			opCodeLength++
+			script = p.getWord(2)
+		}
 		op.callResult = "VAR_RESULT"
 		op.addParam(fmt.Sprintf("%d", script))
 	case "ifNotState":
@@ -440,8 +466,6 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		opCodeLength = 3
 	case "findInventory":
 		opCodeLength = 7
-	case "chainScript":
-		opCodeLength = endsList
 	case "getActorX":
 		opCodeLength = 5
 	case "getActorMoving":
