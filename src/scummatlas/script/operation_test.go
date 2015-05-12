@@ -48,7 +48,8 @@ func TestPrintingCallOperations(t *testing.T) {
 		},
 	}
 
-	if b.String() != "myMethod(x=1234, y=6789)" {
+	if b.String() != "myMethod(x=1234, y=6789)" &&
+		b.String() != "myMethod(y=6789, x=1234)" {
 		t.Errorf("conditional operation `%v` is not properly formatted", b.String())
 	}
 }
