@@ -13,6 +13,11 @@ import (
 
 type BoxMatrix bool
 
+type Exit struct {
+	Path string
+	Room int
+}
+
 type Room struct {
 	data         []byte
 	offset       int
@@ -32,6 +37,18 @@ type Room struct {
 	LocalScripts map[int]s.Script
 	Objects      map[int]Object
 	//ColorCycle ColorCycle
+}
+
+func (r Room) Exits() (exits []Exit) {
+	for _, object := range r.Objects {
+		for _, verb := range object.Verbs {
+			room, hasExit := verb.Script.Exit()
+			if hasExit && room != r.Id {
+				exits = append(exits, Exit{object.Name, room})
+			}
+		}
+	}
+	return
 }
 
 func (r Room) TwoDigitNumber() string {

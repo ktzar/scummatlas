@@ -15,7 +15,19 @@
             {{$background := .Background}}
             <img class="pixelart" height="{{.DoubleHeight}}px" src="{{.Background}}"/>
         </div>
+
+        <div class="row">
+            <h2>Exits</h2>
+            {{range .Exits}}
+            <div class="col-sm-4"><a href="room{{printf "%02d" .Room}}.html">
+                {{.Path}} leads to room {{.Room}}<br/>
+                <img width="128px" src="img_bg/room{{printf "%02d" .Room}}_bg.png"/>
+            </a></div>
+            {{end}} 
+        </div>
+
         <div class="row text-center">
+
             <h2>Z-Planes</h2>
             <div class="zplanes-container" style="width: {{.Width}}px; height: {{.Height}}px">
                 <img class="pixelart zplane" src="{{$background}}"/>
@@ -25,11 +37,20 @@
             </div>
             <label>Rotate</label><br/>
             <input type="range" min="-80" max="80" step="1" id="zPlane-rotation"/>
+
+
             <h2>Walking boxes</h2>
-            <svg class="room-boxes__nobg room-boxes" style="background-image: url({{.Background}})" width="{{.DoubleWidth}}" height="{{.DoubleHeight}}" viewBox="{{.ViewBox}}">
+            <svg class="room-boxes__nobg room-boxes"
+                style="background-image: url({{.Background}})"
+                width="{{.DoubleWidth}}"
+                height="{{.DoubleHeight}}"
+                viewBox="{{.ViewBox}}">
             {{range .Objects}}
-              <rect id="{{.Id}}" x="{{.X}}" y="{{.Y}}" width="{{.Width}}" height="{{.Height}}" fill="rgba(255,0,0,0.5)" stroke="white" stroke-width=".5"/>
-              <text id="text_{{.Id}}" x="{{.X}}" y="{{.Y}}" font-size="0.4em" fill="black" font-family="monospace">{{.Name}}</text>
+              <rect id="{{.Id}}" x="{{.X}}" y="{{.Y}}"
+                  width="{{.Width}}" height="{{.Height}}"
+                  fill="rgba(255,0,0,0.5)" stroke="white" stroke-width=".5"/>
+              <text id="text_{{.Id}}" x="{{.X}}" y="{{.Y}}"
+                  font-size="0.4em" fill="black" font-family="monospace">{{.Name}}</text>
             {{end}}
             {{range .Boxes}}
               <polygon points="
@@ -89,8 +110,8 @@
             <h4>Script #{{printf "%d" $index}}</h4>
             <pre>{{$element.Print}}</pre>
             {{end}}
-
         </div>
+
         <div class="row">
             <h2>Palette</h2>
             <div class="palette">

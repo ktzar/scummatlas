@@ -51,4 +51,20 @@ img.zplane {
     width: 256px;
     margin: 0 auto;
 }
+
+.room-inline-list {
+    list-style: none;
+    padding-left: 0;
+}
+
+.room-inline-list__item {
+    display: inline;
+}
+
+.room-inline-list__item:after {
+    content: ', ';
+}
+
+.room-inline-list__item:last-child:after {
+    content: '';
 }

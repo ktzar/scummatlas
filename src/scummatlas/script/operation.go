@@ -1,6 +1,7 @@
 package script
 
 import "fmt"
+import "strconv"
 
 type Operation struct {
 	opType     int
@@ -27,6 +28,20 @@ func (op Operation) GetMethod() string {
 }
 
 type Script []Operation
+
+func (script Script) Exit() (room int, hasExit bool) {
+	room = 0
+	hasExit = false
+	for _, op := range script {
+		if op.callMethod == "loadRoomWithEgo" ||
+			op.callMethod == "putActorInRoom" {
+			room, _ = strconv.Atoi(op.callMap["room"])
+			hasExit = true
+			break
+		}
+	}
+	return
+}
 
 func (script Script) Print() string {
 	out := ""

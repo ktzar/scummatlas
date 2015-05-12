@@ -463,7 +463,7 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 	case "getActorScale":
 		opCodeLength = 5
 	case "stopSound":
-		opCodeLength = 3
+		opCodeLength = 2
 	case "findInventory":
 		opCodeLength = 7
 	case "getActorX":
