@@ -43,8 +43,7 @@ func main() {
 		game.ProcessSingleRoom(singleRoom, outputdir)
 	}
 
-	templates.WriteIndex(game, outputdir)
-	templates.WriteTable(game, outputdir)
+	templates.WriteGameFiles(*game, outputdir)
 
 	copyStaticFiles()
 

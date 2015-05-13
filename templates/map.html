@@ -4,13 +4,106 @@
 		<link href="./static/style.css" rel="stylesheet" type="text/css"/>
 		<link href="./static/bootstrap.min.css" rel="stylesheet" type="text/css"/>
 		<script src="./static/jquery.min.js"></script>
-		<script src="./static/mapPage.js"></script>
+		<script src="./static/cytoscape.min.js"></script>
+        
     </head>
     <body id="index-page">
     <div class="container">
         <h1>Map view</h1>
         <a href="index.html">Mosaic view</a>
         <a href="table.html">Table view</a>
+        <div id="viewport" style="width: 1024px; height:768px"></div>
     </div>
     </body>
+    <script>
+$(function(){ 
+    var style = cytoscape.stylesheet()
+        {{range .Nodes}}
+        .selector('#room_{{printf "%02d" .Id}}')
+          .css({
+            'background-image': 'img_bg/room{{printf "%02d" .Id}}_bg.png',
+            'content': 'data(name)',
+            'text-valign': 'center',
+            'color': 'white',
+            'text-outline-width': 2,
+            'text-outline-color': '#888'
+          })
+        {{end}}
+        .selector('node')
+        .css({
+            'height': 80,
+            'width': 80,
+            'background-fit': 'cover',
+            'border-color': '#000',
+            'border-width': 3,
+            'border-opacity': 0.5
+        })
+        .selector('.eating')
+        .css({
+            'border-color': 'red'
+        })
+        .selector('.eater')
+        .css({
+            'border-width': 9
+        })
+        .selector('edge')
+        .css({
+            'width': 6,
+            'target-arrow-shape': 'triangle',
+            'line-color': '#ffaaaa',
+            'target-arrow-color': '#ffaaaa'
+        });
+
+    var nodes = [
+        {{range .Nodes}}
+           { data: {
+            id: 'room_{{printf "%02d" .Id}}',
+            name: '{{.Name}}',
+            href: './room{{printf "%02d" .Id}}.html'
+           } },
+        {{end}}
+    ];
+
+    var edges = [
+    {{range .Edges}}
+        {data: {source: 'room_{{printf "%02d" .Source}}', target: 'room_{{printf "%02d" .Target}}'}},
+    {{end}}
+    ];
+
+    var cy = cytoscape({
+      container: document.getElementById('viewport'),
+      style: style,
+      elements: {
+        'nodes': nodes,
+        'edges': edges
+      },
+      layout: {
+        name: 'breadthfirst',
+        directed: true,
+        padding: 10,
+
+        fit: true, // whether to fit the viewport to the graph
+        directed: false, // whether the tree is directed downwards (or edges can point in any direction if false)
+        padding: 30, // padding on fit
+        circle: false, // put depths in concentric circles if true, put depths top down if false
+        spacingFactor: 1.75, // positive spacing factor, larger => more space between nodes (N.B. n/a if causes overlap)
+        boundingBox: undefined, // constrain layout bounds; { x1, y1, x2, y2 } or { x1, y1, w, h }
+        avoidOverlap: true, // prevents node overlap, may overflow boundingBox if not enough space
+        roots: undefined, // the roots of the trees
+        maximalAdjustments: 0, // how many times to try to position the nodes in a maximal way (i.e. no backtracking)
+        animate: false, // whether to transition the node positions
+        animationDuration: 500, // duration of animation in ms if enabled
+        ready: undefined, // callback on layoutready
+        stop: undefined // callback on layoutstop
+      }
+    }); 
+    cy.on('tap', 'node', function() {
+        try { // your browser may block popups
+            window.open(this.data('href'));
+        } catch (e) { // fall back on url change
+            window.location.href = this.data('href');
+        }
+    });
+});
+    </script>
 </html>
