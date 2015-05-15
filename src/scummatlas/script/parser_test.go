@@ -19,16 +19,16 @@ func checkScriptLengthAndOpcodes(file string, expectedOpcodes []byte, t *testing
 	data := readScriptOrDie(file, t)
 	script := ParseScriptBlock(data)
 	if len(script) != len(expectedOpcodes) {
-		t.Errorf("Length mismatch, got %d and expected %d",
-			len(script), len(expectedOpcodes))
+		t.Errorf("File %v, length mismatch, got %d and expected %d",
+			file, len(script), len(expectedOpcodes))
 	}
 	for i, _ := range script {
 		if len(script) <= i || len(expectedOpcodes) <= i {
 			return
 		}
 		if script[i].opCode != expectedOpcodes[i] {
-			t.Errorf("Expecting opcode %x in position %d, but got %x",
-				expectedOpcodes[i], i, script[i].opCode)
+			t.Errorf("File %v, expecting opcode %x in position %d, but got %x",
+				file, expectedOpcodes[i], i, script[i].opCode)
 		}
 	}
 }
