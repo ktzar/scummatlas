@@ -205,7 +205,7 @@ func filterObjectName(in []byte) (out string) {
 func getVerbName(code uint8) (name string) {
 	name = verbNames[code]
 	if name == "" {
-		name = fmt.Sprintf("0x%x", code)
+		name = fmt.Sprintf("%d", code)
 	}
 	return
 }
