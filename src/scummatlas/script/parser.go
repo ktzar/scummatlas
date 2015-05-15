@@ -150,8 +150,6 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		op.addNamedParam("object", p.getWord(1))
 		op.addNamedParam("state", p.getByte(3))
 	case "startScript", "chainScript":
-		opCodeLength = endsList
-		opCodeLength = 2
 		script := p.data[p.offset+1]
 		list := p.parseList(p.offset + 2)
 		opCodeLength = 2 + len(list)*3 + 1
@@ -457,7 +455,23 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 	case "findObject":
 		opCodeLength = 7
 	case "startObject":
-		opCodeLength = endsList
+		object := p.getWord(1)
+		script := p.getByte(3)
+		list := p.parseList(p.offset + 4)
+		opCodeLength = 4 + len(list)*3 + 1
+		op.addNamedParam("object", int(object))
+		op.addNamedParam("script", int(script))
+		op.addNamedStringParam("list", fmt.Sprintf("%v", list))
+	case "startSound":
+		var sound int
+		if paramWord1 {
+			opCodeLength = 3
+			sound = p.getWord(1)
+		} else {
+			opCodeLength = 2
+			sound = p.getByte(1)
+		}
+		op.addParam(fmt.Sprintf("%d", sound))
 	case "actorFollowCamera":
 		opCodeLength = 3
 	case "getActorScale":
@@ -534,8 +548,6 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		opCodeLength = 5
 	case "multiply":
 		opCodeLength = 5
-	case "startSound":
-		opCodeLength = 3
 	case "ifClassOfIs":
 		opCodeLength = varLen
 	case "walkActorTo":
