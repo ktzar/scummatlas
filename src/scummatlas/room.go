@@ -9,6 +9,7 @@ import (
 	l "scummatlas/condlog"
 	"scummatlas/image"
 	s "scummatlas/script"
+	"strings"
 )
 
 type BoxMatrix bool
@@ -44,7 +45,9 @@ func (r Room) Exits() (exits []Exit) {
 		for _, verb := range object.Verbs {
 			room, hasExit := verb.Script.Exit()
 			if hasExit && room != r.Id {
-				exits = append(exits, Exit{object.Name, room})
+				exits = append(exits, Exit{
+					strings.ToUpper(object.Name),
+					room})
 			}
 		}
 	}
