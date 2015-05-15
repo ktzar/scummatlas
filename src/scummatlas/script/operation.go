@@ -74,6 +74,10 @@ func (op *Operation) addParam(param string) {
 	op.callParams = append(op.callParams, param)
 }
 
+func (op *Operation) addResult(result string) {
+	op.callResult = result
+}
+
 func (op Operation) String() string {
 	if op.opType == OpCall {
 		params := ""
