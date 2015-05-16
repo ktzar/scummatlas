@@ -584,11 +584,14 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 }
 
 func (p ScriptParser) parseList(offset int) (values []int) {
-	for p.data[offset] != 0xFF && len(p.data) <= offset {
+	for p.data[offset] != 0xFF {
 		//TODO the first byte is supposed to always be 1 ???
 		value := p.getWord(1)
 		values = append(values, value)
 		offset += 3
+		if offset >= len(p.data) {
+			break
+		}
 	}
 	return
 }
