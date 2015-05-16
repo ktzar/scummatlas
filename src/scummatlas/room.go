@@ -46,7 +46,7 @@ func (r Room) Exits() (exits []Exit) {
 			room, hasExit := verb.Script.Exit()
 			if hasExit && room != r.Id {
 				exits = append(exits, Exit{
-					strings.ToUpper(object.Name),
+					strings.Title(object.Name),
 					room})
 			}
 		}

@@ -472,12 +472,23 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 			sound = p.getByte(1)
 		}
 		op.addParam(fmt.Sprintf("%d", sound))
+	case "stopSound":
+		opCodeLength = 2
+		op.addNamedParam("sound", p.getByte(1))
+	case "getActorWalkBox":
+		opCodeLength = 5
+		variable := varName(byte(p.getByte(1)))
+		actor := varName(byte(p.getWord(2)))
+		if paramWord1 {
+			variable = varName(byte(p.getWord(1)))
+			actor = varName(byte(p.getWord(3)))
+		}
+		op.addResult(variable)
+		op.addNamedStringParam("actor", actor)
 	case "actorFollowCamera":
 		opCodeLength = 3
 	case "getActorScale":
 		opCodeLength = 5
-	case "stopSound":
-		opCodeLength = 2
 	case "findInventory":
 		opCodeLength = 7
 	case "getActorX":
@@ -516,8 +527,6 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		opCodeLength = 3
 	case "verbOps": //TODO
 		opCodeLength = varLen
-	case "getActorWalkBox":
-		opCodeLength = 5
 	case "isSoundRunning":
 		opCodeLength = 5
 	case "breakHere":
@@ -575,14 +584,11 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 }
 
 func (p ScriptParser) parseList(offset int) (values []int) {
-	for p.data[offset] != 0xFF {
+	for p.data[offset] != 0xFF && len(p.data) <= offset {
 		//TODO the first byte is supposed to always be 1 ???
 		value := p.getWord(1)
 		values = append(values, value)
 		offset += 3
-		if offset > len(p.data) {
-			break
-		}
 	}
 	return
 }
