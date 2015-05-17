@@ -5,9 +5,9 @@
 		<link href="./static/bootstrap.min.css" rel="stylesheet" type="text/css"/>
     </head>
     <body id="index-page">
+    {{template "menu"}}
     <div class="container">
         <h1>{{.Title}}</h1>
-        <a href="table.html">Table view</a>
         <h2>List of rooms</h2>
         <div class="row">
         {{range .Rooms}}

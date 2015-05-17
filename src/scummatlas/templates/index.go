@@ -2,7 +2,6 @@ package templates
 
 import (
 	"html/template"
-	"io/ioutil"
 	"os"
 	"scummatlas"
 	l "scummatlas/condlog"
@@ -71,19 +70,6 @@ func WriteGameFiles(game scummatlas.Game, outdir string) {
 }
 
 func writeIndex(game scummatlas.Game, outdir string) {
-
-	//TODO Cache that for the future
-	indexTpl, err := ioutil.ReadFile("./templates/index.html")
-	if err != nil {
-		panic("No index.html in the templates directory")
-	}
-
-	data := IndexData{
-		"A game",
-		game.Rooms,
-	}
-	t := template.Must(template.New("index").Parse(string(indexTpl)))
-
 	filename := outdir + "/index.html"
 	file, err := os.Create(filename)
 	l.Log("template", "Create "+filename)
@@ -91,25 +77,16 @@ func writeIndex(game scummatlas.Game, outdir string) {
 		panic("Can't create index file")
 	}
 
-	t.Execute(file, data)
+	t := template.Must(template.ParseFiles("./templates/index.html", "./templates/partials.html"))
+	t.Execute(file, IndexData{
+		"A game",
+		game.Rooms,
+	})
 }
 
 func writeTable(game scummatlas.Game, outdir string) {
-
-	//roomNames := game.RoomNames
 	rooms := game.Rooms
-
-	//TODO Cache that for the future
-	tableTpl, err := ioutil.ReadFile("./templates/table.html")
-	if err != nil {
-		panic("No table.html in the templates directory")
-	}
-
-	data := TableData{
-		"A game",
-		rooms,
-	}
-	t := template.Must(template.New("table").Parse(string(tableTpl)))
+	t := template.Must(template.ParseFiles("./templates/table.html", "./templates/partials.html"))
 
 	filename := outdir + "/table.html"
 	file, err := os.Create(filename)
@@ -118,19 +95,16 @@ func writeTable(game scummatlas.Game, outdir string) {
 		panic("Can't create table file")
 	}
 
+	data := TableData{
+		"A game",
+		rooms,
+	}
 	t.Execute(file, data)
 }
 
 func writeMap(game scummatlas.Game, outdir string) {
-
-	//TODO Cache that for the future
-	mapTpl, err := ioutil.ReadFile("./templates/map.html")
-	if err != nil {
-		panic("No map.html in the templates directory")
-	}
-
 	data := NewMapData(game)
-	t := template.Must(template.New("map").Parse(string(mapTpl)))
+	t := template.Must(template.ParseFiles("./templates/map.html", "./templates/partials.html"))
 
 	filename := outdir + "/map.html"
 	file, err := os.Create(filename)

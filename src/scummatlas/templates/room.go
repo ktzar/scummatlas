@@ -3,7 +3,6 @@ package templates
 import (
 	"fmt"
 	"html/template"
-	"io/ioutil"
 	"os"
 	"scummatlas"
 	l "scummatlas/condlog"
@@ -17,13 +16,9 @@ type roomData struct {
 }
 
 func WriteRoom(room scummatlas.Room, outputdir string) {
-
-	roomTpl, err := ioutil.ReadFile("./templates/room.html")
-	if err != nil {
-		panic("No index.html in the templates directory")
-	}
-
-	t := template.Must(template.New("index").Parse(string(roomTpl)))
+	t := template.Must(template.ParseFiles(
+		"./templates/room.html",
+		"./templates/partials.html"))
 
 	bgPath := fmt.Sprintf("./img_bg/room%02d_bg.png", room.Id)
 	htmlPath := fmt.Sprintf("%v/room%02d.html", outputdir, room.Id)
