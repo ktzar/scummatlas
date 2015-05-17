@@ -356,7 +356,7 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		case 0x10: //Cycle speed
 		}
 	case "walkActorToObject":
-		opCodeLength = 4
+		opCodeLength = 5
 		op.addNamedParam("actor", p.getByte(1))
 		op.addNamedParam("object", p.getWord(2))
 	case "subtract":
@@ -415,8 +415,9 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		opCodeLength = varLen
 	case "wait":
 		opCodeLength = 2
+		subopcode &= 0x7f
 		if subopcode == 0x01 {
-			opCodeLength = 3
+			opCodeLength = 4
 			op.callMethod += ".forActor"
 			op.addParam(fmt.Sprintf("%d", p.data[p.offset+2]))
 		}
@@ -476,6 +477,10 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		op.addNamedParam("objectB", objectB)
 	case "findObject":
 		opCodeLength = 7
+		variable := varName(p.getWord(1))
+		op.addResult(variable)
+		op.addNamedStringParam("x", varName(p.getWord(3)))
+		op.addNamedStringParam("y", varName(p.getWord(5)))
 	case "startObject":
 		object := p.getWord(1)
 		script := p.getByte(3)
@@ -524,6 +529,16 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		op.addNamedParam("value", value)
 		op.addNamedStringParam("list", fmt.Sprintf("%v", list))
 		op.addNamedParam("target", target)
+	case "walkActorToActor":
+		opCodeLength = 6
+		if paramWord2 {
+			opCodeLength = 5
+		}
+	case "walkActorTo":
+		opCodeLength = 7
+		op.addNamedStringParam("actor", varName(p.getByte(1)))
+		op.addNamedParam("x", p.getWord(3))
+		op.addNamedParam("y", p.getWord(5))
 	case "actorFollowCamera":
 		opCodeLength = 3
 	case "findInventory":
@@ -574,19 +589,12 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		opCodeLength = 5
 	case "getVerbEntryPoint":
 		opCodeLength = 7
-	case "walkActorToActor":
-		opCodeLength = 6
-		if paramWord2 {
-			opCodeLength = 5
-		}
 	case "putActorAtObject":
 		opCodeLength = 5
 	case "actorFromPos":
 		opCodeLength = 5
 	case "multiply":
 		opCodeLength = 5
-	case "walkActorTo":
-		opCodeLength = 6
 	case "isActorInBox":
 		opCodeLength = 7
 	case "stopMusic":

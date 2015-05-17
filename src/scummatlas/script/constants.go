@@ -146,6 +146,7 @@ var opCodesNames = map[byte]string{
 	0xd6: "getActorMoving",
 	0xe1: "putActor",
 	0xe8: "getScriptRunning",
+	0xf5: "findObject",
 	0xfa: "verbOps",
 	0xfc: "isSoundRunning",
 	0xff: "drawBox",
