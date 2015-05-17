@@ -120,6 +120,7 @@ var opCodesNames = map[byte]string{
 
 	//from ScummVM sourcecode
 	0x2a: "startScript",
+	0x4d: "walkActorToActor",
 	0x41: "putActor",
 	0x59: "doSentence",
 	0x61: "putActor",

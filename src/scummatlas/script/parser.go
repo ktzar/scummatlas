@@ -55,7 +55,7 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 	var opCodeLength int
 	var op Operation
 	paramWord1 := opcode&0x80 > 0
-	//paramWord2 := opcode&0x40 > 0
+	paramWord2 := opcode&0x40 > 0
 	//paramWord3 := opcode&0x20 > 0
 
 	//Default to a function call since those are the majority
@@ -416,7 +416,7 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 			opCodeLength = 1
 		}
 		say, length := parsePrintOpcode(p.data, p.offset+opCodeLength)
-		opCodeLength += length
+		opCodeLength += length + 1
 		op.addParam(fmt.Sprintf("\"%v\"", say))
 	case "actorSetClass":
 		list := p.parseList(p.offset + 3)
@@ -452,6 +452,12 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		opCodeLength = 5
 	case "getDist":
 		opCodeLength = 7
+		objectA := p.getWord(1)
+		objectB := p.getWord(2)
+		variable := varName(byte(p.getByte(1)))
+		op.addResult(variable)
+		op.addNamedParam("objectA", objectA)
+		op.addNamedParam("objectB", objectB)
 	case "findObject":
 		opCodeLength = 7
 	case "startObject":
@@ -485,16 +491,27 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		}
 		op.addResult(variable)
 		op.addNamedStringParam("actor", actor)
+	case "getActorScale", "getActorMoving", "getActorFacing", "getActorElevation",
+		"getActorWidth", "getActorCostume", "getActorX", "getActorY":
+		opCodeLength = 5
+		result := varName(uint8(p.getWord(1)))
+		actor := varName(p.data[p.offset+3])
+		op.callResult = result
+		op.addNamedStringParam("actor", actor)
+	case "ifClassOfIs":
+		opCodeLength = varLen
+		value := p.getWord(1)
+		list := p.parseList(3)
+		opCodeLength = 3 + len(list)*3 + 1
+		target := p.getWord(opCodeLength)
+		opCodeLength += 2
+		op.addNamedParam("value", value)
+		op.addNamedStringParam("list", fmt.Sprintf("%v", list))
+		op.addNamedParam("target", target)
 	case "actorFollowCamera":
 		opCodeLength = 3
-	case "getActorScale":
-		opCodeLength = 5
 	case "findInventory":
 		opCodeLength = 7
-	case "getActorX":
-		opCodeLength = 5
-	case "getActorMoving":
-		opCodeLength = 5
 	case "or":
 		opCodeLength = 5
 	case "override":
@@ -507,21 +524,15 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		opCodeLength = 4
 	case "freezeScripts":
 		opCodeLength = 3
-	case "getActorFacing":
-		opCodeLength = 5
 	case "getClosestObjActor":
 		opCodeLength = 5
 	case "getStringWidth":
 		opCodeLength = 5
 	case "debug":
 		opCodeLength = 3
-	case "getActorWidth":
-		opCodeLength = 5
 	case "stopObjectScript":
 		opCodeLength = 2
 	case "lights":
-		opCodeLength = 5
-	case "getActorCostume":
 		opCodeLength = 5
 	case "loadRoom":
 		opCodeLength = 3
@@ -543,22 +554,21 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		opCodeLength = 1
 	case "startMusic":
 		opCodeLength = 3
-	case "getActorElevation":
-		opCodeLength = 5
 	case "faceActor":
 		opCodeLength = 5
 	case "getVerbEntryPoint":
 		opCodeLength = 7
 	case "walkActorToActor":
 		opCodeLength = 6
+		if paramWord2 {
+			opCodeLength = 5
+		}
 	case "putActorAtObject":
 		opCodeLength = 5
 	case "actorFromPos":
 		opCodeLength = 5
 	case "multiply":
 		opCodeLength = 5
-	case "ifClassOfIs":
-		opCodeLength = varLen
 	case "walkActorTo":
 		opCodeLength = 6
 	case "isActorInBox":
@@ -566,8 +576,6 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 	case "stopMusic":
 		opCodeLength = 1
 	case "getAnimCounter":
-		opCodeLength = 5
-	case "getActorY":
 		opCodeLength = 5
 	}
 
