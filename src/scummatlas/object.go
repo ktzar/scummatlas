@@ -15,25 +15,22 @@ type Object struct {
 	Name   string
 	Flags  uint8
 	Parent uint8
-	Script s.Script
 	Image  ObjectImage
-	X      int
-	Y      int
 	Width  int
 	Height int
 	Verbs  []Verb
 	//TODO Direction uint8
+	Point
 }
 
 type ObjectImage struct {
-	X        int
-	Y        int
 	Width    int
 	Height   int
 	States   int
 	Planes   int
 	Hotspots int
 	Frames   []*goimage.RGBA
+	Point
 }
 
 type Verb struct {
@@ -41,6 +38,16 @@ type Verb struct {
 	Name   string
 	offset int
 	Script s.Script
+}
+
+func (self Object) HasExit() bool {
+	for _, verb := range self.Verbs {
+		_, hasExit := verb.Script.Exit()
+		if hasExit {
+			return true
+		}
+	}
+	return false
 }
 
 func (self Verb) PrintScript() string {
@@ -52,6 +59,13 @@ func (self ObjectImage) FramesIndexes() (out []string) {
 		out = append(out, fmt.Sprintf("%02d", i))
 	}
 	return
+}
+
+func (self Object) LabelPosition() Point {
+	return Point{
+		self.X,
+		self.Y + 12,
+	}
 }
 
 func (self Object) IdHex() string {
@@ -80,10 +94,12 @@ func NewObjectImageFromOBIM(data []byte, r *Room) (objImg ObjectImage, id int) {
 	objImg = ObjectImage{
 		States: b.LE16(header, 2),
 		Planes: b.LE16(header, 4),
-		X:      b.LE16(header, 8),
-		Y:      b.LE16(header, 10),
 		Width:  b.LE16(header, 12),
 		Height: b.LE16(header, 14),
+		Point: Point{
+			X: b.LE16(header, 8),
+			Y: b.LE16(header, 10),
+		},
 	}
 
 	if objImg.States > 0 {
@@ -119,12 +135,14 @@ func NewObjectFromOBCD(data []byte) Object {
 	}
 	obj := Object{
 		Id:     b.LE16(data, headerOffset+8),
-		X:      intInOffsetTimesEight(10),
-		Y:      intInOffsetTimesEight(11),
 		Width:  intInOffsetTimesEight(12),
 		Height: intInOffsetTimesEight(13),
 		Flags:  data[headerOffset+14],
 		Parent: data[headerOffset+15],
+		Point: Point{
+			X: intInOffsetTimesEight(10),
+			Y: intInOffsetTimesEight(11),
+		},
 	}
 
 	verbOffset := headerOffset + headerSize
