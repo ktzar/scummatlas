@@ -72,7 +72,7 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		"isGreater",
 		"lessOrEqual":
 		opCodeLength = 7
-		variable := varName(p.data[p.offset+1])
+		variable := varName(p.getByte(1))
 		value := p.getWord(2)
 		target := p.getWord(4)
 		op = Operation{
@@ -84,8 +84,8 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 	case "notEqualZero",
 		"equalZero":
 		opCodeLength = 5
-		variable := varName(p.data[p.offset+1])
-		target := p.getWord(2)
+		variable := varName(p.getWord(1))
+		target := p.getWord(3)
 		op = Operation{
 			opType: OpConditional, condDst: target, opCode: opcode,
 			condOp1: variable, condOp2: "0", condOp: condOpSymbols[opcodeName],
@@ -244,6 +244,22 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		if subopcode < 0x0a {
 			opCodeLength = 2
 			op.callMethod += cursorCommands[subopcode]
+		} else {
+			switch subopcode {
+			case 0x0A:
+				opCodeLength = 4
+			case 0x0B:
+				opCodeLength = 5
+			case 0x0C:
+				opCodeLength = 3
+			case 0x0D:
+				opCodeLength = 3
+			case 0x0E:
+				for p.data[p.offset+int(opCodeLength)] != 0xff {
+					opCodeLength++
+				}
+				opCodeLength++
+			}
 		}
 	case "putActorInRoom":
 		opCodeLength = 3
@@ -454,7 +470,7 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		opCodeLength = 7
 		objectA := p.getWord(1)
 		objectB := p.getWord(2)
-		variable := varName(byte(p.getByte(1)))
+		variable := varName(p.getByte(1))
 		op.addResult(variable)
 		op.addNamedParam("objectA", objectA)
 		op.addNamedParam("objectB", objectB)
@@ -483,19 +499,19 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		op.addNamedParam("sound", p.getByte(1))
 	case "getActorWalkBox":
 		opCodeLength = 5
-		variable := varName(byte(p.getByte(1)))
-		actor := varName(byte(p.getWord(2)))
+		variable := varName(p.getByte(1))
+		actor := varName(p.getWord(2))
 		if paramWord1 {
-			variable = varName(byte(p.getWord(1)))
-			actor = varName(byte(p.getWord(3)))
+			variable = varName(p.getWord(1))
+			actor = varName(p.getWord(3))
 		}
 		op.addResult(variable)
 		op.addNamedStringParam("actor", actor)
 	case "getActorScale", "getActorMoving", "getActorFacing", "getActorElevation",
 		"getActorWidth", "getActorCostume", "getActorX", "getActorY":
 		opCodeLength = 5
-		result := varName(uint8(p.getWord(1)))
-		actor := varName(p.data[p.offset+3])
+		result := varName(p.getWord(1))
+		actor := varName(p.getByte(3))
 		op.callResult = result
 		op.addNamedStringParam("actor", actor)
 	case "ifClassOfIs":
@@ -636,8 +652,8 @@ const varLen int = 0xFE
 const multi byte = 0xFD
 const endsList int = 0xFC
 
-func varName(code uint8) (name string) {
-	name = varNames[code]
+func varName(code int) (name string) {
+	name = varNames[byte(code)]
 	if name == "" {
 		name = "var(" + fmt.Sprintf("0x%x", code) + ")"
 	}

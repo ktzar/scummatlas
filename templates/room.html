@@ -8,9 +8,41 @@
 		<script src="./static/roomPage.js"></script>
     </head>
     <body id="room-page">
+
+    <div class="navbar navbar-default navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <a href="https://github.com/ktzar/scummatlas" class="navbar-brand">Scumm Atlas</a>
+                <button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#navbar-main">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+            </div>
+            <div class="navbar-collapse collapse" id="navbar-main">
+                <ul class="nav navbar-nav">
+                    <li><a href="index.html">Index</a></li>
+                    <li><a href="table.html">Mosaic</a></li>
+                    <li><a href="map.html">Map</a></li>
+                    <li><a href="costumes.html">Costumes</a></li>
+                    <li><a href="scripts.html">Global scripts</a></li>
+                </ul>
+
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="https://github.com/ktzar" target="_blank">by ktzar</a></li>
+                </ul>
+
+            </div>
+        </div>
+    </div>
+
     <div class="container">
-        <div class="row text-center">
+        <br/>
+        <br/>
+        <div class="page-header" id="banner">
             <h1>{{.Name}}</h1>
+        </div>
+        <div class="row">
             <h2>Background</h2>
             {{$background := .Background}}
             <img class="pixelart" height="{{.DoubleHeight}}px" src="{{.Background}}"/>
@@ -44,27 +76,25 @@
             <button class="toggle-svg-bg">Toggle background</button>
         </div>
 
-        <div class="row text-center">
-            <div class="col-sm-6">
-                <h2>Z-Planes</h2>
-                <div class="zplanes-container" style="width: {{.Width}}px; height: {{.Height}}px">
-                    <img class="pixelart zplane" src="{{$background}}"/>
-                    {{range .ZplanesURL}}
-                        <img class="pixelart zplane" style="-webkit-mask-image: url({{.}})" src="{{$background}}"/>
-                    {{end}}
-                </div>
-                <label>Rotate</label><br/>
-                <input type="range" min="-80" max="80" step="1" id="zPlane-rotation"/>
+        <div class="row">
+            <h2>Z-Planes</h2>
+            <div class="zplanes-container" style="width: {{.Width}}px; height: {{.Height}}px">
+                <img class="pixelart zplane" src="{{$background}}"/>
+                {{range .ZplanesURL}}
+                    <img class="pixelart zplane" style="-webkit-mask-image: url({{.}})" src="{{$background}}"/>
+                {{end}}
             </div>
-            <div class="col-sm-6">
-                <h2>Exits</h2>
-                {{range .Exits}}
-                <div class="col-sm-4 text-center"><a href="room{{printf "%02d" .Room}}.html">
-                    {{.Path}} leads to room {{.Room}}<br/>
-                    <img width="128px" src="img_bg/room{{printf "%02d" .Room}}_bg.png"/>
-                </a></div>
-                {{end}} 
-            </div>
+            <label>Rotate</label><br/>
+            <input type="range" min="-80" max="80" step="1" id="zPlane-rotation"/>
+        </div>
+        <div class="row">
+            <h2>Exits</h2>
+            {{range .Exits}}
+            <div class="col-sm-4 text-center"><a href="room{{printf "%02d" .Room}}.html">
+                {{.Path}} leads to room {{.Room}}<br/>
+                <img width="128px" src="img_bg/room{{printf "%02d" .Room}}_bg.png"/>
+            </a></div>
+            {{end}} 
         </div>
         <div class="row">
             <h2>Objects</h2>

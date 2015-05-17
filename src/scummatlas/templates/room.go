@@ -7,6 +7,7 @@ import (
 	"os"
 	"scummatlas"
 	l "scummatlas/condlog"
+	"strings"
 )
 
 type roomData struct {
@@ -43,6 +44,7 @@ func WriteRoom(room scummatlas.Room, outputdir string) {
 		boxes,
 		room,
 	}
+	data.Name = strings.Title(data.Name)
 	t.Execute(file, data)
 }
 
