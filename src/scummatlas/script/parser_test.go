@@ -4,7 +4,7 @@ import "testing"
 import "io/ioutil"
 
 func readScriptOrDie(filename string, t *testing.T) []byte {
-	data, err := ioutil.ReadFile("../testdata/scripts/" + filename + ".dump")
+	data, err := ioutil.ReadFile("./testdata/" + filename + ".dump")
 	if err != nil {
 		t.Errorf("Error reading the file")
 	}
