@@ -8,11 +8,36 @@ import (
 )
 
 type MainScummData struct {
-	Data []byte
+	data     []byte
+	sections map[string][]int
 }
 
-func (d *MainScummData) fourChars(offset int) string {
-	return string(d.Data[offset : offset+4])
+func NewMainScummData(data []byte) *MainScummData {
+	if !checkMainScummData(data) {
+		panic("No main container in the file")
+	}
+	main := new(MainScummData)
+	main.data = data
+
+	loffSize := b.BE32(data, 12)
+	currentOffset := 12 + loffSize + 4
+
+	for currentOffset < len(data) {
+		blockName := b.FourCharString(data, currentOffset)
+		if blockName == "LFLF" {
+			currentOffset += 8
+			continue
+		}
+		if main.sections[blockName] == nil {
+			main.sections[blockName] = make([]int, 1)
+		}
+		main.sections[blockName] = append(main.sections[blockName], currentOffset)
+		blockSize := b.BE32(data, currentOffset+4)
+		currentOffset += blockSize
+		fmt.Println(blockName, blockSize)
+	}
+
+	return main
 }
 
 type RoomOffset struct {
@@ -25,8 +50,8 @@ func (d *MainScummData) GetRoomsOffset() (offsets []RoomOffset) {
 	currentOffset := 17
 	var out []RoomOffset
 	for i := 0; i < count; i++ {
-		count := int(d.Data[currentOffset])
-		offset := b.LE32(d.Data, currentOffset+1)
+		count := int(d.data[currentOffset])
+		offset := b.LE32(d.data, currentOffset+1)
 		roomOffset := RoomOffset{count, offset}
 		out = append(out, roomOffset)
 		currentOffset += 5
@@ -35,39 +60,46 @@ func (d *MainScummData) GetRoomsOffset() (offsets []RoomOffset) {
 }
 
 func (d *MainScummData) getRoomCount() int {
-	blockName := d.fourChars(0)
-	blockSize := b.BE32(d.Data, 4)
-	l.Log("structure", blockName)
-	if blockName != "LECF" {
-		panic("No main container in the file")
-	}
-	l.Log("room", "%v (%v bytes)\t", blockName, blockSize)
-
-	blockName = d.fourChars(8)
+	blockName := b.FourCharString(d.data, 8)
 	if blockName != "LOFF" {
 		panic("No room offset table in the file")
 	}
-	blockSize = b.BE32(d.Data, 12)
-	roomCount := int(d.Data[16])
+	blockSize := b.BE32(d.data, 12)
+	roomCount := int(d.data[16])
 	l.Log("room", "%v (%v bytes)\t", blockName, blockSize)
 	l.Log("room", "roomCount: %v", roomCount)
 	return roomCount
 }
 
 func (d MainScummData) GetScripts() []s.Script {
+	fmt.Printf("%v", d.sections)
+	panic("NOOOOO")
 	return []s.Script{}
 }
 
 func (d *MainScummData) ParseRoom(offset int, order int) Room {
-	blockName := d.fourChars(offset)
-	blockSize := b.BE32(d.Data, offset+4)
+	blockName := b.FourCharString(d.data, offset)
+	blockSize := b.BE32(d.data, offset+4)
 	if blockName != "ROOM" {
 		panic("No room block found")
 	}
 	l.Log("room", "Room of size", blockSize)
 
-	data := d.Data[offset : offset+blockSize]
+	data := d.data[offset : offset+blockSize]
 	dumpBlock(fmt.Sprintf("ROOM_%d", order), data)
 	room := NewRoom(data)
 	return *room
+}
+
+func checkMainScummData(data []byte) bool {
+	blockName := b.FourCharString(data, 0)
+	l.Log("structure", blockName)
+	if blockName != "LECF" {
+		return false
+	}
+	blockName = b.FourCharString(data, 8)
+	if blockName != "LOFF" {
+		return false
+	}
+	return true
 }

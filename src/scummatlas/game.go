@@ -23,7 +23,7 @@ type Game struct {
 	gamedir     string
 	indexFile   string
 	mainFile    string
-	mainData    MainScummData
+	mainData    *MainScummData
 }
 
 type Costume interface{}
@@ -111,7 +111,7 @@ func (self *Game) processMainFile() {
 		panic("Cannot read main file")
 	}
 
-	self.mainData = MainScummData{data}
+	self.mainData = NewMainScummData(data)
 	self.Scripts = self.mainData.GetScripts()
 	self.RoomOffsets = self.mainData.GetRoomsOffset()
 	self.Rooms = make([]Room, len(self.RoomOffsets))
