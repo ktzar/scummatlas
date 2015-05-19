@@ -10,6 +10,33 @@ var condOpSymbols = map[string]string{
 	"equalZero":      "==",
 }
 
+var roomOps = map[byte]string{
+	0x01: "scroll",
+	0x03: "screen",
+	0x04: "setPalette",
+	0x05: "shakeOn",
+	0x06: "shakeOff",
+	0x07: "scale",
+	0x08: "intensity",
+	0x88: "intensity",
+	0x09: "savegame",
+	0x0a: "effect",
+	0x0b: "intensity",
+	0x0c: "shadow",
+	0x0d: "saveString",
+	0x0e: "loadString",
+	0x0f: "transform",
+	0x10: "cycleSpeed",
+}
+
+var stringOps = map[byte]string{
+	0x01: "loadString",
+	0x02: "copyString",
+	0x03: "writeChar",
+	0x04: "readChar",
+	0x05: "newString",
+}
+
 var opCodesNames = map[byte]string{
 	0x00: "stopObjectCode",
 	0x01: "putActor",

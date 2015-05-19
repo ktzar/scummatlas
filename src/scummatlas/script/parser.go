@@ -22,6 +22,16 @@ func NewScriptParser(data []byte, offset int) ScriptParser {
 	return parser
 }
 
+func (p ScriptParser) getString(position int) (length int, str string) {
+	offset := p.offset + position
+	length = 0
+	for p.data[offset+length] != 0x00 {
+		str += string(p.data[offset+length])
+		length++
+	}
+	return
+}
+
 func (p ScriptParser) getWord(position int) int {
 	return b.LE16(p.data, p.offset+position)
 }
@@ -85,7 +95,7 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		"equalZero":
 		opCodeLength = 5
 		variable := varName(p.getWord(1))
-		target := p.getWord(3)
+		target := p.getWord(3) + p.offset + 5
 		op = Operation{
 			opType: OpConditional, condDst: target, opCode: opcode,
 			condOp1: variable, condOp2: "0", condOp: condOpSymbols[opcodeName],
@@ -192,13 +202,14 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 	case "getRandomNumber":
 		opCodeLength = 4
 		result := p.getWord(1)
-		seed := p.data[p.offset+3]
-		op.addParam(string(seed))
-		op.callResult = fmt.Sprintf("var(%d)", result)
+		seed := p.getByte(3)
+		op.addParam(fmt.Sprintf("%d", seed))
+		op.callResult = varName(result)
 	case "jumpRelative":
 		opCodeLength = 3
-		target := p.getWord(1)
-		op.addParam(fmt.Sprintf("0x%x", target))
+		target := p.getWord(1) + op.offset + 3
+		op.callMethod = "goto"
+		op.addParam(fmt.Sprintf("%d", target))
 	case "doSentence":
 		opCodeLength = 7
 		verb := p.getByte(1)
@@ -233,17 +244,37 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 	case "stringOps":
 		l.Log("script", "string subopcode: 0x%x\n", subopcode)
 		opCodeLength = varLen
-		if subopcode == 0x02 || subopcode == 0x05 {
+		op.callMethod += "." + stringOps[subopcode]
+		if subopcode == 0x01 {
+			strId := p.getByte(2)
+			length, str := p.getString(3)
+			fmt.Printf("%v - %d\n", str, length)
+			op.addNamedParam("id", strId)
+			op.addNamedStringParam("string", str)
+			opCodeLength = 4 + length
+		} else if subopcode == 0x02 {
 			opCodeLength = 5
 		} else if subopcode == 0x04 {
-			opCodeLength = 7
+			opCodeLength = 6
+			result := p.getWord(2)
+			strId := p.getByte(4)
+			index := p.getByte(5)
+			op.assignDst = varName(result)
+			op.addNamedParam("stringId", strId)
+			op.addNamedParam("index", index)
+		} else if subopcode == 0x05 {
+			opCodeLength = 5
+			strId := p.getByte(3)
+			size := p.getByte(4)
+			op.addNamedParam("stringId", strId)
+			op.addNamedParam("size", size)
 		}
 		// TODO
 	case "cursorCommand":
 		opCodeLength = varLen
 		if subopcode < 0x0a {
 			opCodeLength = 2
-			op.callMethod += cursorCommands[subopcode]
+			op.callMethod += "." + cursorCommands[subopcode]
 		} else {
 			switch subopcode {
 			case 0x0A:
@@ -288,34 +319,27 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		}
 	case "roomOps":
 		opCodeLength = varLen
+		op.callMethod += "." + roomOps[subopcode]
 		switch subopcode {
 		case 0x01:
 			opCodeLength = 6
-			op.callMethod += ".scroll"
 			op.addNamedParam("minX", p.getWord(2))
 			op.addNamedParam("maxX", p.getWord(4))
 		case 0x03:
 			opCodeLength = 6
-			op.callMethod += ".screen"
 			op.addNamedParam("b", p.getWord(2))
 			op.addNamedParam("h", p.getWord(4))
-		case 0x04:
+		case 0x04, 0xe4:
 			opCodeLength = 10
-			op.callMethod += ".setPalette"
 			palette := p.data[p.offset+9]
 			op.addNamedParam("r", p.getWord(2))
 			op.addNamedParam("g", p.getWord(4))
 			op.addNamedParam("b", p.getWord(6))
 			op.addNamedParam("paletteIndex", int(palette))
-		case 0x05:
+		case 0x05, 0x06:
 			opCodeLength = 2
-			op.callMethod += ".shakeOn"
-		case 0x06:
-			opCodeLength = 2
-			op.callMethod += ".shakeOff"
 		case 0x07:
 			opCodeLength = 7
-			op.callMethod += ".scale"
 			op.addNamedParam("scale1", p.getByte(2))
 			op.addNamedParam("y1", p.getByte(3))
 			op.addNamedParam("scale2", p.getByte(4))
@@ -323,35 +347,32 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 			op.addNamedParam("slot", p.getByte(6))
 		case 0x08, 0x88:
 			opCodeLength = 7
-			op.callMethod += ".intensity"
 			op.addNamedParam("scale", p.getWord(2))
 			op.addNamedParam("startcolor", p.getByte(4))
 			op.addNamedParam("endcolor", p.getByte(5))
 		case 0x09:
 			opCodeLength = 4
-			op.callMethod += ".savegame"
 			op.addNamedParam("flag", p.getByte(2))
 			op.addNamedParam("slot", p.getByte(3))
 		case 0x0A:
 			opCodeLength = 4
-			op.callMethod += ".effect"
 			op.addParam(fmt.Sprintf("%d", p.getWord(2)))
 		case 0x0B, 0x0C:
 			opCodeLength = 10
 			startcolor := p.data[p.offset+8]
 			endcolor := p.data[p.offset+9]
-			if subopcode == 0x0C {
-				op.callMethod += ".shadow"
-			} else {
-				op.callMethod += ".intensity"
-			}
 			op.addNamedParam("r", p.getWord(2))
 			op.addNamedParam("g", p.getWord(4))
 			op.addNamedParam("b", p.getWord(6))
 			op.addNamedParam("startcolor", int(startcolor))
 			op.addNamedParam("endcolor", int(endcolor))
-		case 0x0D: //Save string
-		case 0x0E: //Load string
+		case 0x0D, 0x0E:
+			strId := p.getByte(2)
+			length, str := p.getString(3)
+			fmt.Printf("%v - %d\n", str, length)
+			op.addNamedParam("id", strId)
+			op.addNamedStringParam("string", str)
+			opCodeLength = 4 + length
 		case 0x0F: //Transform
 		case 0x10: //Cycle speed
 		}
@@ -397,12 +418,8 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		opCodeLength = 2 + len(items)*3
 		op.addParam(fmt.Sprintf("%v", items))
 	case "setObjectName":
-		opCodeLength = 3
-		name := ""
-		for p.data[p.offset+opCodeLength] != 0x00 {
-			name += string(p.data[p.offset+opCodeLength])
-			opCodeLength++
-		}
+		length, name := p.getString(3)
+		opCodeLength = 3 + length
 		op.addNamedParam("object", p.getWord(1))
 		op.addNamedStringParam("text", name)
 	case "expression": //TODO properly
