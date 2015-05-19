@@ -115,6 +115,7 @@ func (self *Game) processMainFile() {
 	self.Scripts = self.mainData.GetScripts()
 	self.RoomOffsets = self.mainData.GetRoomsOffset()
 	self.Rooms = make([]Room, len(self.RoomOffsets))
+	self.Scripts = self.mainData.GetScripts()
 
 	l.Log("structure", "Room count", len(self.RoomOffsets))
 }
