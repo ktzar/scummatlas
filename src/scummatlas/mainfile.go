@@ -35,7 +35,7 @@ func NewMainScummData(data []byte) *MainScummData {
 		main.sections[blockName] = append(main.sections[blockName], currentOffset)
 		blockSize := b.BE32(data, currentOffset+4)
 		currentOffset += blockSize
-		fmt.Println(blockName, blockSize)
+		l.Log("structure", "%v\t%v", blockName, blockSize)
 	}
 
 	return main
@@ -74,7 +74,6 @@ func (d *MainScummData) getRoomCount() int {
 
 func (d MainScummData) GetScripts() (scripts []s.Script) {
 	for _, offset := range d.sections["SCRP"] {
-		blockName := b.FourCharString(d.data, offset)
 		blockSize := b.BE32(d.data, offset+4)
 		script := s.ParseScriptBlock(d.data[offset+8 : offset+blockSize])
 		scripts = append(scripts, script)

@@ -7,12 +7,16 @@
     <body id="index-page">
     {{template "menu"}}
     <div class="container">
-        <h1>{{.Title}}</h1>
+        <h1 id="top">{{.Title}}</h1>
         <h2>List of scripts</h2>
+        <table class="table table-bordered table-condensed">
+            <tr>{{range .ScriptTable}}{{.}}{{end}}</tr>
+        </table>
         <div class="row">
         {{range $i, $script := .Scripts}}
-        <h2>Script {{$i}}</h2>
+        <h2 id="script-{{$i}}">Script {{$i}}</h2>
             <pre>{{ $script.Print }}</pre>
+            <a href="#top">Go back to the top</a>
         {{end}}
         </div>
     </div>

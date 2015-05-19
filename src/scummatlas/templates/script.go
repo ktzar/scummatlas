@@ -1,6 +1,7 @@
 package templates
 
 import (
+	"fmt"
 	"html/template"
 	"os"
 	"scummatlas"
@@ -11,6 +12,18 @@ import (
 type scriptData struct {
 	Title   string
 	Scripts []s.Script
+}
+
+func (self scriptData) ScriptTable() (out []template.HTML) {
+	for i, _ := range self.Scripts {
+		if i%12 == 0 {
+			out = append(out, template.HTML("</tr><tr>"))
+		}
+		out = append(out, template.HTML(fmt.Sprintf(
+			"<td><a href='#script-%d'>Script %d</a></td>",
+			i, i)))
+	}
+	return
 }
 
 func writeScripts(game scummatlas.Game, outdir string) {
