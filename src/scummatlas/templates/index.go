@@ -7,17 +7,17 @@ import (
 	l "scummatlas/condlog"
 )
 
-type IndexData struct {
+type indexData struct {
 	Title string
 	Rooms []scummatlas.Room
 }
 
-type TableData struct {
+type tableData struct {
 	Title string
 	Rooms []scummatlas.Room
 }
 
-type MapData struct {
+type mapData struct {
 	Title string
 	Nodes []MapNode
 	Edges []MapEdge
@@ -33,8 +33,8 @@ type MapEdge struct {
 	Target int
 }
 
-func NewMapData(game scummatlas.Game) *MapData {
-	data := new(MapData)
+func newMapData(game scummatlas.Game) *mapData {
+	data := new(mapData)
 
 	data.Title = "Map"
 
@@ -67,6 +67,7 @@ func WriteGameFiles(game scummatlas.Game, outdir string) {
 	writeIndex(game, outdir)
 	writeTable(game, outdir)
 	writeMap(game, outdir)
+	writeScripts(game, outdir)
 }
 
 func writeIndex(game scummatlas.Game, outdir string) {
@@ -78,7 +79,7 @@ func writeIndex(game scummatlas.Game, outdir string) {
 	}
 
 	t := template.Must(template.ParseFiles("./templates/index.html", "./templates/partials.html"))
-	t.Execute(file, IndexData{
+	t.Execute(file, indexData{
 		"A game",
 		game.Rooms,
 	})
@@ -95,7 +96,7 @@ func writeTable(game scummatlas.Game, outdir string) {
 		panic("Can't create table file")
 	}
 
-	data := TableData{
+	data := tableData{
 		"A game",
 		rooms,
 	}
@@ -103,7 +104,7 @@ func writeTable(game scummatlas.Game, outdir string) {
 }
 
 func writeMap(game scummatlas.Game, outdir string) {
-	data := NewMapData(game)
+	data := newMapData(game)
 	t := template.Must(template.ParseFiles("./templates/map.html", "./templates/partials.html"))
 
 	filename := outdir + "/map.html"
