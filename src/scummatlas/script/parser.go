@@ -245,16 +245,22 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		l.Log("script", "string subopcode: 0x%x\n", subopcode)
 		opCodeLength = varLen
 		op.callMethod += "." + stringOps[subopcode]
-		if subopcode == 0x01 {
+		switch subopcode {
+		case 0x01:
 			strId := p.getByte(2)
 			length, str := p.getString(3)
-			fmt.Printf("%v - %d\n", str, length)
 			op.addNamedParam("id", strId)
 			op.addNamedStringParam("string", str)
 			opCodeLength = 4 + length
-		} else if subopcode == 0x02 {
+		case 0x02, 0x03:
 			opCodeLength = 5
-		} else if subopcode == 0x04 {
+			strId := p.getByte(2)
+			index := p.getByte(3)
+			char := string(p.getByte(3))
+			op.addNamedParam("stringId", strId)
+			op.addNamedParam("index", index)
+			op.addNamedStringParam("char", char)
+		case 0x04:
 			opCodeLength = 6
 			result := p.getWord(2)
 			strId := p.getByte(4)
@@ -262,10 +268,10 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 			op.assignDst = varName(result)
 			op.addNamedParam("stringId", strId)
 			op.addNamedParam("index", index)
-		} else if subopcode == 0x05 {
-			opCodeLength = 5
-			strId := p.getByte(3)
-			size := p.getByte(4)
+		case 0x05:
+			opCodeLength = 4
+			strId := p.getByte(2)
+			size := p.getByte(3)
 			op.addNamedParam("stringId", strId)
 			op.addNamedParam("size", size)
 		}
