@@ -29,6 +29,25 @@ var roomOps = map[byte]string{
 	0x10: "cycleSpeed",
 }
 
+var verbOps = map[byte]string{
+	0x01: "image",
+	0x02: "name",
+	0x03: "color",
+	0x04: "hicolor",
+	0x05: "at",
+	0x06: "on",
+	0x07: "off",
+	0x08: "delete",
+	0x09: "new",
+	0x10: "dimcolor",
+	0x11: "dim",
+	0x12: "key",
+	0x13: "center",
+	0x14: "name_str",
+	0x16: "assign",
+	0x17: "setBackColor",
+}
+
 var stringOps = map[byte]string{
 	0x01: "loadString",
 	0x02: "copyString",

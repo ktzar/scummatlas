@@ -581,6 +581,45 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		op.addNamedStringParam("actor", varName(p.getByte(1)))
 		op.addNamedParam("x", p.getWord(3))
 		op.addNamedParam("y", p.getWord(5))
+	case "verbOps":
+		verb := p.getByte(3)
+		opCodeLength = 3
+		if paramWord1 {
+			verb = p.getWord(3)
+			opCodeLength = 4
+		}
+		op.addNamedParam("verbId", verb)
+		for p.getByte(opCodeLength) != int(0xFF) {
+			action := verbOps[byte(p.getByte(opCodeLength))]
+			switch action {
+			case "on", "off", "delete", "new", "dim", "center":
+				op.addParam(action)
+				opCodeLength++
+			case "color", "hicolor", "dimcolor", "key", "setBackColor":
+				param := p.getByte(opCodeLength + 1)
+				op.addParam(fmt.Sprintf("%v=%d", action, param))
+				opCodeLength += 2
+			case "image", "name_str":
+				param := p.getWord(opCodeLength + 1)
+				op.addParam(fmt.Sprintf("%v=%d", action, param))
+				opCodeLength += 3
+			case "at":
+				left := p.getWord(opCodeLength + 1)
+				top := p.getWord(opCodeLength + 3)
+				op.addParam(fmt.Sprintf("%v[%d,%d]", action, left, top))
+				opCodeLength += 5
+			case "assign":
+				object := p.getWord(opCodeLength + 1)
+				room := p.getByte(opCodeLength + 3)
+				op.addParam(fmt.Sprintf("%v[%d,%d]", action, object, room))
+				opCodeLength += 4
+			case "name":
+				length, name := p.getString(opCodeLength + 1)
+				op.addNamedStringParam(action, name)
+				opCodeLength += 1 + length
+			}
+		}
+		opCodeLength++
 	case "actorFollowCamera":
 		opCodeLength = 3
 	case "findInventory":
@@ -607,8 +646,6 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		opCodeLength = 5
 	case "loadRoom":
 		opCodeLength = 3
-	case "verbOps": //TODO
-		opCodeLength = varLen
 	case "isSoundRunning":
 		opCodeLength = 5
 	case "breakHere":
@@ -620,7 +657,19 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 	case "dummy":
 		opCodeLength = 1
 	case "saveRestoreVerbs":
-		opCodeLength = 4
+		opCodeLength = 5
+		switch subopcode {
+		case 0x01:
+			op.callMethod += ".save"
+		case 0x02:
+			op.callMethod += ".restore"
+		case 0x03:
+			op.callMethod += ".delete"
+		}
+		op.addNamedParam("start", p.getByte(2))
+		op.addNamedParam("end", p.getByte(3))
+		op.addNamedParam("mode", p.getByte(4))
+
 	case "endCutScene":
 		opCodeLength = 1
 	case "startMusic":
