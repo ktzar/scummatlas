@@ -187,15 +187,12 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		x := p.getWord(1)
 		op.addNamedParam("x", x)
 	case "actorOps":
+		//TODO
 		opCodeLength = 4
-		actor := p.getWord(1)
-		command := actorOps[subopcode]
-		op.callMethod += "." + command
-		op.addNamedParam("actor", actor)
 		for p.data[p.offset+int(opCodeLength)] != 0xff {
 			opCodeLength++
 			if opCodeLength > 200 {
-				return Operation{}, errors.New("cutscene too long")
+				return Operation{}, errors.New("actorOps too long")
 			}
 		}
 		opCodeLength++
@@ -386,13 +383,17 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		opCodeLength = 5
 		op.addNamedParam("actor", p.getByte(1))
 		op.addNamedParam("object", p.getWord(2))
-	case "subtract":
+	case "substract", "add":
 		opCodeLength = 5
 		op.opType = OpAssignment
 		result := p.getWord(1)
 		value := p.data[p.offset+3]
+		symbol := "+"
+		if opcodeName == "substract" {
+			symbol = "-"
+		}
 		op.assignDst = fmt.Sprintf("0x%x", result)
-		op.assignVal = fmt.Sprintf("0x%x - 0x%x", result, value)
+		op.assignVal = fmt.Sprintf("0x%x %v 0x%x", result, symbol, value)
 	case "drawBox":
 		opCodeLength = 12
 		if p.offset+11 < len(p.data) {
@@ -484,6 +485,24 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		opCodeLength = 3
 	case "setVarRange":
 		opCodeLength = endsList
+		from := p.getWord(1)
+		count := p.getByte(3)
+		size := 1
+		if paramWord1 {
+			size = 2
+		}
+		opCodeLength = 4 + size*count
+		list := make([]int, count)
+		for i := 0; i < count; i++ {
+			if paramWord1 {
+				list[i] = p.getWord(4 + size*i)
+			} else {
+				list[i] = p.getByte(4 + size*i)
+			}
+		}
+		op.addNamedParam("from", from)
+		op.addNamedParam("count", count)
+		op.addNamedStringParam("list", fmt.Sprintf("%v", list))
 	case "setOwnerOf":
 		opCodeLength = 5
 	case "delayVariable":
@@ -570,8 +589,6 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		opCodeLength = 5
 	case "override":
 		opCodeLength = 2
-	case "add":
-		opCodeLength = 5
 	case "divide":
 		opCodeLength = 5
 	case "oldRoomEffect":

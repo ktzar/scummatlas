@@ -73,10 +73,11 @@ func (d *MainScummData) getRoomCount() int {
 }
 
 func (d MainScummData) GetScripts() (scripts []s.Script) {
-	for _, offset := range d.sections["SCRP"] {
+	for i, offset := range d.sections["SCRP"] {
 		blockSize := b.BE32(d.data, offset+4)
 		script := s.ParseScriptBlock(d.data[offset+8 : offset+blockSize])
 		scripts = append(scripts, script)
+		dumpBlock(fmt.Sprintf("SCRP_%d", i), d.data[offset:offset+blockSize])
 	}
 	return
 }
