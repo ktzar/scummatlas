@@ -248,7 +248,7 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 			length, str := p.getString(3)
 			op.addNamedParam("id", strId)
 			op.addNamedStringParam("string", str)
-			opCodeLength = 4 + length
+			opCodeLength = 5 + length
 		case 0x02, 0x03:
 			opCodeLength = 5
 			strId := p.getByte(2)
@@ -271,6 +271,11 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 			size := p.getByte(3)
 			op.addNamedParam("stringId", strId)
 			op.addNamedParam("size", size)
+		default:
+			return Operation{}, errors.New(
+				fmt.Sprintf(
+					"stringOps subopcode %02x not understood",
+					subopcode))
 		}
 		// TODO
 	case "cursorCommand":
@@ -293,6 +298,11 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 					opCodeLength++
 				}
 				opCodeLength++
+			default:
+				return Operation{}, errors.New(
+					fmt.Sprintf(
+						"cursorCommand subopcode %02x not understood",
+						subopcode))
 			}
 		}
 	case "putActorInRoom":
@@ -583,13 +593,14 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		op.addNamedParam("y", p.getWord(5))
 	case "verbOps":
 		verb := p.getByte(2)
-		opCodeLength = 2
+		opCodeLength = 3
 		if paramWord1 {
 			verb = p.getWord(2)
-			opCodeLength = 3
+			opCodeLength = 4
 		}
 		op.addNamedParam("verbId", verb)
-		for p.getByte(opCodeLength) != int(0xFF) {
+		for p.getByte(opCodeLength) != int(0xFF) &&
+			op.opType != OpError {
 			action := verbOps[byte(p.getByte(opCodeLength))]
 			switch action {
 			case "on", "off", "delete", "new", "dim", "center":
@@ -622,7 +633,10 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 					opCodeLength++
 				}
 			default:
-				panic("NOOO")
+				return Operation{}, errors.New(
+					fmt.Sprintf(
+						"verbOps subopcode %02x not understood",
+						subopcode))
 			}
 		}
 		opCodeLength++
@@ -737,8 +751,8 @@ func ParseScriptBlock(data []byte) Script {
 		_, err := parser.ParseNext()
 		if err != nil {
 			parser.Script = append(parser.Script, Operation{
-				opType:     OpCall,
-				callMethod: "error_" + err.Error(),
+				opType:   OpError,
+				errorMsg: "error_" + err.Error(),
 			})
 			return parser.Script
 		}

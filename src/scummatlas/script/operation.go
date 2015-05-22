@@ -3,6 +3,15 @@ package script
 import "fmt"
 import "strconv"
 
+//Operation types
+const (
+	_ = iota
+	OpCall
+	OpConditional
+	OpAssignment
+	OpError
+)
+
 type Operation struct {
 	opType     int
 	offset     int
@@ -17,6 +26,7 @@ type Operation struct {
 	callResult string
 	callMap    map[string]string
 	callParams []string
+	errorMsg   string
 }
 
 func (op Operation) GetMethod() string {
@@ -53,14 +63,6 @@ func (script Script) Print() string {
 	}
 	return out
 }
-
-//Operation types
-const (
-	_ = iota
-	OpCall
-	OpConditional
-	OpAssignment
-)
 
 func (op *Operation) addNamedStringParam(paramName string, value string) {
 	op.callMap[paramName] = "\"" + value + "\""
@@ -102,6 +104,8 @@ func (op Operation) String() string {
 		return fmt.Sprintf("%v = %v", op.assignDst, op.assignVal)
 	} else if op.opType == OpConditional {
 		return fmt.Sprintf("unless (%v %v %v) goto %x", op.condOp1, op.condOp, op.condOp2, op.condDst)
+	} else if op.opType == OpError {
+		return fmt.Sprintf("%v", op.errorMsg)
 	}
 	return ""
 }
