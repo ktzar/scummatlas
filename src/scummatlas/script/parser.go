@@ -582,11 +582,11 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		op.addNamedParam("x", p.getWord(3))
 		op.addNamedParam("y", p.getWord(5))
 	case "verbOps":
-		verb := p.getByte(3)
-		opCodeLength = 3
+		verb := p.getByte(2)
+		opCodeLength = 2
 		if paramWord1 {
-			verb = p.getWord(3)
-			opCodeLength = 4
+			verb = p.getWord(2)
+			opCodeLength = 3
 		}
 		op.addNamedParam("verbId", verb)
 		for p.getByte(opCodeLength) != int(0xFF) {
@@ -598,7 +598,7 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 			case "color", "hicolor", "dimcolor", "key", "setBackColor":
 				param := p.getByte(opCodeLength + 1)
 				op.addParam(fmt.Sprintf("%v=%d", action, param))
-				opCodeLength += 2
+				opCodeLength += 3
 			case "image", "name_str":
 				param := p.getWord(opCodeLength + 1)
 				op.addParam(fmt.Sprintf("%v=%d", action, param))
@@ -614,9 +614,15 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 				op.addParam(fmt.Sprintf("%v[%d,%d]", action, object, room))
 				opCodeLength += 4
 			case "name":
-				length, name := p.getString(opCodeLength + 1)
-				op.addNamedStringParam(action, name)
-				opCodeLength += 1 + length
+				if byte(p.getByte(opCodeLength+1)) != 0xff {
+					length, name := p.getString(opCodeLength + 1)
+					op.addNamedStringParam(action, name)
+					opCodeLength += 2 + length
+				} else {
+					opCodeLength++
+				}
+			default:
+				panic("NOOO")
 			}
 		}
 		opCodeLength++

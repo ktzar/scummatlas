@@ -63,7 +63,7 @@ const (
 )
 
 func (op *Operation) addNamedStringParam(paramName string, value string) {
-	op.callMap[paramName] = value
+	op.callMap[paramName] = "\"" + value + "\""
 }
 
 func (op *Operation) addNamedParam(paramName string, value int) {

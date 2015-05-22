@@ -57,7 +57,9 @@ func main() {
 				go func(room scummatlas.Room) {
 					processRoom(room)
 					fmt.Printf("Room %v processed\n", room.Id)
-					wg.Done()
+					if multicpu {
+						wg.Done()
+					}
 				}(room)
 			} else {
 				processRoom(room)
