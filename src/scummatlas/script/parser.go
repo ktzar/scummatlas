@@ -73,6 +73,7 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 	op.callMethod = opcodeName
 	op.callMap = make(map[string]string)
 	op.opCode = opcode
+	op.offset = p.offset
 
 	switch opcodeName {
 	case "isGreaterEqual",
@@ -665,7 +666,7 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 	case "lights":
 		opCodeLength = 5
 	case "loadRoom":
-		opCodeLength = 3
+		opCodeLength = 2
 	case "isSoundRunning":
 		opCodeLength = 5
 	case "breakHere":

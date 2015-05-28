@@ -33,7 +33,7 @@ func main() {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
-	fmt.Println(script.Print())
+	fmt.Println(script.Debug())
 }
 
 func parseScript(data []byte) (s.Script, error) {

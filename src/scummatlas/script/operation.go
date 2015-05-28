@@ -53,13 +53,19 @@ func (script Script) Exit() (room int, hasExit bool) {
 	return
 }
 
+func (script Script) Debug() string {
+	out := ""
+	for _, op := range script {
+		out += fmt.Sprintf("[%04x] (%02x) %v\n",
+			op.offset, op.opCode, op.String())
+	}
+	return out
+}
+
 func (script Script) Print() string {
 	out := ""
-	for i, op := range script {
-		if i > 0 {
-			out += "\n"
-		}
-		out += op.String()
+	for _, op := range script {
+		out += op.String() + "\n"
 	}
 	return out
 }
