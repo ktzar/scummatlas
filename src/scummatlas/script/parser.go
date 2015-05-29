@@ -234,7 +234,7 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		op.addNamedParam("x", x)
 		op.addNamedParam("y", y)
 	case "pickupObject":
-		opCodeLength = 5
+		opCodeLength = 4
 		object := p.getWord(1)
 		room := p.data[p.offset+3]
 		op.addNamedParam("object", object)
