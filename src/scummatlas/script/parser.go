@@ -130,6 +130,9 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		op.addNamedParam("y", y)
 	case "getActorRoom":
 		opCodeLength = 4
+		if paramWord1 {
+			opCodeLength = 5
+		}
 		result := p.getWord(1)
 		actor := p.data[p.offset+3]
 		op.callResult = fmt.Sprintf("0x%x", result)
@@ -467,9 +470,11 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		} else {
 			opCodeLength = 1
 		}
-		say, length := parsePrintOpcode(p.data, p.offset+opCodeLength)
+		actions, length := parsePrintOpcode(p.data, p.offset+opCodeLength)
 		opCodeLength += length + 1
-		op.addParam(fmt.Sprintf("\"%v\"", say))
+		for _, action := range actions {
+			op.addParam(action)
+		}
 	case "actorSetClass":
 		list := p.parseList(p.offset + 3)
 		opCodeLength = 4 + len(list)*3
@@ -637,7 +642,7 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 				return Operation{}, errors.New(
 					fmt.Sprintf(
 						"verbOps subopcode %02x not understood",
-						subopcode))
+						action))
 			}
 		}
 		opCodeLength++

@@ -1,31 +1,48 @@
 package script
 
-func parsePrintOpcode(data []byte, offset int) (say string, length int) {
+import "fmt"
+import b "scummatlas/binaryutils"
+
+func parsePrintOpcode(data []byte, offset int) (actions []string, opCodeLength int) {
 	originalOffset := offset
-	// Process subinstructions
 	var subinst byte
-	subinst = 0x0f
-	for subinst != 0x00 && offset < len(data) {
-		subinst := data[offset]
+	subinst = 0x00
+	for subinst != 0x0f && offset < len(data) {
+		subinst = data[offset]
 		switch subinst {
-		case 0x0F:
-			say, length = parseString(data, offset+1)
+		case 0x0f:
+			say, length := parseString(data, offset+1)
 			offset += length
-			return say, offset - originalOffset
-		case 0x01, 0x02:
-			//TODO encode color, right
+			actions = append(actions, "text=\""+say+"\"")
+		case 0x01:
+			color := data[offset+1]
+			actions = append(actions, fmt.Sprintf("color=%d", color))
 			offset += 2
-		case 0x00, 0x03, 0x08:
-			//TODO encode position, width, offset
+		case 0x02:
+			clipped := data[offset+1]
+			actions = append(actions, fmt.Sprintf("clipright=%d", clipped))
+			offset += 2
+		case 0x00:
+			x := b.LE32(data, offset)
+			y := b.LE32(data, offset+2)
+			actions = append(actions, fmt.Sprintf("pos=%d,%d", x, y))
 			offset += 4
-		case 0x04, 0x06, 0x07:
+		case 0x04:
+			actions = append(actions, "center")
+			offset++
+		case 0x06:
+			actions = append(actions, "left")
+			offset++
+		case 0x07:
+			actions = append(actions, "overhead")
 			offset++
 		default:
-			offset++
+			panic(fmt.Sprintf("Unknown print subinst %x", subinst))
 			break
 		}
 	}
-	return say, offset - originalOffset
+	opCodeLength = offset - originalOffset
+	return
 }
 
 func parseString(data []byte, offset int) (say string, length int) {
@@ -39,9 +56,9 @@ func parseString(data []byte, offset int) (say string, length int) {
 			escapeChar := data[offset+1]
 			switch {
 			case 0x01 <= escapeChar && escapeChar <= 0x03:
-				offset += 2
+				offset += 3
 			case 0x04 <= escapeChar && escapeChar <= 0x0e:
-				offset += 4
+				offset += 5
 			}
 		} else if currChar >= 0x20 && currChar <= 0x7e { //printable ascii char
 			say += string(currChar)
