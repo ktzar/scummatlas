@@ -227,8 +227,8 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 						"actorOps subopcode %02x not understood",
 						action))
 			}
+			opCodeLength++
 		}
-		opCodeLength++
 	case "getRandomNumber":
 		opCodeLength = 4
 		result := p.getWord(1)
