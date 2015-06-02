@@ -192,12 +192,40 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		x := p.getWord(1)
 		op.addNamedParam("x", x)
 	case "actorOps":
-		//TODO
-		opCodeLength = 4
-		for p.data[p.offset+int(opCodeLength)] != 0xff {
-			opCodeLength++
-			if opCodeLength > 200 {
-				return Operation{}, errors.New("actorOps too long")
+		opCodeLength = 2
+		actor := p.getByte(1)
+		if paramWord1 {
+			opCodeLength = 3
+			actor = p.getWord(1)
+		}
+		op.addNamedParam("actor", actor)
+		for p.getByte(opCodeLength) != int(0xFF) &&
+			op.opType != OpError {
+			actionCode := byte(p.getByte(opCodeLength))
+			actionLong := false
+			if actionCode > 0x80 {
+				actionCode = actionCode - 0x80
+				actionLong = true
+			}
+			action := actorOps[actionCode]
+			fmt.Printf("Action: %02v for code %02x\n", action, byte(p.getByte(opCodeLength)))
+			switch action {
+			case "default":
+				//Nothing to do, initialise actor
+			case "dummy", "costume", "sound", "walk_animation", "stand_animation", "talk_color", "init_animation", "width", "always_zclip", "animation_speed", "shadow":
+				opCodeLength += 1
+				param := p.getByte(opCodeLength)
+				if actionLong {
+					param = p.getWord(opCodeLength)
+					opCodeLength += 1
+				}
+				op.addNamedParam(action, param)
+			case "TODO": //TODO other length subopcodes
+			default:
+				return Operation{}, errors.New(
+					fmt.Sprintf(
+						"actorOps subopcode %02x not understood",
+						action))
 			}
 		}
 		opCodeLength++
