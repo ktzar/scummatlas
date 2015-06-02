@@ -91,6 +91,7 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 			condOp1: fmt.Sprintf("%v", value),
 			condOp2: variable,
 			condOp:  condOpSymbols[opcodeName],
+			offset:  p.offset,
 		}
 	case "notEqualZero",
 		"equalZero":
