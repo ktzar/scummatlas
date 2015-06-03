@@ -208,10 +208,10 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 				actionLong = true
 			}
 			action := actorOps[actionCode]
-			fmt.Printf("Action: %02v for code %02x\n", action, byte(p.getByte(opCodeLength)))
+			fmt.Printf("Code [%02x] -> %02v\n", byte(p.getByte(opCodeLength)), action)
 			switch action {
-			case "default":
-				//Nothing to do, initialise actor
+			case "init", "ignore_boxes", "follow_boxes":
+				//Nothing to do
 			case "dummy", "costume", "sound", "walk_animation", "stand_animation", "talk_color", "init_animation", "width", "always_zclip", "animation_speed", "shadow":
 				opCodeLength += 1
 				param := p.getByte(opCodeLength)
@@ -220,15 +220,27 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 					opCodeLength += 1
 				}
 				op.addNamedParam(action, param)
-			case "TODO": //TODO other length subopcodes
+				fmt.Printf("Param %d\n", param) //TODO remove
+			case "step_dist":
+				x := p.getByte(opCodeLength + 1)
+				y := p.getByte(opCodeLength + 2)
+				opCodeLength += 2
+				op.addNamedStringParam(action, fmt.Sprintf("%d,%d", x, y))
+				fmt.Printf("Params %d,%d\n", x, y) //TODO remove
+			case "name":
+				length, str := p.getString(opCodeLength + 1)
+				opCodeLength += length + 1
+				op.addNamedStringParam(action, str)
+				fmt.Printf("NAME: \"%v\"\n", str) //TODO remove
 			default:
 				return Operation{}, errors.New(
 					fmt.Sprintf(
-						"actorOps subopcode %02x not understood",
+						"actorOps action %v not implemented",
 						action))
 			}
 			opCodeLength++
 		}
+		opCodeLength++
 	case "getRandomNumber":
 		opCodeLength = 4
 		result := p.getWord(1)
@@ -415,7 +427,6 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		case 0x0D, 0x0E:
 			strId := p.getByte(2)
 			length, str := p.getString(3)
-			fmt.Printf("%v - %d\n", str, length)
 			op.addNamedParam("id", strId)
 			op.addNamedStringParam("string", str)
 			opCodeLength = 4 + length
