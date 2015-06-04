@@ -210,9 +210,15 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 				actionCode = actionCode - 0x80
 				actionLong = true
 			}
+			if actionCode > 0x40 {
+				actionCode = actionCode - 0x40
+			}
 			action := actorOps[actionCode]
+			fmt.Printf(
+				"actorOps action %v (0x%02x)\n",
+				action, actionCode)
 			switch action {
-			case "init", "ignore_boxes", "follow_boxes":
+			case "init", "ignore_boxes", "follow_boxes", "never_zclip":
 				//Nothing to do
 			case "dummy", "costume", "sound", "walk_animation", "stand_animation", "talk_color", "init_animation", "width", "always_zclip", "animation_speed", "shadow":
 				opCodeLength += 1
@@ -222,16 +228,11 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 					opCodeLength += 1
 				}
 				op.addNamedParam(action, param)
-			case "palette":
-				index := p.getByte(opCodeLength + 1)
-				value := p.getByte(opCodeLength + 2)
+			case "palette", "scale", "step_dist", "talk_animation":
+				param1 := p.getByte(opCodeLength + 1)
+				param2 := p.getByte(opCodeLength + 2)
 				opCodeLength += 2
-				op.addNamedStringParam(action, fmt.Sprintf("%d,%d", index, value))
-			case "step_dist":
-				x := p.getByte(opCodeLength + 1)
-				y := p.getByte(opCodeLength + 2)
-				opCodeLength += 2
-				op.addNamedStringParam(action, fmt.Sprintf("%d,%d", x, y))
+				op.addNamedStringParam(action, fmt.Sprintf("%d,%d", param1, param2))
 			case "elevation":
 				param := p.getWord(opCodeLength + 1)
 				opCodeLength += 2
@@ -243,8 +244,8 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 			default:
 				return Operation{}, errors.New(
 					fmt.Sprintf(
-						"actorOps action %v not implemented",
-						action))
+						"actorOps action %v (0x%02x) not implemented",
+						action, actionCode))
 			}
 			opCodeLength++
 		}
