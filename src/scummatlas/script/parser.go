@@ -47,10 +47,6 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 	opcode := p.data[p.offset]
 	opcodeName, ok := opCodesNames[opcode]
 
-	var subopcode byte
-	if p.offset+1 < len(p.data) {
-		subopcode = p.data[p.offset+1]
-	}
 	if !ok {
 		opcodeName, ok = opCodesNames[opcode&0x7F]
 		if ok {
@@ -62,11 +58,16 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 	}
 	l.Log("script", "[%04x] (%02x) %v", p.offset, opcode, opcodeName)
 
+	var subopcode byte
+	if p.offset+1 < len(p.data) {
+		subopcode = p.data[p.offset+1]
+	}
+
 	var opCodeLength int
 	var op Operation
 	paramWord1 := opcode&0x80 > 0
-	paramWord2 := opcode&0x40 > 0
-	//paramWord3 := opcode&0x20 > 0
+	paramWord2 := paramWord1 && opcode&0x40 > 0
+	//paramWord3 := paramWord2 && opcode&0x20 > 0
 
 	//Default to a function call since those are the majority
 	op.opType = OpCall
@@ -104,15 +105,16 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		}
 	case "animateActor":
 		opCodeLength = 3
-		var actor int
-		var anim int
+		actor := p.getByte(1)
+		anim := p.getByte(2)
 		if paramWord1 {
 			actor = p.getWord(1)
 			anim = p.getByte(3)
 			opCodeLength++
-		} else {
-			actor = p.getByte(1)
-			anim = p.getByte(2)
+		}
+		if paramWord2 {
+			anim = p.getWord(3)
+			opCodeLength++
 		}
 		op.addNamedParam("actor", actor)
 		op.addNamedParam("anim", anim)
@@ -125,6 +127,7 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 			actor = p.getWord(1)
 			x = p.getWord(3)
 			y = p.getWord(5)
+			opCodeLength++
 		}
 		op.addNamedParam("actor", actor)
 		op.addNamedParam("x", x)
@@ -219,12 +222,16 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 					opCodeLength += 1
 				}
 				op.addNamedParam(action, param)
+			case "palette":
+				index := p.getByte(opCodeLength + 1)
+				value := p.getByte(opCodeLength + 2)
+				opCodeLength += 2
+				op.addNamedStringParam(action, fmt.Sprintf("%d,%d", index, value))
 			case "step_dist":
 				x := p.getByte(opCodeLength + 1)
 				y := p.getByte(opCodeLength + 2)
 				opCodeLength += 2
 				op.addNamedStringParam(action, fmt.Sprintf("%d,%d", x, y))
-				fmt.Printf("Params %d,%d\n", x, y) //TODO remove
 			case "elevation":
 				param := p.getWord(opCodeLength + 1)
 				opCodeLength += 2
@@ -233,7 +240,6 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 				length, str := p.getString(opCodeLength + 1)
 				opCodeLength += length + 1
 				op.addNamedStringParam(action, str)
-				fmt.Printf("NAME: \"%v\"\n", str) //TODO remove
 			default:
 				return Operation{}, errors.New(
 					fmt.Sprintf(
@@ -356,6 +362,15 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		opCodeLength = 3
 		actor := p.getByte(2)
 		room := p.getByte(3)
+		if paramWord1 {
+			actor = p.getWord(2)
+			room = p.getByte(4)
+			opCodeLength++
+			if paramWord2 {
+				room = p.getWord(4)
+				opCodeLength++
+			}
+		}
 		op.addNamedParam("actor", actor)
 		op.addNamedParam("room", int(room))
 	case "delay":
