@@ -208,7 +208,6 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 				actionLong = true
 			}
 			action := actorOps[actionCode]
-			fmt.Printf("Code [%02x] -> %02v\n", byte(p.getByte(opCodeLength)), action)
 			switch action {
 			case "init", "ignore_boxes", "follow_boxes":
 				//Nothing to do
@@ -220,7 +219,6 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 					opCodeLength += 1
 				}
 				op.addNamedParam(action, param)
-				fmt.Printf("Param %d\n", param) //TODO remove
 			case "step_dist":
 				x := p.getByte(opCodeLength + 1)
 				y := p.getByte(opCodeLength + 2)

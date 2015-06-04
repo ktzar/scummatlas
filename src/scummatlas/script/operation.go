@@ -56,7 +56,7 @@ func (script Script) Exit() (room int, hasExit bool) {
 func (script Script) Debug() string {
 	out := ""
 	for _, op := range script {
-		out += fmt.Sprintf("[%04x] (%02x) %v\n",
+		out += fmt.Sprintf("[%04X] (%02x) %v\n",
 			op.offset, op.opCode, op.String())
 	}
 	return out

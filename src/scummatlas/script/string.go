@@ -38,6 +38,7 @@ func parsePrintOpcode(data []byte, offset int) (actions []string, opCodeLength i
 			offset++
 		default:
 			panic(fmt.Sprintf("Unknown print subinst %x", subinst))
+			offset++
 			break
 		}
 	}
@@ -56,9 +57,9 @@ func parseString(data []byte, offset int) (say string, length int) {
 			escapeChar := data[offset+1]
 			switch {
 			case 0x01 <= escapeChar && escapeChar <= 0x03:
-				offset += 3
+				offset += 2
 			case 0x04 <= escapeChar && escapeChar <= 0x0e:
-				offset += 5
+				offset += 4
 			}
 		} else if currChar >= 0x20 && currChar <= 0x7e { //printable ascii char
 			say += string(currChar)
