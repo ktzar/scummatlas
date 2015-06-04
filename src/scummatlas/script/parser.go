@@ -225,6 +225,10 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 				opCodeLength += 2
 				op.addNamedStringParam(action, fmt.Sprintf("%d,%d", x, y))
 				fmt.Printf("Params %d,%d\n", x, y) //TODO remove
+			case "elevation":
+				param := p.getWord(opCodeLength + 1)
+				opCodeLength += 2
+				op.addNamedParam(action, param)
 			case "name":
 				length, str := p.getString(opCodeLength + 1)
 				opCodeLength += length + 1
