@@ -214,9 +214,6 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 				actionCode = actionCode - 0x40
 			}
 			action := actorOps[actionCode]
-			fmt.Printf(
-				"actorOps action %v (0x%02x)\n",
-				action, actionCode)
 			switch action {
 			case "init", "ignore_boxes", "follow_boxes", "never_zclip":
 				//Nothing to do
