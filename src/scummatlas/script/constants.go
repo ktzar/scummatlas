@@ -165,6 +165,7 @@ var opCodesNames = map[byte]string{
 	0xd8: "printEgo",
 
 	//from ScummVM sourcecode
+	0x21: "putActor",
 	0x2a: "startScript",
 	0x4d: "walkActorToActor",
 	0x41: "putActor",
