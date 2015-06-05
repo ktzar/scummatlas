@@ -136,11 +136,13 @@ func (r *Room) parseLSCR() {
 }
 
 func (r *Room) parseENCD() {
+	l.Log("script", "\nENCD")
 	r.EntryScript = s.ParseScriptBlock(r.data[r.offset+8 : r.offset+r.getBlockSize()])
 	dumpBlock("ENCD", r.data[r.offset:r.offset+r.getBlockSize()])
 }
 
 func (r *Room) parseEXCD() {
+	l.Log("script", "\nEXCD")
 	r.ExitScript = s.ParseScriptBlock(r.data[r.offset+8 : r.offset+r.getBlockSize()])
 	dumpBlock("EXCD", r.data[r.offset:r.offset+r.getBlockSize()])
 }

@@ -75,6 +75,7 @@ func (d *MainScummData) getRoomCount() int {
 func (d MainScummData) GetScripts() (scripts []s.Script) {
 	for i, offset := range d.sections["SCRP"] {
 		blockSize := b.BE32(d.data, offset+4)
+		l.Log("script", "Parsing global script %d", i)
 		script := s.ParseScriptBlock(d.data[offset+8 : offset+blockSize])
 		scripts = append(scripts, script)
 		dumpBlock(fmt.Sprintf("SCRP_%d", i), d.data[offset:offset+blockSize])
@@ -88,7 +89,7 @@ func (d *MainScummData) ParseRoom(offset int, order int) Room {
 	if blockName != "ROOM" {
 		panic("No room block found")
 	}
-	l.Log("room", "Room of size", blockSize)
+	l.Log("room", "Room", order)
 
 	data := d.data[offset : offset+blockSize]
 	dumpBlock(fmt.Sprintf("ROOM_%d", order), data)

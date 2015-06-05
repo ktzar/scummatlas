@@ -32,14 +32,14 @@ func TestStringOpcode(t *testing.T) {
 	//ENCODINGS
 	actions, length = parsePrintOpcode([]byte{
 		0x0F,
-		0x41, 0x42, 0x43,
+		0x41, 0xFF, 0x01, 0x42, 0x43,
 		0xFF, 0x03,
 		0x44, 0x00,
 	}, 0)
-	if actions[0] != "text=\"ABCD\"" {
+	if actions[0] != "text=\"A\\n BC\\wait D\"" {
 		t.Errorf("Action %v is not right", actions[0])
 	}
-	if length != 7 {
+	if length != 9 {
 		t.Errorf("Length %d is not right", length)
 	}
 

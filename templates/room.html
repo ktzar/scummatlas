@@ -49,7 +49,8 @@
                 {{end}}
                 </svg>
             </div>
-            <button class="toggle-svg-bg">Toggle background</button>
+            <br/>
+            <button class="btn btn-primary toggle-svg-bg">Toggle background</button>
         </div>
 
         <div class="row">
@@ -63,6 +64,7 @@
             <label>Rotate</label><br/>
             <input type="range" min="-80" max="80" step="1" id="zPlane-rotation"/>
         </div>
+        {{if .Exits}}
         <div class="row">
             <h2>Exits</h2>
             {{range .Exits}}
@@ -72,6 +74,7 @@
             </a></div>
             {{end}} 
         </div>
+        {{end}} 
         <div class="row">
             <h2>Objects</h2>
             <table class="table table-bordered">
