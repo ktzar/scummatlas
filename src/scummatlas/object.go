@@ -63,8 +63,8 @@ func (self ObjectImage) FramesIndexes() (out []string) {
 
 func (self Object) LabelPosition() Point {
 	return Point{
-		self.X,
-		self.Y + 12,
+		self.X + self.Width/2,
+		self.Y + self.Height/2,
 	}
 }
 
