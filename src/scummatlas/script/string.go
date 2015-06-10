@@ -2,6 +2,7 @@ package script
 
 import "fmt"
 import b "scummatlas/binaryutils"
+import l "scummatlas/condlog"
 
 func parsePrintOpcode(data []byte, offset int) (actions []string, opCodeLength int) {
 	originalOffset := offset
@@ -40,7 +41,7 @@ func parsePrintOpcode(data []byte, offset int) (actions []string, opCodeLength i
 			actions = append(actions, "overhead")
 			offset++
 		default:
-			panic(fmt.Sprintf("Unknown print subinst %x", subinst))
+			l.Log("script", "Unknown print subinst %x\n", subinst)
 			offset++
 			break
 		}
