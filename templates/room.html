@@ -90,6 +90,7 @@
                     <th>Image</th>
                     <th>Position</th>
                     <th>Size</th>
+                    <th>Calls</th>
                     <th>Actions</th>
                 </tr>
             {{range .Objects}}
@@ -104,6 +105,7 @@
                     </td>
                     <td>{{.X}},{{.Y}}</td>
                     <td>{{.Width}}x{{.Height}}</td>
+                    <td>{{.CalledScripts}}</td>
                     <td>
                         {{range .Verbs}}
                         <strong>{{.Name}}</strong><pre>{{.PrintScript}}</pre>

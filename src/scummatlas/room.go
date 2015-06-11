@@ -43,11 +43,11 @@ type Room struct {
 func (r Room) Exits() (exits []Exit) {
 	for _, object := range r.Objects {
 		for _, verb := range object.Verbs {
-			room, hasExit := verb.Script.Exit()
-			if hasExit && room != r.Id {
+			properties := verb.Script.Properties()
+			if properties.HasExit && properties.ExitTo != r.Id {
 				exits = append(exits, Exit{
 					strings.Title(object.Name),
-					room})
+					properties.ExitTo})
 			}
 		}
 	}

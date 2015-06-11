@@ -42,12 +42,23 @@ type Verb struct {
 
 func (self Object) HasExit() bool {
 	for _, verb := range self.Verbs {
-		_, hasExit := verb.Script.Exit()
-		if hasExit {
+		properties := verb.Script.Properties()
+		if properties.HasExit {
 			return true
 		}
 	}
 	return false
+}
+
+func (self Object) CalledScripts() []int {
+	scripts := make([]int, 0, 1)
+	for _, verb := range self.Verbs {
+		properties := verb.Script.Properties()
+		if properties.LoadsScript {
+			scripts = append(scripts, properties.LoadedScript)
+		}
+	}
+	return scripts
 }
 
 func (self Verb) PrintScript() string {

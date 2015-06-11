@@ -39,15 +39,28 @@ func (op Operation) GetMethod() string {
 
 type Script []Operation
 
-func (script Script) Exit() (room int, hasExit bool) {
-	room = 0
-	hasExit = false
+type ScriptProperties struct {
+	ExitTo       int
+	HasExit      bool
+	LoadedScript int
+	LoadsScript  bool
+}
+
+func (script Script) Properties() (out ScriptProperties) {
+	out = ScriptProperties{
+		ExitTo:       -1,
+		HasExit:      false,
+		LoadedScript: -1,
+		LoadsScript:  false,
+	}
 	for _, op := range script {
-		if op.callMethod == "loadRoomWithEgo" ||
-			op.callMethod == "putActorInRoom" {
-			room, _ = strconv.Atoi(op.callMap["room"])
-			hasExit = true
-			break
+		switch op.callMethod {
+		case "loadRoomWithEgo", "putActorInRoom":
+			out.ExitTo, _ = strconv.Atoi(op.callMap["room"])
+			out.HasExit = true
+		case "startScript", "chainScript":
+			out.LoadedScript, _ = strconv.Atoi(op.callMap["script"])
+			out.LoadsScript = true
 		}
 	}
 	return
