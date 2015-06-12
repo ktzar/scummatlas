@@ -672,16 +672,23 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		op.addNamedParam("x", x)
 		op.addNamedParam("y", y)
 	case "verbOps":
-		verb := p.getByte(2)
+		verb := p.getByte(1)
 		opCodeLength = 3
 		if paramWord1 {
-			verb = p.getWord(2)
-			opCodeLength = 4
+			verb = p.getWord(1)
+			opCodeLength = 3
 		}
 		op.addNamedParam("verbId", verb)
 		for p.getByte(opCodeLength) != int(0xFF) &&
 			op.opType != OpError {
-			action := verbOps[byte(p.getByte(opCodeLength))]
+			actionCode := byte(p.getByte(opCodeLength))
+			if actionCode > 0x80 {
+				actionCode -= 0x80
+			}
+			if actionCode > 0x40 {
+				actionCode -= 0x40
+			}
+			action := verbOps[actionCode]
 			switch action {
 			case "on", "off", "delete", "new", "dim", "center":
 				op.addParam(action)
@@ -705,13 +712,12 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 				op.addParam(fmt.Sprintf("%v[%d,%d]", action, object, room))
 				opCodeLength += 4
 			case "name":
-				if byte(p.getByte(opCodeLength+1)) != 0xff {
-					length, name := p.getString(opCodeLength + 1)
-					op.addNamedStringParam(action, name)
-					opCodeLength += 2 + length
-				} else {
-					opCodeLength++
-				}
+
+				strOffset := p.offset + opCodeLength + 1
+
+				name, length := parseString(p.data, strOffset)
+				op.addNamedStringParam(action, name)
+				opCodeLength += length + 1
 			default:
 				return Operation{}, errors.New(
 					fmt.Sprintf(
