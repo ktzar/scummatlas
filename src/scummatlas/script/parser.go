@@ -32,6 +32,13 @@ func (p ScriptParser) getString(position int) (length int, str string) {
 	return
 }
 
+func (p ScriptParser) dumpHex(count int) {
+	fmt.Printf("Dumping %d bytes from %x:\n%x\n",
+		count,
+		p.offset,
+		p.data[p.offset:p.offset+count])
+}
+
 func (p ScriptParser) getWord(position int) int {
 	return b.LE16(p.data, p.offset+position)
 }
@@ -676,7 +683,7 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		opCodeLength = 3
 		if paramWord1 {
 			verb = p.getWord(1)
-			opCodeLength = 3
+			opCodeLength = 4
 		}
 		op.addNamedParam("verbId", verb)
 		for p.getByte(opCodeLength) != int(0xFF) &&
@@ -689,6 +696,7 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 				actionCode -= 0x40
 			}
 			action := verbOps[actionCode]
+			//fmt.Printf("Code: %02x\tAction: %v\n", byte(p.getByte(opCodeLength)), action)
 			switch action {
 			case "on", "off", "delete", "new", "dim", "center":
 				op.addParam(action)
@@ -714,15 +722,19 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 			case "name":
 
 				strOffset := p.offset + opCodeLength + 1
+				fmt.Printf("PARSE STRING WITH these 20 bytes %x\n",
+					p.data[strOffset:strOffset+30])
 
 				name, length := parseString(p.data, strOffset)
+				fmt.Printf("Name -%v-, length: %d\n", name, length)
 				op.addNamedStringParam(action, name)
 				opCodeLength += length + 1
 			default:
 				return Operation{}, errors.New(
 					fmt.Sprintf(
-						"verbOps subopcode %02x not understood",
-						action))
+						"verbOps subopcode %02x not recognised. 20 bytes of data are: %x\n",
+						action,
+						p.data[p.offset:p.offset+20]))
 			}
 		}
 		opCodeLength++
