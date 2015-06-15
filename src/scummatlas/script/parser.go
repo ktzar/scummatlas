@@ -277,6 +277,10 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		opCodeLength = 5
 		op.opType = OpAssignment
 		result := p.getWord(1)
+		// ???? from scummvm
+		if result&0x2000 > 0 {
+			opCodeLength += 2
+		}
 		value := p.getWord(3)
 		op.assignDst = fmt.Sprintf("var(%d)", result)
 		op.assignVal = fmt.Sprintf("%d", value)
