@@ -711,6 +711,9 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 				param := p.getByte(opCodeLength + 1)
 				op.addParam(fmt.Sprintf("%v=%d", action, param))
 				opCodeLength += 2
+				if action1Word {
+					opCodeLength++
+				}
 			case "image", "name_str":
 				param := p.getWord(opCodeLength + 1)
 				op.addParam(fmt.Sprintf("%v=%d", action, param))
@@ -732,7 +735,7 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 				name, length := parseString(p.data, strOffset)
 				fmt.Printf("Name -%v-, length: %d\n", name, length)
 				op.addNamedStringParam(action, name)
-				opCodeLength += length + 2
+				opCodeLength += length + 1
 			default:
 				return Operation{}, errors.New(
 					fmt.Sprintf(
