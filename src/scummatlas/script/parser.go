@@ -680,20 +680,26 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		op.addNamedParam("y", y)
 	case "verbOps":
 		verb := p.getByte(1)
-		opCodeLength = 3
+		opCodeLength = 2
 		if paramWord1 {
 			verb = p.getWord(1)
-			opCodeLength = 4
+			opCodeLength = 3
 		}
 		op.addNamedParam("verbId", verb)
 		for p.getByte(opCodeLength) != int(0xFF) &&
 			op.opType != OpError {
 			actionCode := byte(p.getByte(opCodeLength))
+			fmt.Printf("Code %x at %d\n", actionCode, opCodeLength)
+			action1Word := false
 			if actionCode > 0x80 {
 				actionCode -= 0x80
+				action1Word = true
 			}
 			if actionCode > 0x40 {
 				actionCode -= 0x40
+			}
+			if false && action1Word {
+				print("dummy")
 			}
 			action := verbOps[actionCode]
 			//fmt.Printf("Code: %02x\tAction: %v\n", byte(p.getByte(opCodeLength)), action)
@@ -704,7 +710,7 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 			case "color", "hicolor", "dimcolor", "key", "setBackColor":
 				param := p.getByte(opCodeLength + 1)
 				op.addParam(fmt.Sprintf("%v=%d", action, param))
-				opCodeLength += 3
+				opCodeLength += 2
 			case "image", "name_str":
 				param := p.getWord(opCodeLength + 1)
 				op.addParam(fmt.Sprintf("%v=%d", action, param))
@@ -720,21 +726,20 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 				op.addParam(fmt.Sprintf("%v[%d,%d]", action, object, room))
 				opCodeLength += 4
 			case "name":
-
 				strOffset := p.offset + opCodeLength + 1
-				fmt.Printf("PARSE STRING WITH these 20 bytes %x\n",
-					p.data[strOffset:strOffset+30])
-
+				fmt.Printf("PARSE STRING WITH these 40 bytes %x\n",
+					p.data[strOffset:strOffset+40])
 				name, length := parseString(p.data, strOffset)
 				fmt.Printf("Name -%v-, length: %d\n", name, length)
 				op.addNamedStringParam(action, name)
-				opCodeLength += length + 1
+				opCodeLength += length + 2
 			default:
 				return Operation{}, errors.New(
 					fmt.Sprintf(
-						"verbOps subopcode %02x not recognised. 20 bytes of data are: %x\n",
+						"verbOps subopcode %02x not recognised at op offset %d. 20 bytes of data are: %x\n",
 						action,
-						p.data[p.offset:p.offset+20]))
+						opCodeLength,
+						p.data[p.offset:p.offset+40]))
 			}
 		}
 		opCodeLength++
