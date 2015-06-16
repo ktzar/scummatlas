@@ -184,9 +184,12 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		opCodeLength = 3
 		switch subopcode {
 		case 0x11:
-			opCodeLength = 1
+			opCodeLength = 2
 		case 0x14:
 			opCodeLength = 4
+		}
+		if opCodeLength == 3 {
+			op.addParam(fmt.Sprintf("%d", p.getByte(1)))
 		}
 		op.callMethod += "." + resourceRoutines[subopcode]
 	case "getObjectState":
@@ -310,7 +313,7 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 			length, str := p.getString(3)
 			op.addNamedParam("id", strId)
 			op.addNamedStringParam("string", str)
-			opCodeLength = 5 + length
+			opCodeLength = 4 + length
 		case 0x02, 0x03:
 			opCodeLength = 5
 			strId := p.getByte(2)
@@ -516,7 +519,14 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		}
 		opCodeLength++
 	case "pseudoRoom":
-		opCodeLength = varLen
+		opCodeLength = 1
+		value := p.getByte(opCodeLength)
+		for value != 0x00 {
+			opCodeLength++
+			op.addParam(fmt.Sprintf("%d", value))
+			value = p.getByte(opCodeLength)
+		}
+		opCodeLength++
 	case "wait":
 		opCodeLength = 2
 		subopcode &= 0x7f
@@ -591,7 +601,11 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		op.addNamedParam("count", count)
 		op.addNamedStringParam("list", fmt.Sprintf("%v", list))
 	case "setOwnerOf":
-		opCodeLength = 5
+		opCodeLength = 4
+		object := p.getWord(1)
+		owner := p.getByte(3)
+		op.addNamedParam("object", object)
+		op.addNamedParam("owner", owner)
 	case "delayVariable":
 		opCodeLength = 3
 	case "and":
@@ -865,7 +879,7 @@ func ParseScriptBlock(data []byte) Script {
 			return parser.Script
 		}
 		i++
-		if i > 1000 {
+		if i > 2000 {
 			break
 		}
 	}
