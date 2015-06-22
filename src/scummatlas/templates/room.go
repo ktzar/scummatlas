@@ -17,8 +17,8 @@ type roomData struct {
 
 func WriteRoom(room scummatlas.Room, outputdir string) {
 	t := template.Must(template.ParseFiles(
-		"./templates/room.html",
-		"./templates/partials.html"))
+		htmlPath+"room.html",
+		htmlPath+"partials.html"))
 
 	bgPath := fmt.Sprintf("./img_bg/room%02d_bg.png", room.Id)
 	htmlPath := fmt.Sprintf("%v/room%02d.html", outputdir, room.Id)

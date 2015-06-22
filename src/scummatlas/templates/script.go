@@ -34,7 +34,9 @@ func writeScripts(game scummatlas.Game, outdir string) {
 		panic("Can't create index file")
 	}
 
-	t := template.Must(template.ParseFiles("./templates/scripts.html", "./templates/partials.html"))
+	t := template.Must(template.ParseFiles(
+		htmlPath+"scripts.html",
+		htmlPath+"partials.html"))
 	t.Execute(file, scriptData{
 		"A game",
 		game.Scripts,

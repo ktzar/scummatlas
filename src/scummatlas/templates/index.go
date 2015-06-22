@@ -78,7 +78,7 @@ func writeIndex(game scummatlas.Game, outdir string) {
 		panic("Can't create index file")
 	}
 
-	t := template.Must(template.ParseFiles("./templates/index.html", "./templates/partials.html"))
+	t := template.Must(template.ParseFiles(htmlPath+"index.html", htmlPath+"partials.html"))
 	t.Execute(file, indexData{
 		"A game",
 		game.Rooms,
@@ -87,7 +87,7 @@ func writeIndex(game scummatlas.Game, outdir string) {
 
 func writeTable(game scummatlas.Game, outdir string) {
 	rooms := game.Rooms
-	t := template.Must(template.ParseFiles("./templates/table.html", "./templates/partials.html"))
+	t := template.Must(template.ParseFiles(htmlPath+"table.html", htmlPath+"partials.html"))
 
 	filename := outdir + "/table.html"
 	file, err := os.Create(filename)
@@ -105,7 +105,9 @@ func writeTable(game scummatlas.Game, outdir string) {
 
 func writeMap(game scummatlas.Game, outdir string) {
 	data := newMapData(game)
-	t := template.Must(template.ParseFiles("./templates/map.html", "./templates/partials.html"))
+	t := template.Must(template.ParseFiles(
+		htmlPath+"map.html",
+		htmlPath+"partials.html"))
 
 	filename := outdir + "/map.html"
 	file, err := os.Create(filename)
