@@ -59,8 +59,13 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		if ok {
 			l.Log("script", "Code %0x not in table, using %0x instead", opcode, opcode&0x7F)
 		} else {
-			l.Log("script", "0x%x is not a known code\n", opcode)
-			return Operation{}, fmt.Errorf("Unknown code %02x", opcode)
+			opcodeName, ok = opCodesNames[opcode-0xC0]
+			if ok {
+				l.Log("script", "Code %0x not in table, using %0x instead", opcode, opcode&0x7F)
+			} else {
+				l.Log("script", "0x%x is not a known code\n", opcode)
+				return Operation{}, fmt.Errorf("Unknown code %02x", opcode)
+			}
 		}
 	}
 	l.Log("script", "[%04x] (%02x) %v", p.offset, opcode, opcodeName)
@@ -153,7 +158,6 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		object := p.getWord(1)
 		op.addNamedParam("object", object)
 		action := ""
-
 		subopcode = p.data[p.offset+3]
 		switch subopcode {
 		case 0x01:
@@ -168,6 +172,8 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		case 0xff:
 			opCodeLength = 4
 			action = "draw"
+		default:
+			fmt.Printf("Unknown drawObject subopcode %x\n", subopcode)
 		}
 		op.callMethod += "." + action
 	case "setState":
@@ -818,6 +824,8 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		opCodeLength = 3
 	case "faceActor":
 		opCodeLength = 5
+		op.addNamedParam("actor", p.getWord(1))
+		op.addNamedParam("object", p.getByte(3))
 	case "getVerbEntryPoint":
 		opCodeLength = 7
 	case "putActorAtObject":
@@ -835,7 +843,7 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 	}
 
 	if opCodeLength == varLen {
-		return Operation{}, errors.New("Variable length opcode " + fmt.Sprintf("%x", opcode) + ", cannot proceed")
+		return Operation{}, errors.New(fmt.Sprintf("Action %v (%x) is varLen. Can't proceed", opcodeName, opcode))
 	}
 
 	if opCodeLength == 0 {
