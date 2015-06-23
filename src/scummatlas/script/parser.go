@@ -275,14 +275,18 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		op.callMethod = "goto"
 		op.addParam(fmt.Sprintf("%d", target))
 	case "doSentence":
-		op.addNamedParam("actor", p.getByte(1))
 		opCodeLength = 6
 		verb := p.getByte(1)
 		objA := p.getWord(2)
 		objB := p.getWord(4)
-		op.addNamedParam("verb", verb)
-		op.addNamedParam("objA", objA)
-		op.addNamedParam("objB", objB)
+		if verb == 0xFE {
+			opCodeLength = 2
+			op.addParam("STOP")
+		} else {
+			op.addNamedParam("verb", verb)
+			op.addNamedParam("objA", objA)
+			op.addNamedParam("objB", objB)
+		}
 	case "move":
 		opCodeLength = 5
 		op.opType = OpAssignment
