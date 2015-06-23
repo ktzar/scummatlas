@@ -682,7 +682,6 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		op.callResult = result
 		op.addNamedStringParam("actor", actor)
 	case "ifClassOfIs":
-		opCodeLength = varLen
 		value := p.getWord(1)
 		list := p.parseList(3)
 		opCodeLength = 3 + len(list)*3 + 1
