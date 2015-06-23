@@ -552,6 +552,9 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		if opcodeName == "print" {
 			op.addNamedParam("actor", p.getByte(1))
 			opCodeLength = 2
+			if paramWord1 {
+				opCodeLength = 3
+			}
 		} else {
 			opCodeLength = 1
 		}
