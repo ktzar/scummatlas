@@ -275,7 +275,8 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		op.callMethod = "goto"
 		op.addParam(fmt.Sprintf("%d", target))
 	case "doSentence":
-		opCodeLength = 7
+		op.addNamedParam("actor", p.getByte(1))
+		opCodeLength = 6
 		verb := p.getByte(1)
 		objA := p.getWord(2)
 		objB := p.getWord(4)
