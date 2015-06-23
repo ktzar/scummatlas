@@ -2,6 +2,27 @@ package script
 
 import "testing"
 
+func TestGetMethod(t *testing.T) {
+	methodName := "abcdeg"
+	op := Operation{
+		opType:     OpCall,
+		callMethod: methodName,
+	}
+
+	if op.GetMethod() != methodName {
+		t.Errorf("GetMethod() should not be %v, but "+methodName, op.GetMethod())
+	}
+
+	op = Operation{
+		opType:     OpAssignment,
+		callMethod: "abcdefg",
+	}
+
+	if op.GetMethod() != "" {
+		t.Errorf("GetMethod() should not be %v but an empty string", op.GetMethod())
+	}
+}
+
 func TestPrintingConditionalOperations(t *testing.T) {
 	a := Operation{
 		opType:  OpConditional,

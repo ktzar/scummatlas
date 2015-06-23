@@ -186,13 +186,6 @@ func (r *Room) parseEPAL() {
 	l.Log("palette", "EGA palette, not used")
 	return
 	//TODO REMOVE
-	paletteData := r.data[r.offset+8 : r.offset+r.getBlockSize()]
-	fmt.Println("Palette data size ", len(paletteData))
-
-	r.Palette = image.ParsePalette(r.data[r.offset+8 : r.offset+8+3*256])
-	fmt.Println("Palette length", len(r.Palette))
-	fmt.Println(r.Palette)
-
 }
 
 func (r *Room) parseCLUT() {

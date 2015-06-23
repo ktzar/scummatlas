@@ -5,3 +5,6 @@ test:
 	go test scummatlas/image
 	go test scummatlas/script
 	go test scummatlas/templates
+
+coverage:
+	./coverage.sh
