@@ -47,6 +47,18 @@ func (p ScriptParser) getByte(position int) int {
 	return int(p.data[p.offset+position])
 }
 
+func (p ScriptParser) getList(offset int) (values []int) {
+	for p.getByte(offset) != 0xFF {
+		value := p.getWord(1)
+		values = append(values, value)
+		offset += 3
+		if p.offset+offset >= len(p.data) {
+			break
+		}
+	}
+	return
+}
+
 func (p *ScriptParser) ParseNext() (Operation, error) {
 	if p.offset >= len(p.data) {
 		return Operation{}, errors.New("Script finished")
@@ -181,8 +193,8 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		op.addNamedParam("object", p.getWord(1))
 		op.addNamedParam("state", p.getByte(3))
 	case "startScript", "chainScript":
-		script := p.data[p.offset+1]
-		list := p.parseList(p.offset + 2)
+		script := p.getByte(1)
+		list := p.getList(2)
 		opCodeLength = 2 + len(list)*3 + 1
 		op.addNamedParam("script", int(script))
 		op.addNamedStringParam("list", fmt.Sprintf("%v", list))
@@ -515,7 +527,7 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		op.assignDst = fmt.Sprintf("Var[%d]", variable)
 		op.assignVal = fmt.Sprintf("Var[%d] %v 1", operation, variable)
 	case "soundKludge":
-		items := p.parseList(p.offset + 1)
+		items := p.getList(1)
 		opCodeLength = 2 + len(items)*3
 		op.addParam(fmt.Sprintf("%v", items))
 	case "setObjectName":
@@ -550,7 +562,7 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 			}
 		}
 	case "cutscene":
-		list := p.parseList(p.offset + 1)
+		list := p.getList(1)
 		opCodeLength = 2 + len(list)*3
 		op.addParam(fmt.Sprintf("%v", list))
 	case "print", "printEgo":
@@ -569,7 +581,7 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 			op.addParam(action)
 		}
 	case "actorSetClass":
-		list := p.parseList(p.offset + 3)
+		list := p.getList(3)
 		opCodeLength = 4 + len(list)*3
 		op.addNamedParam("actor", p.getByte(1))
 		op.addParam(fmt.Sprintf("%v", list))
@@ -646,7 +658,7 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 	case "startObject":
 		object := p.getWord(1)
 		script := p.getByte(3)
-		list := p.parseList(p.offset + 4)
+		list := p.getList(4)
 		opCodeLength = 4 + len(list)*3 + 1
 		op.addNamedParam("object", int(object))
 		op.addNamedParam("script", int(script))
@@ -683,7 +695,7 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		op.addNamedStringParam("actor", actor)
 	case "ifClassOfIs":
 		value := p.getWord(1)
-		list := p.parseList(3)
+		list := p.getList(3)
 		opCodeLength = 3 + len(list)*3 + 1
 		target := p.getWord(opCodeLength)
 		opCodeLength += 2
@@ -859,19 +871,6 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 	p.offset += int(opCodeLength)
 	p.Script = append(p.Script, op)
 	return op, nil
-}
-
-func (p ScriptParser) parseList(offset int) (values []int) {
-	for p.data[offset] != 0xFF {
-		//TODO the first byte is supposed to always be 1 ???
-		value := p.getWord(1)
-		values = append(values, value)
-		offset += 3
-		if offset >= len(p.data) {
-			break
-		}
-	}
-	return
 }
 
 func ParseScriptBlock(data []byte) Script {
