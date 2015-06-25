@@ -2,6 +2,13 @@ package image
 
 import "testing"
 
+/*
+// TODO
+func TestPalette(t *testing.T) {
+	t.Errorf("Not implemented")
+}
+*/
+
 func TestGetCompressionMethod(t *testing.T) {
 
 	assertCompressionMethod := func(code uint8, method int, direction int, trans int, palette uint8) {
