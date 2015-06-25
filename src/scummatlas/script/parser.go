@@ -126,6 +126,7 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		op = Operation{
 			opType: OpConditional, condDst: target, opCode: opcode,
 			condOp1: variable, condOp2: "0", condOp: condOpSymbols[opcodeName],
+			offset: p.offset,
 		}
 	case "animateActor":
 		opCodeLength = 3

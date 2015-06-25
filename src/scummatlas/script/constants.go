@@ -171,6 +171,7 @@ var opCodesNames = map[byte]string{
 	0x41: "putActor",
 	0x4a: "startScript",
 	0x59: "doSentence",
+	0x79: "doSentence",
 	0x61: "putActor",
 	0x64: "loadRoomWithEgo",
 	0x69: "setOwnerOf",
