@@ -62,6 +62,17 @@ func NewGame(gamedir string) *Game {
 	return &game
 }
 
+func (self *Game) inferName() {
+	self.Name = "A game"
+	if self.RoomNames[0].Name == "beach" {
+		self.Name = "The Secret of Monkey Island"
+	} else if self.RoomNames[0].Name == "part" {
+		self.Name = "Monkey Island 2: Lechuck's Revenge"
+	} else if self.RoomNames[0].Name == "coloffic" {
+		self.Name = "Indiana Jones and the Fate of Atlantis"
+	}
+}
+
 func (self *Game) ProcessAllRooms(outputdir string) {
 	roomDone := make(chan int)
 
@@ -182,6 +193,8 @@ func (self *Game) processIndex() error {
 
 		}
 	}
+
+	self.inferName()
 
 	return nil
 }

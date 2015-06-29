@@ -80,7 +80,7 @@ func writeIndex(game scummatlas.Game, outdir string) {
 
 	t := template.Must(template.ParseFiles(htmlPath+"index.html", htmlPath+"partials.html"))
 	t.Execute(file, indexData{
-		"A game",
+		game.Name,
 		game.Rooms,
 	})
 }
