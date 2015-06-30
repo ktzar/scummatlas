@@ -123,6 +123,12 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		opCodeLength = 5
 		variable := varName(p.getWord(1))
 		target := p.getWord(3) + p.offset + 5
+		if p.getByte(2) == 0xa0 {
+			opCodeLength++
+		}
+		if p.getByte(4) == 0x20 {
+			opCodeLength++
+		}
 		op = Operation{
 			opType: OpConditional, condDst: target, opCode: opcode,
 			condOp1: variable, condOp2: "0", condOp: condOpSymbols[opcodeName],
@@ -704,10 +710,24 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		op.addNamedStringParam("list", fmt.Sprintf("%v", list))
 		op.addNamedParam("target", target)
 	case "walkActorToActor":
-		opCodeLength = 6
-		if paramWord2 {
-			opCodeLength = 5
+		opCodeLength = 4
+		walker := p.getByte(1)
+		walkee := p.getByte(2)
+		distance := p.getByte(3)
+		if paramWord1 {
+			walker = p.getWord(1)
+			walkee = p.getByte(3)
+			distance = p.getByte(4)
+			opCodeLength++
+			if paramWord2 {
+				walkee = p.getWord(3)
+				distance = p.getByte(5)
+				opCodeLength++
+			}
 		}
+		op.addNamedParam("walker", walker)
+		op.addNamedParam("walkee", walkee)
+		op.addNamedParam("distance", distance)
 	case "walkActorTo":
 		opCodeLength = 6
 		actor := varName(p.getByte(1))
