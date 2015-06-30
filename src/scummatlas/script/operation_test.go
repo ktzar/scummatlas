@@ -2,6 +2,47 @@ package script
 
 import "testing"
 
+func TestPrint(t *testing.T) {
+	methodName := "abcdef"
+	op := Operation{
+		opCode:     0x22,
+		opType:     OpCall,
+		callMethod: methodName,
+		callParams: []string{"one", "two"},
+		offset:     0x234,
+	}
+
+	script := Script{}
+	script = append(script, op)
+	script = append(script, op)
+	result := script.Print()
+	expected := "abcdef(one, two)\n"
+
+	if result != expected+expected {
+		t.Errorf("Was expecting %v, but got %v", expected+expected, result)
+	}
+}
+
+func TestDebug(t *testing.T) {
+	methodName := "abcdef"
+	op := Operation{
+		opCode:     0x22,
+		opType:     OpCall,
+		callMethod: methodName,
+		offset:     0x234,
+	}
+
+	script := Script{}
+	script = append(script, op)
+	script = append(script, op)
+	result := script.Debug()
+	expected := "[0234] (22) abcdef()\n"
+
+	if result != expected+expected {
+		t.Errorf("Was expecting %v, but got %v", expected+expected, result)
+	}
+}
+
 func TestGetMethod(t *testing.T) {
 	methodName := "abcdeg"
 	op := Operation{
@@ -51,13 +92,14 @@ func TestPrintingCallOperations(t *testing.T) {
 	a := Operation{
 		opType:     OpCall,
 		callMethod: "myMethod",
+		callResult: "result",
 		callParams: []string{
 			"123", "456",
 		},
 	}
 
-	if a.String() != "myMethod(123, 456)" {
-		t.Errorf("conditional operation `%v` is not properly formatted", a.String())
+	if a.String() != "result = myMethod(123, 456)" {
+		t.Errorf("call operation `%v` is not properly formatted", a.String())
 	}
 
 	b := Operation{
