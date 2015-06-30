@@ -31,4 +31,4 @@ out
 
 bin
 src/github.com/*
-.coverage/
+coverage/*
