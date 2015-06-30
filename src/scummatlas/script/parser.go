@@ -436,6 +436,9 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		}
 	case "roomOps":
 		opCodeLength = varLen
+		if subopcode&0xE0 != 0 {
+			subopcode -= 0xE0
+		}
 		op.callMethod += "." + roomOps[subopcode]
 		switch subopcode {
 		case 0x01:
@@ -452,7 +455,7 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 			op.addNamedParam("r", p.getWord(2))
 			op.addNamedParam("g", p.getWord(4))
 			op.addNamedParam("b", p.getWord(6))
-			op.addNamedParam("paletteIndex", int(palette))
+			op.addNamedParam("palIdx", int(palette))
 		case 0x05, 0x06:
 			opCodeLength = 2
 		case 0x07:
