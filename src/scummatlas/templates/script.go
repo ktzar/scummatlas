@@ -38,7 +38,7 @@ func writeScripts(game scummatlas.Game, outdir string) {
 		htmlPath+"scripts.html",
 		htmlPath+"partials.html"))
 	t.Execute(file, scriptData{
-		"A game",
+		game.Name,
 		game.Scripts,
 	})
 }
