@@ -152,16 +152,11 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		op.addNamedParam("actor", actor)
 		op.addNamedParam("anim", anim)
 	case "putActor":
-		opCodeLength = 6
-		actor := p.getByte(1)
+		opCodeLength = 1
+		actor := getByteWord(paramWord1)
 		x := p.getWord(2)
 		y := p.getWord(4)
-		if paramWord1 {
-			actor = p.getWord(1)
-			x = p.getWord(3)
-			y = p.getWord(5)
-			opCodeLength++
-		}
+		opCodeLength += 4
 		op.addNamedParam("actor", actor)
 		op.addNamedParam("x", x)
 		op.addNamedParam("y", y)
