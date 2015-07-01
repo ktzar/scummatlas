@@ -100,6 +100,17 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 	op.opCode = opcode
 	op.offset = p.offset
 
+	getByteWord := func(byteWord bool) (data int) {
+		if byteWord {
+			data = p.getWord(opCodeLength)
+			opCodeLength += 2
+		} else {
+			data = p.getByte(opCodeLength)
+			opCodeLength++
+		}
+		return
+	}
+
 	switch opcodeName {
 	case "isGreaterEqual",
 		"isLess",
@@ -135,18 +146,9 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 			offset: p.offset,
 		}
 	case "animateActor":
-		opCodeLength = 3
-		actor := p.getByte(1)
-		anim := p.getByte(2)
-		if paramWord1 {
-			actor = p.getWord(1)
-			anim = p.getByte(3)
-			opCodeLength++
-		}
-		if paramWord2 {
-			anim = p.getWord(3)
-			opCodeLength++
-		}
+		opCodeLength = 1
+		actor := getByteWord(paramWord1)
+		anim := getByteWord(paramWord2)
 		op.addNamedParam("actor", actor)
 		op.addNamedParam("anim", anim)
 	case "putActor":
