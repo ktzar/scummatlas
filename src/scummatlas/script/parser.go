@@ -495,7 +495,7 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		case 0x0F: //Transform
 		case 0x10: //Cycle speed
 		}
-	case "walkActorToObject":
+	case "walkActorToObject", "putActorAtObject":
 		opCodeLength = 4
 		actor := p.getByte(1)
 		object := p.getWord(2)
@@ -878,17 +878,6 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		op.addNamedParam("object", p.getWord(2))
 	case "getVerbEntryPoint":
 		opCodeLength = 7
-	case "putActorAtObject":
-		opCodeLength = 4
-		actor := p.getByte(1)
-		object := p.getWord(2)
-		if paramWord1 {
-			opCodeLength++
-			actor = p.getWord(1)
-			object = p.getWord(3)
-		}
-		op.addNamedParam("actor", actor)
-		op.addNamedParam("object", object)
 	case "actorFromPos":
 		opCodeLength = 5
 	case "multiply":
