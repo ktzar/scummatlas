@@ -2,8 +2,9 @@ package script
 
 var condOpSymbols = map[string]string{
 	"isEqual":        "==",
-	"isNotEqual":     "!=",
+	"isLess":         "<",
 	"isGreater":      ">",
+	"isNotEqual":     "!=",
 	"lessOrEqual":    "<=",
 	"isGreaterEqual": ">=",
 	"notEqualZero":   "!=",
