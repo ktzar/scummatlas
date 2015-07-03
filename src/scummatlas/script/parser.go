@@ -540,8 +540,7 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		op.assignDst = fmt.Sprintf("Var[%d]", variable)
 		op.assignVal = fmt.Sprintf("Var[%d] %v 1", operation, variable)
 	case "soundKludge":
-		items := p.getList(1)
-		opCodeLength = 2 + len(items)*3
+		items := getList()
 		op.addParam(fmt.Sprintf("%v", items))
 	case "setObjectName":
 		length, name := p.getString(3)
@@ -573,8 +572,7 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 			}
 		}
 	case "cutscene":
-		list := p.getList(1)
-		opCodeLength = 2 + len(list)*3
+		list := getList()
 		op.addParam(fmt.Sprintf("%v", list))
 	case "print", "printEgo":
 		if opcodeName == "print" {
@@ -591,9 +589,8 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 			op.addParam(action)
 		}
 	case "actorSetClass":
-		list := p.getList(3)
-		opCodeLength = 4 + len(list)*3
-		op.addNamedParam("actor", p.getByte(1))
+		op.addNamedParam("actor", getWord())
+		list := getList()
 		op.addParam(fmt.Sprintf("%v", list))
 	case "stopScript":
 		opCodeLength = 2
@@ -662,10 +659,9 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		op.addNamedStringParam("x", varName(p.getWord(3)))
 		op.addNamedStringParam("y", varName(p.getWord(5)))
 	case "startObject":
-		object := p.getWord(1)
-		script := p.getByte(3)
-		list := p.getList(4)
-		opCodeLength = 4 + len(list)*3 + 1
+		object := getWord()
+		script := getByte()
+		list := getList()
 		op.addNamedParam("object", int(object))
 		op.addNamedParam("script", int(script))
 		op.addNamedStringParam("list", fmt.Sprintf("%v", list))
@@ -688,9 +684,8 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		op.callResult = result
 		op.addNamedStringParam("actor", actor)
 	case "ifClassOfIs":
-		value := p.getWord(1)
-		list := p.getList(3)
-		opCodeLength = 3 + len(list)*3 + 1
+		value := getWord()
+		list := getList()
 		target := p.getWord(opCodeLength)
 		opCodeLength += 2
 		op.addNamedParam("value", value)
