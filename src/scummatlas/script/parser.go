@@ -59,7 +59,7 @@ func (p ScriptParser) getList(offset int) (values []int) {
 	return
 }
 
-func (p *ScriptParser) ParseNext() (Operation, error) {
+func (p *ScriptParser) ParseNext() (op Operation, err error) {
 	if p.offset >= len(p.data) {
 		return Operation{}, errors.New("Script finished")
 	}
@@ -88,7 +88,6 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 	}
 
 	opCodeLength := 1
-	var op Operation
 	paramWord1 := opcode&0x80 > 0
 	paramWord2 := paramWord1 && opcode&0x40 > 0
 	//paramWord3 := paramWord2 && opcode&0x20 > 0
@@ -746,9 +745,11 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 	case "getVerbEntryPoint":
 		opCodeLength = 7
 	case "actorFromPos":
-		opCodeLength = 5
+		op.addResult(varName(getByte()))
+		op.addNamedParam("x", getWord())
+		op.addNamedParam("y", getWord())
 	case "multiply":
-		opCodeLength = 5
+		opCodeLength = 5 // ?
 	case "isActorInBox":
 		opCodeLength = 7
 	case "stopMusic":
@@ -763,9 +764,10 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 	if opCodeLength == 0 {
 		panic("Opcode length can't be 0")
 	}
+
 	p.offset += int(opCodeLength)
 	p.Script = append(p.Script, op)
-	return op, nil
+	return
 }
 
 func ParseScriptBlock(data []byte) Script {
