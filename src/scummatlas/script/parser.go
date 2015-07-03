@@ -165,20 +165,12 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		op.addNamedParam("actor", actor)
 		op.addNamedParam("anim", anim)
 	case "putActor":
-		actor := getByteWord(paramWord1)
-		x := p.getWord(2)
-		y := p.getWord(4)
-		opCodeLength += 4
-		op.addNamedParam("actor", actor)
-		op.addNamedParam("x", x)
-		op.addNamedParam("y", y)
+		op.addNamedParam("actor", getByteWord(paramWord1))
+		op.addNamedParam("x", getWord())
+		op.addNamedParam("y", getWord())
 	case "getActorRoom":
-		opCodeLength = 4
-		if paramWord1 {
-			opCodeLength = 5
-		}
-		result := p.getWord(1)
-		actor := p.data[p.offset+3]
+		result := getWord()
+		actor := getByteWord(paramWord1)
 		op.callResult = fmt.Sprintf("0x%x", result)
 		op.addNamedParam("actor", int(actor))
 	case "drawObject":
@@ -224,18 +216,11 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 			op.addParam(fmt.Sprintf("%d", p.getByte(1)))
 		}
 		op.callMethod += "." + resourceRoutines[subopcode]
-	case "getObjectState":
-		opCodeLength = 5
-		object := p.getWord(3)
-		op.addNamedParam("object", object)
-	case "getObjectOwner":
-		opCodeLength = 5
-		object := p.getWord(3)
-		op.addNamedParam("object", object)
+	case "getObjectState", "getObjectOwner":
+		op.addResult(varName(getWord()))
+		op.addNamedParam("object", getWord())
 	case "panCameraTo":
-		opCodeLength = 3
-		x := p.getWord(1)
-		op.addNamedParam("x", x)
+		op.addNamedParam("x", getWord())
 	case "actorOps":
 		actor := getByteWord(paramWord1)
 		op.addNamedParam("actor", actor)
@@ -285,28 +270,21 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		}
 		opCodeLength++
 	case "getRandomNumber":
-		opCodeLength = 4
-		result := p.getWord(1)
-		seed := p.getByte(3)
-		op.addParam(fmt.Sprintf("%d", seed))
-		op.callResult = varName(result)
+		op.callResult = varName(getWord())
+		op.addParam(fmt.Sprintf("%d", getByte()))
 	case "jumpRelative":
-		opCodeLength = 3
-		target := p.getWord(1) + op.offset + 3
+		target := getWord() + 3
 		op.callMethod = "goto"
 		op.addParam(fmt.Sprintf("%d", target))
 	case "doSentence":
-		opCodeLength = 6
-		verb := p.getByte(1)
-		objA := p.getWord(2)
-		objB := p.getWord(4)
+		verb := getByte()
 		if verb == 0xFE {
 			opCodeLength = 2
 			op.addParam("STOP")
 		} else {
 			op.addNamedParam("verb", verb)
-			op.addNamedParam("objA", objA)
-			op.addNamedParam("objB", objB)
+			op.addNamedParam("objA", getWord())
+			op.addNamedParam("objB", getWord())
 		}
 	case "move":
 		opCodeLength = 5
@@ -320,54 +298,35 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		op.assignDst = fmt.Sprintf("var(%d)", result)
 		op.assignVal = fmt.Sprintf("%d", value)
 	case "loadRoomWithEgo":
-		opCodeLength = 8
-		object := p.getWord(1)
-		room := p.data[p.offset+3]
-		x := p.getWord(4)
-		y := p.getWord(6)
-		op.addNamedParam("object", object)
-		op.addNamedParam("room", int(room))
-		op.addNamedParam("x", x)
-		op.addNamedParam("y", y)
+		op.addNamedParam("object", getWord())
+		op.addNamedParam("room", getByte())
+		op.addNamedParam("x", getWord())
+		op.addNamedParam("y", getWord())
 	case "pickupObject":
-		opCodeLength = 4
-		object := p.getWord(1)
-		room := p.data[p.offset+3]
-		op.addNamedParam("object", object)
-		op.addNamedParam("room", int(room))
+		op.addNamedParam("object", getWord())
+		op.addNamedParam("room", getByte())
 	case "stringOps":
 		l.Log("script", "string subopcode: 0x%x\n", subopcode)
-		opCodeLength = varLen
+		opCodeLength = 2
 		op.callMethod += "." + stringOps[subopcode]
 		switch subopcode {
 		case 0x01:
-			strId := p.getByte(2)
-			length, str := p.getString(3)
+			strId := getByte()
+			length, str := p.getString(opCodeLength)
 			op.addNamedParam("id", strId)
 			op.addNamedStringParam("string", str)
-			opCodeLength = 4 + length
+			opCodeLength += length + 1
 		case 0x02, 0x03:
-			opCodeLength = 5
-			strId := p.getByte(2)
-			index := p.getByte(3)
-			char := string(p.getByte(3))
-			op.addNamedParam("stringId", strId)
-			op.addNamedParam("index", index)
-			op.addNamedStringParam("char", char)
+			op.addNamedParam("stringId", getByte())
+			op.addNamedParam("index", getByte())
+			op.addNamedStringParam("char", string(getByte()))
 		case 0x04:
-			opCodeLength = 6
-			result := p.getWord(2)
-			strId := p.getByte(4)
-			index := p.getByte(5)
-			op.assignDst = varName(result)
-			op.addNamedParam("stringId", strId)
-			op.addNamedParam("index", index)
+			op.assignDst = varName(getWord())
+			op.addNamedParam("stringId", getByte())
+			op.addNamedParam("index", getByte())
 		case 0x05:
-			opCodeLength = 4
-			strId := p.getByte(2)
-			size := p.getByte(3)
-			op.addNamedParam("stringId", strId)
-			op.addNamedParam("size", size)
+			op.addNamedParam("stringId", getByte())
+			op.addNamedParam("size", getByte())
 		default:
 			return Operation{}, errors.New(
 				fmt.Sprintf(
