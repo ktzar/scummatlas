@@ -508,12 +508,11 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		}
 	case "wait":
 		opCodeLength = 2
-		subopcode &= 0x7f
-		if subopcode == 0x01 {
-			opCodeLength = 3
+		if subopcode&0x7f == 0x01 {
+			param := getByte()
 			op.callMethod += ".forActor"
-			op.addParam(fmt.Sprintf("%d", p.data[p.offset+2]))
-			if p.getByte(3) == 0 {
+			op.addParam(fmt.Sprintf("%d", param))
+			if p.getByte(opCodeLength) == 0 {
 				opCodeLength++
 			}
 		}
@@ -522,12 +521,7 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		op.addParam(fmt.Sprintf("%v", list))
 	case "print", "printEgo":
 		if opcodeName == "print" {
-			op.addNamedParam("actor", p.getByte(1))
-			opCodeLength = 2
-			if paramWord1 {
-				opCodeLength = 3
-			}
-		} else {
+			op.addNamedParam("actor", getByteWord(paramWord1))
 		}
 		actions, length := parsePrintOpcode(p.data, p.offset+opCodeLength)
 		opCodeLength += length + 1
@@ -539,8 +533,7 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		list := getList()
 		op.addParam(fmt.Sprintf("%v", list))
 	case "stopScript":
-		opCodeLength = 2
-		op.addNamedParam("script", p.getByte(1))
+		op.addNamedParam("script", getByte())
 	case "getScriptRunning":
 		opCodeLength = 3
 		script := getByteWord(paramWord1)
@@ -549,12 +542,11 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 	case "ifNotState":
 		opCodeLength = 6
 	case "getInventoryCount":
-		opCodeLength = 5
-		op.addResult(varName(p.getByte(1)))
-		op.addNamedParam("actor", p.getWord(2))
+		op.addResult(varName(getByte()))
+		op.addNamedParam("actor", getWord())
+		opCodeLength++
 	case "setCameraAt":
-		opCodeLength = 3
-		op.addNamedParam("x", p.getWord(1))
+		op.addNamedParam("x", getWord())
 	case "setVarRange":
 		opCodeLength = endsList
 		from := p.getWord(1)
@@ -576,34 +568,26 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		op.addNamedParam("count", count)
 		op.addNamedStringParam("list", fmt.Sprintf("%v", list))
 	case "setOwnerOf":
-		opCodeLength = 4
-		object := p.getWord(1)
-		owner := p.getByte(3)
-		op.addNamedParam("object", object)
-		op.addNamedParam("owner", owner)
+		op.addNamedParam("object", getWord())
+		op.addNamedParam("owner", getByte())
 	case "delayVariable":
 		opCodeLength = 3
 	case "and":
-		opCodeLength = 5
-		variable := varName(p.getByte(1))
-		value := p.getWord(2)
+		variable := varName(getByte())
+		value := getWord()
 		op.opType = OpAssignment
 		op.assignDst = variable
 		op.assignVal = fmt.Sprintf("%v && %x", variable, value)
+		opCodeLength++
 	case "getDist":
-		opCodeLength = 7
-		objectA := p.getWord(2)
-		objectB := p.getWord(4)
-		variable := varName(p.getByte(1))
-		op.addResult(variable)
-		op.addNamedParam("objectA", objectA)
-		op.addNamedParam("objectB", objectB)
+		op.addResult(varName(getByte()))
+		op.addNamedParam("objectA", getWord())
+		op.addNamedParam("objectB", getWord())
+		opCodeLength++
 	case "findObject":
-		opCodeLength = 7
-		variable := varName(p.getWord(1))
-		op.addResult(variable)
-		op.addNamedStringParam("x", varName(p.getWord(3)))
-		op.addNamedStringParam("y", varName(p.getWord(5)))
+		op.addResult(varName(getWord()))
+		op.addNamedParam("x", getWord())
+		op.addNamedParam("y", getWord())
 	case "startObject":
 		object := getWord()
 		script := getByte()
@@ -615,8 +599,7 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		sound := getByteWord(paramWord1)
 		op.addParam(fmt.Sprintf("%d", sound))
 	case "stopSound":
-		opCodeLength = 2
-		op.addNamedParam("sound", p.getByte(1))
+		op.addNamedParam("sound", getByte())
 	case "getActorWalkBox":
 		variable := varName(getByteWord(paramWord1))
 		actor := varName(getByteWord(true))
@@ -624,19 +607,13 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		op.addNamedStringParam("actor", actor)
 	case "getActorScale", "getActorMoving", "getActorFacing", "getActorElevation",
 		"getActorWidth", "getActorCostume", "getActorX", "getActorY":
-		opCodeLength = 5
-		result := varName(p.getWord(1))
-		actor := varName(p.getByte(3))
-		op.callResult = result
-		op.addNamedStringParam("actor", actor)
+		op.callResult = varName(getWord())
+		op.addNamedStringParam("actor", varName(getByte()))
+		opCodeLength++
 	case "ifClassOfIs":
-		value := getWord()
-		list := getList()
-		target := p.getWord(opCodeLength)
-		opCodeLength += 2
-		op.addNamedParam("value", value)
-		op.addNamedStringParam("list", fmt.Sprintf("%v", list))
-		op.addNamedParam("target", target)
+		op.addNamedParam("value", getWord())
+		op.addNamedStringParam("list", fmt.Sprintf("%v", getList()))
+		op.addNamedParam("target", getWord())
 	case "walkActorToActor":
 		walker := getByteWord(paramWord1)
 		walkee := getByteWord(paramWord2)
@@ -653,12 +630,7 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		op.addNamedParam("x", x)
 		op.addNamedParam("y", y)
 	case "verbOps":
-		verb := p.getByte(1)
-		opCodeLength = 2
-		if paramWord1 {
-			verb = p.getWord(1)
-			opCodeLength = 3
-		}
+		verb := getByteWord(paramWord1)
 		op.addNamedParam("verbId", verb)
 		for p.getByte(opCodeLength) != int(0xFF) &&
 			op.opType != OpError {
@@ -718,10 +690,10 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 	case "actorFollowCamera":
 		opCodeLength = 3
 	case "findInventory":
-		opCodeLength = 7
-		op.callResult = varName(p.getWord(1))
-		op.addNamedParam("owner", p.getByte(3))
-		op.addNamedParam("index", p.getByte(4))
+		op.callResult = varName(getWord())
+		op.addNamedParam("owner", getByte())
+		op.addNamedParam("index", getByte())
+		opCodeLength += 2 // ?
 	case "or":
 		opCodeLength = 5
 	case "override":
@@ -752,7 +724,6 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 	case "stopObjectCode":
 	case "dummy":
 	case "saveRestoreVerbs":
-		opCodeLength = 5
 		switch subopcode {
 		case 0x01:
 			op.callMethod += ".save"
@@ -761,17 +732,17 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		case 0x03:
 			op.callMethod += ".delete"
 		}
-		op.addNamedParam("start", p.getByte(2))
-		op.addNamedParam("end", p.getByte(3))
-		op.addNamedParam("mode", p.getByte(4))
+		opCodeLength = 2
+		op.addNamedParam("start", getByte())
+		op.addNamedParam("end", getByte())
+		op.addNamedParam("mode", getByte())
 
 	case "endCutScene":
 	case "startMusic":
 		opCodeLength = 3
 	case "faceActor":
-		opCodeLength = 4
-		op.addNamedParam("actor", p.getByte(1))
-		op.addNamedParam("object", p.getWord(2))
+		op.addNamedParam("actor", getByte())
+		op.addNamedParam("object", getWord())
 	case "getVerbEntryPoint":
 		opCodeLength = 7
 	case "actorFromPos":
