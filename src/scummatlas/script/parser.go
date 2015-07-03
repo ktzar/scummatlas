@@ -131,10 +131,10 @@ func (p *ScriptParser) ParseNext() (op Operation, err error) {
 		"isNotEqual",
 		"isGreater",
 		"lessOrEqual":
-		opCodeLength = 7
-		variable := varName(p.getByte(1))
-		value := p.getWord(2)
-		target := p.getWord(4)
+		variable := varName(getByte())
+		value := getWord()
+		target := getWord()
+		opCodeLength++
 		op = Operation{
 			opType: OpConditional, condDst: target, opCode: opcode,
 			condOp1: fmt.Sprintf("%v", value),
@@ -144,9 +144,10 @@ func (p *ScriptParser) ParseNext() (op Operation, err error) {
 		}
 	case "notEqualZero",
 		"equalZero":
-		opCodeLength = 5
-		variable := varName(p.getWord(1))
-		target := p.getWord(3) + p.offset + 5
+		variable := varName(getWord())
+		target := getWord()
+		target += p.offset + opCodeLength
+
 		if p.getByte(2) == 0xa0 {
 			opCodeLength++
 		}
@@ -202,17 +203,16 @@ func (p *ScriptParser) ParseNext() (op Operation, err error) {
 		op.addNamedParam("script", int(script))
 		op.addNamedStringParam("list", fmt.Sprintf("%v", list))
 	case "resourceRoutines":
-		opCodeLength = 3
+		opCodeLength++
+		op.callMethod += "." + resourceRoutines[subopcode]
 		switch subopcode {
 		case 0x11:
-			opCodeLength = 2
 		case 0x14:
-			opCodeLength = 4
+			op.addNamedParam("room", getByte())
+			op.addNamedParam("object", getWord())
+		default:
+			op.addNamedParam("resId", getByte())
 		}
-		if opCodeLength == 3 {
-			op.addParam(fmt.Sprintf("%d", p.getByte(1)))
-		}
-		op.callMethod += "." + resourceRoutines[subopcode]
 	case "getObjectState", "getObjectOwner":
 		op.addResult(varName(getWord()))
 		op.addNamedParam("object", getWord())
@@ -221,9 +221,8 @@ func (p *ScriptParser) ParseNext() (op Operation, err error) {
 	case "actorOps":
 		actor := getByteWord(paramWord1)
 		op.addNamedParam("actor", actor)
-		for p.getByte(opCodeLength) != int(0xFF) &&
-			op.opType != OpError {
-			actionCode := byte(p.getByte(opCodeLength))
+		for p.getByte(opCodeLength) != 0xFF && op.opType != OpError {
+			actionCode := getByte()
 			actionLong := false
 			if actionCode > 0x80 {
 				actionCode = actionCode - 0x80
@@ -236,34 +235,22 @@ func (p *ScriptParser) ParseNext() (op Operation, err error) {
 			switch action {
 			case "init", "ignore_boxes", "follow_boxes", "never_zclip":
 				//Nothing to do
-			case "dummy", "costume", "sound", "walk_animation", "stand_animation", "talk_color", "init_animation", "width", "always_zclip", "animation_speed", "shadow":
-				opCodeLength += 1
-				param := p.getByte(opCodeLength)
-				if actionLong {
-					param = p.getWord(opCodeLength)
-					opCodeLength += 1
-				}
+			case "dummy", "costume", "sound", "walk_animation", "stand_animation", "talk_color",
+				"init_animation", "width", "always_zclip", "animation_speed", "shadow":
+				param := getByteWord(actionLong)
 				op.addNamedParam(action, param)
 			case "palette", "scale", "step_dist", "talk_animation":
-				param1 := p.getByte(opCodeLength + 1)
-				param2 := p.getByte(opCodeLength + 2)
-				opCodeLength += 2
-				op.addNamedStringParam(action, fmt.Sprintf("%d,%d", param1, param2))
+				op.addNamedStringParam(action, fmt.Sprintf("%d,%d", getByte(), getByte()))
 			case "elevation":
-				param := p.getWord(opCodeLength + 1)
-				opCodeLength += 2
-				op.addNamedParam(action, param)
+				op.addNamedParam(action, getWord())
 			case "name":
-				length, str := p.getString(opCodeLength + 1)
+				length, str := p.getString(opCodeLength)
 				opCodeLength += length + 1
 				op.addNamedStringParam(action, str)
 			default:
 				return Operation{}, errors.New(
-					fmt.Sprintf(
-						"actorOps action %v (0x%02x) not implemented",
-						action, actionCode))
+					fmt.Sprintf("actorOps action %v (0x%02x) not implemented", action, actionCode))
 			}
-			opCodeLength++
 		}
 		opCodeLength++
 	case "getRandomNumber":
@@ -474,16 +461,12 @@ func (p *ScriptParser) ParseNext() (op Operation, err error) {
 		op.addNamedStringParam("text", name)
 	case "expression":
 		expression := ""
-		p.dumpHex(35)
-
-		op.addResult(varName(p.getByte(1)))
-		opCodeLength++
+		op.addResult(varName(getByte()))
 		for p.data[p.offset+int(opCodeLength)] != 0xff {
-			subopcode := p.getByte(opCodeLength)
+			subopcode := getByte()
 			switch subopcode {
 			case 0x01:
-				expression += fmt.Sprintf(" %d ", p.getWord(opCodeLength+1))
-				opCodeLength++
+				expression += fmt.Sprintf(" %d ", getWord())
 			case 0x02:
 				expression += "+"
 			case 0x03:
@@ -495,7 +478,6 @@ func (p *ScriptParser) ParseNext() (op Operation, err error) {
 			case 0x06:
 				expression += "nested opCode"
 			}
-			opCodeLength++
 		}
 		op.addParam(expression)
 		opCodeLength++
@@ -547,14 +529,13 @@ func (p *ScriptParser) ParseNext() (op Operation, err error) {
 	case "setCameraAt":
 		op.addNamedParam("x", getWord())
 	case "setVarRange":
-		opCodeLength = endsList
-		from := p.getWord(1)
-		count := p.getByte(3)
+		from := getWord()
+		count := getByte()
 		size := 1
 		if paramWord1 {
 			size = 2
 		}
-		opCodeLength = 4 + size*count
+		opCodeLength += size * count
 		list := make([]int, count)
 		for i := 0; i < count; i++ {
 			if paramWord1 {

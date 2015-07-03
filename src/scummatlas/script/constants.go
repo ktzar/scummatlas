@@ -214,7 +214,7 @@ var cursorCommands = map[byte]string{
 	0x08: "softUserInputOff",
 }
 
-var actorOps = map[byte]string{
+var actorOps = map[int]string{
 	0x00: "dummy",
 	0x01: "costume",
 	0x02: "step_dist",
