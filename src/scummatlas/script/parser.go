@@ -111,6 +111,20 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		return
 	}
 
+	getWord := func() int {
+		return getByteWord(true)
+	}
+
+	getByte := func() int {
+		return getByteWord(false)
+	}
+
+	getList := func() []int {
+		list := p.getList(opCodeLength)
+		opCodeLength += len(list)*3 + 1
+		return list
+	}
+
 	switch opcodeName {
 	case "isGreaterEqual",
 		"isLess",
@@ -191,13 +205,11 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		}
 		op.callMethod += "." + action
 	case "setState":
-		opCodeLength = 4
-		op.addNamedParam("object", p.getWord(1))
-		op.addNamedParam("state", p.getByte(3))
+		op.addNamedParam("object", getWord())
+		op.addNamedParam("state", getByte())
 	case "startScript", "chainScript":
-		script := p.getByte(1)
-		list := p.getList(2)
-		opCodeLength = 2 + len(list)*3 + 1
+		script := getByte()
+		list := getList()
 		op.addNamedParam("script", int(script))
 		op.addNamedStringParam("list", fmt.Sprintf("%v", list))
 	case "resourceRoutines":
