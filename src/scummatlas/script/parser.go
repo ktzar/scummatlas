@@ -501,13 +501,11 @@ func (p *ScriptParser) ParseNext() (Operation, error) {
 		op.addParam(expression)
 		opCodeLength++
 	case "pseudoRoom":
-		value := p.getByte(opCodeLength)
+		value := getByte()
 		for value != 0x00 {
-			opCodeLength++
 			op.addParam(fmt.Sprintf("%d", value))
-			value = p.getByte(opCodeLength)
+			value = getByte()
 		}
-		opCodeLength++
 	case "wait":
 		opCodeLength = 2
 		subopcode &= 0x7f
