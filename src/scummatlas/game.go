@@ -26,8 +26,6 @@ type Game struct {
 	mainData    *MainScummData
 }
 
-type Costume interface{}
-
 const DEBUG_SAVE_DECODED = true
 const V5_KEY = 0x69
 
@@ -127,6 +125,7 @@ func (self *Game) processMainFile() {
 	self.RoomOffsets = self.mainData.GetRoomsOffset()
 	self.Rooms = make([]Room, len(self.RoomOffsets))
 	self.Scripts = self.mainData.GetScripts()
+	self.mainData.GetCostumes()
 
 	l.Log("structure", "Room count", len(self.RoomOffsets))
 }
