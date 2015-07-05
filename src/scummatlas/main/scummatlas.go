@@ -37,6 +37,7 @@ func main() {
 	os.MkdirAll(outputdir+"/img_bg", 0755)
 
 	game := scummatlas.NewGame(gamedir)
+
 	if singleRoom < 1 {
 		game.ProcessAllRooms(outputdir)
 	} else {
