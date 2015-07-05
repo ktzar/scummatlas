@@ -72,6 +72,16 @@ func (d *MainScummData) getRoomCount() int {
 	return roomCount
 }
 
+func (d MainScummData) GetCostumes() (costumes []Costume) {
+	for i, offset := range d.sections["COST"] {
+		blockSize := b.BE32(d.data, offset+4)
+		l.Log("structure", "Parsing costume %d", i)
+		// append new
+		dumpBlock(fmt.Sprintf("COST_%d", i), d.data[offset:offset+blockSize])
+	}
+	return
+}
+
 func (d MainScummData) GetScripts() (scripts []s.Script) {
 	for i, offset := range d.sections["SCRP"] {
 		blockSize := b.BE32(d.data, offset+4)
