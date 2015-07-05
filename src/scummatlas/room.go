@@ -2,12 +2,12 @@ package scummatlas
 
 import (
 	"fmt"
-	goimage "image"
+	"image"
 	"image/color"
 	"os"
 	b "scummatlas/binaryutils"
 	l "scummatlas/condlog"
-	"scummatlas/image"
+	i "scummatlas/image"
 	s "scummatlas/script"
 	"strings"
 )
@@ -29,8 +29,8 @@ type Room struct {
 	ObjCount     int
 	TranspIndex  uint8
 	Palette      color.Palette
-	Image        *goimage.RGBA
-	Zplanes      []*goimage.RGBA
+	Image        *image.RGBA
+	Zplanes      []*image.RGBA
 	Boxes        []Box
 	BoxMatrix    BoxMatrix
 	ExitScript   s.Script
@@ -192,7 +192,7 @@ func (r *Room) parseCLUT() {
 	paletteData := r.data[r.offset+8 : r.offset+r.getBlockSize()]
 	l.Log("palette", "Palette data size ", len(paletteData))
 
-	r.Palette = image.ParsePalette(r.data[r.offset+8 : r.offset+8+3*256])
+	r.Palette = i.ParsePalette(r.data[r.offset+8 : r.offset+8+3*256])
 	l.Log("palette", "Palette length", len(r.Palette))
 
 	for _, color := range r.Palette {
@@ -219,7 +219,7 @@ func (r *Room) parseRMIM() {
 	imageSize := b.BE32(r.data, imageOffset+4)
 	l.Log("image", b.FourCharString(r.data, imageOffset), imageSize)
 
-	image, zplanes := image.ParseImage(
+	image, zplanes := i.ParseImage(
 		r.data[imageOffset:imageOffset+4+imageSize],
 		zBuffers,
 		r.Width,
