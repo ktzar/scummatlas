@@ -629,9 +629,8 @@ func (p *ScriptParser) parseNext() (op Operation, err error) {
 	case "verbOps":
 		verb := getByteWord(paramWord1)
 		op.addNamedParam("verbId", verb)
-		for p.getByte(opCodeLength) != int(0xFF) &&
-			op.opType != OpError {
-			actionCode := byte(p.getByte(opCodeLength))
+		for p.getByte(opCodeLength) != int(0xFF) && op.opType != OpError {
+			actionCode := byte(getByte())
 			action1Word := false
 			if actionCode > 0x80 {
 				actionCode -= 0x80
@@ -647,33 +646,25 @@ func (p *ScriptParser) parseNext() (op Operation, err error) {
 			switch action {
 			case "on", "off", "delete", "new", "dim", "center":
 				op.addParam(action)
-				opCodeLength++
 			case "color", "hicolor", "dimcolor", "key", "setBackColor":
-				param := p.getByte(opCodeLength + 1)
+				param := getByteWord(action1Word)
 				op.addParam(fmt.Sprintf("%v=%d", action, param))
-				opCodeLength += 2
-				if action1Word {
-					opCodeLength++
-				}
 			case "image", "name_str":
-				param := p.getWord(opCodeLength + 1)
+				param := getWord()
 				op.addParam(fmt.Sprintf("%v=%d", action, param))
-				opCodeLength += 3
 			case "at":
-				left := p.getWord(opCodeLength + 1)
-				top := p.getWord(opCodeLength + 3)
+				left := getWord()
+				top := getWord()
 				op.addParam(fmt.Sprintf("%v[%d,%d]", action, left, top))
-				opCodeLength += 5
 			case "assign":
-				object := p.getWord(opCodeLength + 1)
-				room := p.getByte(opCodeLength + 3)
+				object := getWord()
+				room := getByte()
 				op.addParam(fmt.Sprintf("%v[%d,%d]", action, object, room))
-				opCodeLength += 4
 			case "name":
-				strOffset := p.offset + opCodeLength + 1
+				strOffset := p.offset + opCodeLength
 				name, length := parseString(p.data, strOffset)
+				opCodeLength += length
 				op.addNamedStringParam(action, name)
-				opCodeLength += length + 1
 			default:
 				return Operation{}, errors.New(
 					fmt.Sprintf(
