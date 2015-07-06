@@ -5,6 +5,7 @@ import (
 	"fmt"
 	b "scummatlas/binaryutils"
 	l "scummatlas/condlog"
+	"strings"
 )
 
 type ScriptParser struct {
@@ -466,7 +467,8 @@ func (p *ScriptParser) parseNext() (op Operation, err error) {
 		op.addNamedStringParam("text", name)
 	case "expression":
 		op.addResult(varName(getByte()))
-		var stack [2]string
+		stackBottom := ""
+		stackTop := ""
 		for p.data[p.offset+int(opCodeLength)] != 0xff {
 			subopcode := getByte()
 			var value, operand string
@@ -490,20 +492,20 @@ func (p *ScriptParser) parseNext() (op Operation, err error) {
 				if err != nil {
 					panic("wrong nested opcode in expression")
 				}
-				value = nested.String()
+				value = strings.Split(nested.String(), " = ")[1]
 			}
 			if value != "" {
-				if stack[0] == "" {
-					stack[0] = value
+				if stackBottom == "" {
+					stackBottom = value
 				} else {
-					stack[1] = value
+					stackTop = value
 				}
 			} else if operand != "" {
-				stack[0] = "(" + stack[0] + " " + operand + " " + stack[1] + ")"
-				stack[1] = ""
+				stackBottom = fmt.Sprintf("(%v %v %v)", stackBottom, operand, stackTop)
+				stackTop = ""
 			}
 		}
-		op.addParam(stack[0])
+		op.addParam(stackBottom)
 		opCodeLength++
 	case "pseudoRoom":
 		value := getByte()
