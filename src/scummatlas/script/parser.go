@@ -557,18 +557,9 @@ func (p *ScriptParser) parseNext() (op Operation, err error) {
 	case "setVarRange":
 		from := getWord()
 		count := getByte()
-		size := 1
-		if paramWord1 {
-			size = 2
-		}
-		opCodeLength += size * count
 		list := make([]int, count)
 		for i := 0; i < count; i++ {
-			if paramWord1 {
-				list[i] = p.getWord(4 + size*i)
-			} else {
-				list[i] = p.getByte(4 + size*i)
-			}
+			list[i] = getByteWord(paramWord1)
 		}
 		op.addNamedParam("from", from)
 		op.addNamedParam("count", count)
