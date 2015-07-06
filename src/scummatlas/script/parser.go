@@ -33,8 +33,7 @@ func (p ScriptParser) getString(position int) (length int, str string) {
 }
 
 func (p ScriptParser) dumpHex(count int) {
-	fmt.Printf("Dumping %d bytes from %x:\n%x\n",
-		count,
+	fmt.Printf("[%04x]\t%x\n",
 		p.offset,
 		p.data[p.offset:p.offset+count])
 }
@@ -60,6 +59,12 @@ func (p ScriptParser) getList(offset int) (values []int) {
 }
 
 func (p *ScriptParser) ParseNext() (op Operation, err error) {
+	op, err = p.parseNext()
+	p.Script = append(p.Script, op)
+	return
+}
+
+func (p *ScriptParser) parseNext() (op Operation, err error) {
 	if p.offset >= len(p.data) {
 		return Operation{}, errors.New("Script finished")
 	}
@@ -460,26 +465,45 @@ func (p *ScriptParser) ParseNext() (op Operation, err error) {
 		opCodeLength = opCodeLength + length + 1
 		op.addNamedStringParam("text", name)
 	case "expression":
-		expression := ""
 		op.addResult(varName(getByte()))
+		var stack [2]string
 		for p.data[p.offset+int(opCodeLength)] != 0xff {
 			subopcode := getByte()
+			var value, operand string
 			switch subopcode {
 			case 0x01:
-				expression += fmt.Sprintf(" %d ", getWord())
+				value = fmt.Sprintf("%d", getWord())
+			case 0x81:
+				value = fmt.Sprintf("local[%d]", getWord()&0x00ff)
 			case 0x02:
-				expression += "+"
+				operand = "+"
 			case 0x03:
-				expression += "-"
+				operand = "-"
 			case 0x04:
-				expression += "*"
+				operand = "*"
 			case 0x05:
-				expression += "/"
+				operand = "/"
 			case 0x06:
-				expression += "nested opCode"
+				p.offset += opCodeLength
+				nested, err := p.parseNext()
+				p.offset -= opCodeLength
+				if err != nil {
+					panic("wrong nested opcode in expression")
+				}
+				value = nested.String()
+			}
+			if value != "" {
+				if stack[0] == "" {
+					stack[0] = value
+				} else {
+					stack[1] = value
+				}
+			} else if operand != "" {
+				stack[0] = "(" + stack[0] + " " + operand + " " + stack[1] + ")"
+				stack[1] = ""
 			}
 		}
-		op.addParam(expression)
+		op.addParam(stack[0])
 		opCodeLength++
 	case "pseudoRoom":
 		value := getByte()
@@ -747,7 +771,6 @@ func (p *ScriptParser) ParseNext() (op Operation, err error) {
 	}
 
 	p.offset += int(opCodeLength)
-	p.Script = append(p.Script, op)
 	return
 }
 

@@ -2,6 +2,7 @@ package script
 
 import "testing"
 import "io/ioutil"
+import "strings"
 
 func readScriptOrDie(filename string, t *testing.T) []byte {
 	data, err := ioutil.ReadFile("./testdata/" + filename + ".dump")
@@ -35,6 +36,29 @@ func checkScriptLengthAndOpcodes(file string, expectedOpcodes []byte, t *testing
 				file, expectedOpcodes[i], script[i].opCode, i)
 		}
 	}
+}
+
+func checkScriptResult(rawscript []byte, expected string, t *testing.T) {
+	script := ParseScriptBlock(rawscript)
+	if len(script) == 0 {
+		t.Errorf("Empty result, was expecting %v", expected)
+		return
+	}
+	result := strings.TrimSpace(script.Print())
+	if result != expected {
+		t.Errorf("Expression not valid, expected %v but got %v",
+			expected, result)
+	}
+}
+
+func TestExpression(t *testing.T) {
+	checkScriptResult(
+		[]byte{0xac, 0x76, 0x00, 0x81, 0x03, 0x40, 0x01, 0x01, 0x00, 0x03, 0xff},
+		"var(0x76) = expression((local[3] - 1))", t)
+
+	checkScriptResult(
+		[]byte{0xac, 0x64, 0x00, 0x01, 0xc8, 0x00, 0x81, 0x05, 0x40, 0x02, 0x01, 0x01, 0x00, 0x03, 0xff},
+		"var(0x64) = expression(((200 + local[5]) - 1))", t)
 }
 
 func TestRoomScript1(t *testing.T) {
