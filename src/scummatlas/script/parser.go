@@ -105,8 +105,8 @@ func (p *ScriptParser) parseNext() (op Operation, err error) {
 	op.opCode = opcode
 	op.offset = p.offset
 
-	getByteWord := func(byteWord bool) (data int) {
-		if byteWord {
+	getByteWord := func(isWord bool) (data int) {
+		if isWord {
 			data = p.getWord(opCodeLength)
 			opCodeLength += 2
 		} else {
@@ -137,10 +137,18 @@ func (p *ScriptParser) parseNext() (op Operation, err error) {
 		"isNotEqual",
 		"isGreater",
 		"lessOrEqual":
+		//p.dumpHex(16)
 		variable := varName(getByte())
 		value := getWord()
 		target := getWord()
-		opCodeLength++
+
+		if value&0x4000 > 0 {
+			value -= 0x4000
+		}
+
+		fmt.Printf("variable: %02x\n", variable)
+		fmt.Printf("value: %02x\n", value)
+		fmt.Printf("target: %02x\n", target)
 		op = Operation{
 			opType: OpConditional, condDst: target, opCode: opcode,
 			condOp1: fmt.Sprintf("%v", value),
@@ -274,8 +282,12 @@ func (p *ScriptParser) parseNext() (op Operation, err error) {
 		if result&0x2000 > 0 {
 			opCodeLength += 2
 		}
+		if result&0x4000 > 0 {
+			op.assignDst = fmt.Sprintf("local[%d]", result-0x4000)
+		} else {
+			op.assignDst = fmt.Sprintf("var[%d]", result)
+		}
 		value := p.getWord(3)
-		op.assignDst = fmt.Sprintf("var(%d)", result)
 		op.assignVal = fmt.Sprintf("%d", value)
 	case "loadRoomWithEgo":
 		op.addNamedParam("object", getWord())
