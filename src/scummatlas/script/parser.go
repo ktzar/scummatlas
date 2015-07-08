@@ -138,21 +138,17 @@ func (p *ScriptParser) parseNext() (op Operation, err error) {
 		"isGreater",
 		"lessOrEqual":
 		variable := varName(getWord())
-		//p.dumpHex(16)
 		value := getWord()
-		target := getWord()
+		target := getWord() + opCodeLength + p.offset
 
 		if value&0x4000 > 0 {
 			value -= 0x4000
 		}
 
-		fmt.Printf("variable: %02x\n", variable)
-		fmt.Printf("value: %02x\n", value)
-		fmt.Printf("target: %02x\n", target)
 		op = Operation{
 			opType: OpConditional, condDst: target, opCode: opcode,
 			condOp1: fmt.Sprintf("%v", value),
-			condOp2: variable,
+			condOp2: fmt.Sprintf("%v", variable),
 			condOp:  condOpSymbols[opcodeName],
 			offset:  p.offset,
 		}
@@ -734,6 +730,7 @@ func (p *ScriptParser) parseNext() (op Operation, err error) {
 	}
 
 	p.offset += int(opCodeLength)
+	op.length = opCodeLength
 	return
 }
 

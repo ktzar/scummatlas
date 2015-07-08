@@ -72,7 +72,11 @@ func TestPrintingConditionalOperations(t *testing.T) {
 		condOp:  "==",
 		condDst: 0x2345,
 	}
-	if a.String() != "unless (Var[1] == Var[2]) goto 2345" {
+	if a.String() != "unless (Var[1] == Var[2]) {" {
+		t.Errorf("conditional operation `%v` is not properly formatted", a.String())
+	}
+
+	if a.Debug() != "unless (Var[1] == Var[2]) goto 2345" {
 		t.Errorf("conditional operation `%v` is not properly formatted", a.String())
 	}
 }

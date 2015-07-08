@@ -12,8 +12,10 @@ import (
 
 func main() {
 	var infile string
+	var isDebug bool
 
 	flag.StringVar(&infile, "in", "REQUIRED", "File to parse")
+	flag.BoolVar(&isDebug, "debug", false, "Show offsets and do not beautify conditionals")
 	flag.Parse()
 
 	if infile == "REQUIRED" {
@@ -33,7 +35,11 @@ func main() {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
-	fmt.Println(script.Debug())
+	if isDebug {
+		fmt.Println(script.Debug())
+	} else {
+		fmt.Println(script.Print())
+	}
 }
 
 func parseScript(data []byte) (s.Script, error) {

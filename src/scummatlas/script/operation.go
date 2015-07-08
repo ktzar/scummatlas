@@ -1,7 +1,10 @@
 package script
 
-import "fmt"
-import "strconv"
+import (
+	"fmt"
+	"strconv"
+	"strings"
+)
 
 //Operation types
 const (
@@ -15,6 +18,7 @@ const (
 type Operation struct {
 	opType     int
 	offset     int
+	length     int
 	opCode     byte
 	assignDst  string
 	assignVal  string
@@ -70,15 +74,29 @@ func (script Script) Debug() string {
 	out := ""
 	for _, op := range script {
 		out += fmt.Sprintf("[%04X] (%02x) %v\n",
-			op.offset, op.opCode, op.String())
+			op.offset, op.opCode, op.Debug())
 	}
 	return out
 }
 
 func (script Script) Print() string {
 	out := ""
+	indent := 0
+	condUntil := make([]int, 0)
 	for _, op := range script {
-		out += op.String() + "\n"
+		out += strings.Repeat("  ", indent)
+		out += op.String()
+		if op.opType == OpConditional && op.offset < op.condDst {
+			condUntil = append(condUntil, op.condDst)
+			indent++
+		}
+		out += "\n"
+		if indent > 0 && condUntil[indent-1] == op.offset+op.length {
+			condUntil = condUntil[0 : indent-1]
+			indent--
+			out += strings.Repeat("  ", indent)
+			out += "}\n"
+		}
 	}
 	return out
 }
@@ -99,7 +117,7 @@ func (op *Operation) addResult(result string) {
 	op.callResult = result
 }
 
-func (op Operation) String() string {
+func (op Operation) Debug() string {
 	if op.opType == OpCall {
 		params := ""
 		for _, param := range op.callParams {
@@ -127,4 +145,12 @@ func (op Operation) String() string {
 		return fmt.Sprintf("%v", op.errorMsg)
 	}
 	return ""
+}
+
+func (op Operation) String() string {
+	if op.opType == OpConditional {
+		return fmt.Sprintf("unless (%v %v %v) {", op.condOp1, op.condOp, op.condOp2)
+	} else {
+		return op.Debug()
+	}
 }
