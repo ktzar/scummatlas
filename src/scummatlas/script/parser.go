@@ -775,7 +775,7 @@ const endsList int = 0xFC
 func varName(code int) (name string) {
 	name = varNames[byte(code)]
 	if name == "" {
-		name = fmt.Sprintf("var[%d]", code) + ")"
+		name = fmt.Sprintf("var[%d]", code)
 	}
 	return
 }
