@@ -14,10 +14,8 @@ func LE32(data []byte, index int) int {
 }
 
 func LE24(data []byte, index int) int {
-	threebytes := data[index : index+3]
-	onebyte := []byte{0x00}
-	threebytes = append(onebyte, threebytes...)
-	return int(binary.LittleEndian.Uint32(threebytes))
+	fourbytes := []byte{data[index], data[index+1], data[index+2], 0x00}
+	return int(binary.LittleEndian.Uint32(fourbytes))
 }
 
 func BE16(data []byte, index int) int {

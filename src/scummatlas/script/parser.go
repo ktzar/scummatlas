@@ -49,7 +49,7 @@ func (p ScriptParser) getByte(position int) int {
 
 func (p ScriptParser) getList(offset int) (values []int) {
 	for p.getByte(offset) != 0xFF {
-		value := p.getWord(1)
+		value := p.getWord(1 + offset)
 		values = append(values, value)
 		offset += 3
 		if p.offset+offset >= len(p.data) {
@@ -105,8 +105,8 @@ func (p *ScriptParser) parseNext() (op Operation, err error) {
 	op.opCode = opcode
 	op.offset = p.offset
 
-	getByteWord := func(byteWord bool) (data int) {
-		if byteWord {
+	getByteWord := func(isWord bool) (data int) {
+		if isWord {
 			data = p.getWord(opCodeLength)
 			opCodeLength += 2
 		} else {
@@ -137,15 +137,19 @@ func (p *ScriptParser) parseNext() (op Operation, err error) {
 		"isNotEqual",
 		"isGreater",
 		"lessOrEqual":
-		variable := varName(getByte())
+		variable := varName(getWord())
 		value := getWord()
-		target := getWord()
-		opCodeLength++
+		target := getWord() + opCodeLength + p.offset
+
+		if value&0x4000 > 0 {
+			value -= 0x4000
+		}
+
 		op = Operation{
 			opType: OpConditional, condDst: target, opCode: opcode,
 			condOp1: fmt.Sprintf("%v", value),
-			condOp2: variable,
-			condOp:  condOpSymbols[opcodeName],
+			condOp2: fmt.Sprintf("%v", variable),
+			condOp:  opcodeName,
 			offset:  p.offset,
 		}
 	case "notEqualZero",
@@ -162,7 +166,7 @@ func (p *ScriptParser) parseNext() (op Operation, err error) {
 		}
 		op = Operation{
 			opType: OpConditional, condDst: target, opCode: opcode,
-			condOp1: variable, condOp2: "0", condOp: condOpSymbols[opcodeName],
+			condOp1: variable, condOp2: "0", condOp: opcodeName,
 			offset: p.offset,
 		}
 	case "animateActor":
@@ -255,7 +259,8 @@ func (p *ScriptParser) parseNext() (op Operation, err error) {
 		op.addParam(fmt.Sprintf("%d", getByte()))
 	case "jumpRelative":
 		op.callMethod = "goto"
-		op.addParam(fmt.Sprintf("%d", getWord()+3))
+		to := getWord()
+		op.addParam(fmt.Sprintf("%d", to+p.offset+opCodeLength))
 	case "doSentence":
 		verb := getByte()
 		if verb == 0xFE {
@@ -274,8 +279,12 @@ func (p *ScriptParser) parseNext() (op Operation, err error) {
 		if result&0x2000 > 0 {
 			opCodeLength += 2
 		}
+		if result&0x4000 > 0 {
+			op.assignDst = fmt.Sprintf("local[%d]", result-0x4000)
+		} else {
+			op.assignDst = fmt.Sprintf("var[%d]", result)
+		}
 		value := p.getWord(3)
-		op.assignDst = fmt.Sprintf("var(%d)", result)
 		op.assignVal = fmt.Sprintf("%d", value)
 	case "loadRoomWithEgo":
 		op.addNamedParam("object", getWord())
@@ -413,7 +422,7 @@ func (p *ScriptParser) parseNext() (op Operation, err error) {
 		}
 	case "walkActorToObject", "putActorAtObject":
 		op.addNamedParam("actor", getByteWord(paramWord1))
-		op.addNamedParam("object", getByteWord(true))
+		op.addNamedParam("object", getWord())
 	case "substract", "add":
 		op.opType = OpAssignment
 		symbol := "+"
@@ -452,7 +461,7 @@ func (p *ScriptParser) parseNext() (op Operation, err error) {
 		opCodeLength = opCodeLength + length + 1
 		op.addNamedStringParam("text", name)
 	case "expression":
-		op.addResult(varName(getByte()))
+		op.addResult(varName(getWord()))
 		stackBottom := ""
 		stackTop := ""
 		for p.data[p.offset+int(opCodeLength)] != 0xff {
@@ -534,9 +543,8 @@ func (p *ScriptParser) parseNext() (op Operation, err error) {
 	case "ifNotState":
 		opCodeLength = 6
 	case "getInventoryCount":
-		op.addResult(varName(getByte()))
+		op.addResult(varName(getWord()))
 		op.addNamedParam("actor", getWord())
-		opCodeLength++
 	case "setCameraAt":
 		op.addNamedParam("x", getWord())
 	case "setVarRange":
@@ -555,17 +563,15 @@ func (p *ScriptParser) parseNext() (op Operation, err error) {
 	case "delayVariable":
 		opCodeLength = 3
 	case "and":
-		variable := varName(getByte())
+		variable := varName(getWord())
 		value := getWord()
 		op.opType = OpAssignment
 		op.assignDst = variable
 		op.assignVal = fmt.Sprintf("%v && %x", variable, value)
-		opCodeLength++
 	case "getDist":
-		op.addResult(varName(getByte()))
+		op.addResult(varName(getWord()))
 		op.addNamedParam("objectA", getWord())
 		op.addNamedParam("objectB", getWord())
-		opCodeLength++
 	case "findObject":
 		op.addResult(varName(getWord()))
 		op.addNamedParam("x", getWord())
@@ -583,19 +589,23 @@ func (p *ScriptParser) parseNext() (op Operation, err error) {
 	case "stopSound":
 		op.addNamedParam("sound", getByte())
 	case "getActorWalkBox":
-		variable := varName(getByteWord(paramWord1))
-		actor := varName(getByteWord(true))
+		variable := varName(getWord())
+		actor := varName(getWord())
 		op.addResult(variable)
 		op.addNamedStringParam("actor", actor)
 	case "getActorScale", "getActorMoving", "getActorFacing", "getActorElevation",
 		"getActorWidth", "getActorCostume", "getActorX", "getActorY":
 		op.callResult = varName(getWord())
-		op.addNamedStringParam("actor", varName(getByte()))
-		opCodeLength++
+		op.addNamedStringParam("actor", varName(getWord()))
 	case "ifClassOfIs":
-		op.addNamedParam("value", getWord())
-		op.addNamedStringParam("list", fmt.Sprintf("%v", getList()))
-		op.addNamedParam("target", getWord())
+		op.opType = OpConditional
+		op.condOp1 = fmt.Sprintf("classOf(%d)", getWord())
+		op.condOp = "in"
+		op.condOp2 = fmt.Sprintf("%v", getList())
+		target := getWord()
+		target += p.offset + opCodeLength
+		op.addNamedParam("target", target)
+		op.condDst = target
 	case "walkActorToActor":
 		op.addNamedParam("walker", getByteWord(paramWord1))
 		op.addNamedParam("walkee", getByteWord(paramWord2))
@@ -653,7 +663,7 @@ func (p *ScriptParser) parseNext() (op Operation, err error) {
 		op.addNamedParam("actor", getByte())
 		op.addNamedParam("object", getWord())
 	case "actorFromPos":
-		op.addResult(varName(getByte()))
+		op.addResult(varName(getWord()))
 		op.addNamedParam("x", getWord())
 		op.addNamedParam("y", getWord())
 	case "findInventory":
@@ -726,6 +736,7 @@ func (p *ScriptParser) parseNext() (op Operation, err error) {
 	}
 
 	p.offset += int(opCodeLength)
+	op.length = opCodeLength
 	return
 }
 

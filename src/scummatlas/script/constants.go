@@ -9,6 +9,7 @@ var condOpSymbols = map[string]string{
 	"isGreaterEqual": ">=",
 	"notEqualZero":   "!=",
 	"equalZero":      "==",
+	"in":             "in",
 }
 
 var roomOps = map[byte]string{
