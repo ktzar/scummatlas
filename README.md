@@ -8,6 +8,8 @@ The aim of this software is to provide an easy to understand, testable, and orga
 
 It creates a bunch of HTML files that software that aim to show the inner aspects of how these beloved games were implemented.
 
+Build status: https://travis-ci.org/ktzar/scummatlas
+
 TODO
 - Improve parsing local and object scripts
 - Parse costumes
