@@ -49,7 +49,7 @@ func (p ScriptParser) getByte(position int) int {
 
 func (p ScriptParser) getList(offset int) (values []int) {
 	for p.getByte(offset) != 0xFF {
-		value := p.getWord(1)
+		value := p.getWord(1 + offset)
 		values = append(values, value)
 		offset += 3
 		if p.offset+offset >= len(p.data) {
@@ -149,7 +149,7 @@ func (p *ScriptParser) parseNext() (op Operation, err error) {
 			opType: OpConditional, condDst: target, opCode: opcode,
 			condOp1: fmt.Sprintf("%v", value),
 			condOp2: fmt.Sprintf("%v", variable),
-			condOp:  condOpSymbols[opcodeName],
+			condOp:  opcodeName,
 			offset:  p.offset,
 		}
 	case "notEqualZero",
@@ -166,7 +166,7 @@ func (p *ScriptParser) parseNext() (op Operation, err error) {
 		}
 		op = Operation{
 			opType: OpConditional, condDst: target, opCode: opcode,
-			condOp1: variable, condOp2: "0", condOp: condOpSymbols[opcodeName],
+			condOp1: variable, condOp2: "0", condOp: opcodeName,
 			offset: p.offset,
 		}
 	case "animateActor":
@@ -259,7 +259,8 @@ func (p *ScriptParser) parseNext() (op Operation, err error) {
 		op.addParam(fmt.Sprintf("%d", getByte()))
 	case "jumpRelative":
 		op.callMethod = "goto"
-		op.addParam(fmt.Sprintf("%d", getWord()+3))
+		to := getWord()
+		op.addParam(fmt.Sprintf("%d", to+p.offset+opCodeLength))
 	case "doSentence":
 		verb := getByte()
 		if verb == 0xFE {
@@ -597,9 +598,14 @@ func (p *ScriptParser) parseNext() (op Operation, err error) {
 		op.callResult = varName(getWord())
 		op.addNamedStringParam("actor", varName(getWord()))
 	case "ifClassOfIs":
-		op.addNamedParam("value", getWord())
-		op.addNamedStringParam("list", fmt.Sprintf("%v", getList()))
-		op.addNamedParam("target", getWord())
+		op.opType = OpConditional
+		op.condOp1 = fmt.Sprintf("classOf(%d)", getWord())
+		op.condOp = "in"
+		op.condOp2 = fmt.Sprintf("%v", getList())
+		target := getWord()
+		target += p.offset + opCodeLength
+		op.addNamedParam("target", target)
+		op.condDst = target
 	case "walkActorToActor":
 		op.addNamedParam("walker", getByteWord(paramWord1))
 		op.addNamedParam("walkee", getByteWord(paramWord2))

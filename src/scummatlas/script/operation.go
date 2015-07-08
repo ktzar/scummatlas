@@ -16,16 +16,17 @@ const (
 )
 
 type Operation struct {
+	opCode     byte
 	opType     int
 	offset     int
 	length     int
-	opCode     byte
-	assignDst  string
-	assignVal  string
+	condDst    int
+	indent     int
 	condOp1    string
 	condOp     string
 	condOp2    string
-	condDst    int
+	assignDst  string
+	assignVal  string
 	callMethod string
 	callResult string
 	callMap    map[string]string
@@ -80,23 +81,39 @@ func (script Script) Debug() string {
 }
 
 func (script Script) Print() string {
-	out := ""
-	indent := 0
+	var out string
+	var indent int
 	condUntil := make([]int, 0)
-	for _, op := range script {
-		out += strings.Repeat("  ", indent)
-		out += op.String()
-		if op.opType == OpConditional && op.offset < op.condDst {
-			condUntil = append(condUntil, op.condDst)
-			indent++
+	for i, op := range script {
+		script[i].indent = indent
+		if op.callMethod == "ifClassOfIs" || op.opType == OpConditional {
+			if op.offset < op.condDst {
+				condUntil = append(condUntil, op.condDst)
+				indent++
+			}
 		}
-		out += "\n"
 		if indent > 0 && condUntil[indent-1] == op.offset+op.length {
 			condUntil = condUntil[0 : indent-1]
 			indent--
-			out += strings.Repeat("  ", indent)
-			out += "}\n"
 		}
+	}
+	prevIndent := 0
+	for i, op := range script {
+		if op.indent > prevIndent {
+			out += " {"
+		}
+		if op.indent < prevIndent {
+			out += "\n" + strings.Repeat("  ", op.indent) + "}"
+		}
+		prevIndent = op.indent
+		if i > 0 {
+			out += "\n"
+		}
+		out += strings.Repeat("  ", op.indent) + op.String()
+	}
+	for prevIndent > 0 {
+		out += "\n" + strings.Repeat("  ", prevIndent) + "}"
+		prevIndent--
 	}
 	return out
 }
@@ -140,7 +157,7 @@ func (op Operation) Debug() string {
 	} else if op.opType == OpAssignment {
 		return fmt.Sprintf("%v = %v", op.assignDst, op.assignVal)
 	} else if op.opType == OpConditional {
-		return fmt.Sprintf("unless (%v %v %v) goto %04x", op.condOp1, op.condOp, op.condOp2, op.condDst)
+		return fmt.Sprintf("unless (%v %v %v) goto %04x", op.condOp1, condOpSymbols[op.condOp], op.condOp2, op.condDst)
 	} else if op.opType == OpError {
 		return fmt.Sprintf("%v", op.errorMsg)
 	}
@@ -149,7 +166,7 @@ func (op Operation) Debug() string {
 
 func (op Operation) String() string {
 	if op.opType == OpConditional {
-		return fmt.Sprintf("unless (%v %v %v) {", op.condOp1, op.condOp, op.condOp2)
+		return fmt.Sprintf("if (%v %v %v)", op.condOp1, condOpSymbols[op.condOp], op.condOp2)
 	} else {
 		return op.Debug()
 	}
