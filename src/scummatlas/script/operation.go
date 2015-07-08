@@ -92,7 +92,7 @@ func (script Script) Print() string {
 				indent++
 			}
 		}
-		if indent > 0 && condUntil[indent-1] == op.offset+op.length {
+		for indent > 0 && condUntil[indent-1] == op.offset+op.length {
 			condUntil = condUntil[0 : indent-1]
 			indent--
 		}
