@@ -54,11 +54,11 @@ func checkScriptResult(rawscript []byte, expected string, t *testing.T) {
 func TestExpression(t *testing.T) {
 	checkScriptResult(
 		[]byte{0xac, 0x76, 0x00, 0x81, 0x03, 0x40, 0x01, 0x01, 0x00, 0x03, 0xff},
-		"var(0x76) = expression((local[3] - 1))", t)
+		"var[118] = expression((local[3] - 1))", t)
 
 	checkScriptResult(
 		[]byte{0xac, 0x64, 0x00, 0x01, 0xc8, 0x00, 0x81, 0x05, 0x40, 0x02, 0x01, 0x01, 0x00, 0x03, 0xff},
-		"var(0x64) = expression(((200 + local[5]) - 1))", t)
+		"var[100] = expression(((200 + local[5]) - 1))", t)
 }
 
 func TestRoomScript1(t *testing.T) {
