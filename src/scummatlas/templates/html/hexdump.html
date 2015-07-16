@@ -1,0 +1,28 @@
+<html>
+    <head>
+        <title>Hex Map</title>
+		<link href="./static/style.css" rel="stylesheet" type="text/css"/>
+		<link href="./static/bootstrap.min.css" rel="stylesheet" type="text/css"/>
+    </head>
+    <body id="index-page">
+    {{template "menu"}}
+    <div class="container">
+        <h1 id="top">{{.Title}}</h1>
+        <h2>Hex dump</h2>
+        <table class="table table-bordered table-condensed">
+        {{range .Rows}}
+        <tr>
+            {{range .}}<td title="type--{{.Class}}" class="{{.Class}}">{{printf "%02x" .Value}}</td>{{end}}
+        </tr>
+        {{end}}
+        </table>
+        <style>
+        {{range $class, $colour := .Colours}}
+        .type--{{$class}} {
+            background: #{{printf "%06x" $colour}};
+        }
+        {{end}}
+        </style>
+    </div>
+    </body>
+</html>

@@ -8,6 +8,7 @@ import (
 	"os"
 	"scummatlas"
 	b "scummatlas/binaryutils"
+	"scummatlas/templates"
 )
 
 func main() {
@@ -28,12 +29,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	script, err := parseCostume(data)
+	costume, err := parseCostume(data)
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
-	script.Debug()
+	templates.WriteHexMap(costume.HexMap, "bytes.html")
+	costume.Debug()
 }
 
 func parseCostume(data []byte) (*scummatlas.Costume, error) {
