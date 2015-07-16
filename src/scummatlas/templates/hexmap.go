@@ -16,7 +16,11 @@ type HexMapData struct {
 	Rows    [][]HexCol
 }
 
-const HexDumpRowSize = 16
+func (h HexMapData) RowAddress(row int) string {
+	return fmt.Sprintf("0x%04x", row*HexDumpRowSize)
+}
+
+const HexDumpRowSize = 32
 
 func WriteHexMap(hexmap scummatlas.HexMap, outputfile string) {
 	t := template.Must(template.ParseFiles(
@@ -24,22 +28,17 @@ func WriteHexMap(hexmap scummatlas.HexMap, outputfile string) {
 		htmlPath+"partials.html"))
 
 	colours := []int{
+		/* Nice pastel */
+		0x389090,
+		0xf47d7e,
+		0xb5d045,
+		0xfb8335,
+		0x81c0c5,
+		0xe0c7a8,
+		/* Variations */
 		0xffdddd,
 		0xddffdd,
 		0xddddff,
-		0xffffdd,
-		0xffffdd,
-		0xddffff,
-		0xffdddd,
-		0xddffdd,
-		0xddddff,
-		0xffffdd,
-		0xffffdd,
-		0xddffff,
-		0xffdddd,
-		0xddffdd,
-		0xddddff,
-		0xffffdd,
 		0xffffdd,
 		0xddffff,
 	}
@@ -61,7 +60,9 @@ func WriteHexMap(hexmap scummatlas.HexMap, outputfile string) {
 	curColour := 0
 	curRow := 0
 
-	for _, section := range hexmap.Sections() {
+	sections := hexmap.Sections()
+
+	for _, section := range sections {
 		_, colourExists := classes[section.Type]
 		if !colourExists {
 			classes[section.Type] = colours[curColour%len(colours)]
@@ -76,7 +77,7 @@ func WriteHexMap(hexmap scummatlas.HexMap, outputfile string) {
 			curRow++
 		}
 		column := HexCol{Value: octet}
-		for _, section := range hexmap.Sections() {
+		for _, section := range sections {
 			if section.IncludesOffset(i) {
 				column.Class = section.Type
 				break

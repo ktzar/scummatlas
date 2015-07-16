@@ -8,7 +8,7 @@ type HexMapSection struct {
 }
 
 func (s HexMapSection) IncludesOffset(offset int) bool {
-	return offset > s.Start && offset < s.Start+s.Length
+	return offset >= s.Start && offset < s.Start+s.Length
 }
 
 type HexMap struct {
@@ -24,6 +24,7 @@ func (h HexMap) Sections() []HexMapSection {
 	return h.sections
 }
 
-func (h *HexMap) AddSection(section HexMapSection) {
-	h.sections = append(h.sections, section)
+func (h *HexMap) AddSection(start int, end int, name string, description string) {
+	h.sections = append(h.sections, HexMapSection{
+		start, end, name, description})
 }

@@ -6,23 +6,30 @@
     </head>
     <body id="index-page">
     {{template "menu"}}
+    {{$root := .}}
     <div class="container">
         <h1 id="top">{{.Title}}</h1>
         <h2>Hex dump</h2>
-        <table class="table table-bordered table-condensed">
-        {{range .Rows}}
-        <tr>
-            {{range .}}<td title="type--{{.Class}}" class="{{.Class}}">{{printf "%02x" .Value}}</td>{{end}}
-        </tr>
+        <table class="table"><tr>
+        {{range $class, $colour := .Colours}}
+            <td class="{{$class}}">{{$class}}</td>
         {{end}}
-        </table>
+        </tr></table>
         <style>
         {{range $class, $colour := .Colours}}
-        .type--{{$class}} {
+        .{{$class}} {
             background: #{{printf "%06x" $colour}};
         }
         {{end}}
         </style>
+        <table class="table table-condensed">
+        {{range $i, $row := .Rows}}
+        <tr>
+            <td>{{$root.RowAddress $i}}</td>
+            {{range $row}}<td title="{{.Class}}" class="{{.Class}} text-center">{{printf "%02x" .Value}}</td>{{end}}
+        </tr>
+        {{end}}
+        </table>
     </div>
     </body>
 </html>
