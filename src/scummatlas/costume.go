@@ -3,7 +3,6 @@ package scummatlas
 import (
 	"fmt"
 	"image"
-	"image/color"
 	b "scummatlas/binaryutils"
 )
 
@@ -56,15 +55,13 @@ func NewCostume(data []byte) *Costume {
 
 	cursor := 0
 
-	c.AddSection(HexMapSection{
-		cursor, 1, "NumAnim", ""})
+	c.AddSection(cursor, 1, "NumAnim", "")
 
 	c.NumAnim = int(data[cursor])
 	cursor++
 	format := data[cursor]
 	fmt.Printf("Format at cursor: %x, %d\n", format, cursor)
-	c.AddSection(HexMapSection{
-		cursor, 1, "Format", ""})
+	c.AddSection(cursor, 1, "Format", "")
 	cursor++
 
 	c.PaletteSize = 32
@@ -75,8 +72,7 @@ func NewCostume(data []byte) *Costume {
 		c.Mirrored = true
 	}
 
-	c.AddSection(HexMapSection{
-		cursor, c.PaletteSize, "Palette", ""})
+	c.AddSection(cursor, c.PaletteSize, "Palette", "")
 
 	for i := 0; i < c.PaletteSize; i++ {
 		c.Palette = append(c.Palette, data[cursor])
@@ -85,20 +81,17 @@ func NewCostume(data []byte) *Costume {
 
 	//TODO anim cmds offset
 	c.animCmdOffset = b.LE16(data, cursor)
-	c.AddSection(HexMapSection{
-		cursor, 2, "AnimCmdOffset", ""})
+	c.AddSection(cursor, 2, "AnimCmdOffset", "")
 	cursor += 2
 
 	//There are always 16 limbs
-	c.AddSection(HexMapSection{
-		cursor, 32, "LimbsOffsets", ""})
+	c.AddSection(cursor, 32, "LimbsOffsets", "")
 	for i := 0; i < 16; i++ {
 		c.limbOffsets = append(c.limbOffsets, b.LE16(data, cursor))
 		cursor += 2
 	}
 
-	c.AddSection(HexMapSection{
-		cursor, 2 * c.NumAnim, "AnimOffsets", ""})
+	c.AddSection(cursor, 2*c.NumAnim, "AnimOffsets", "")
 	for i := 0; i < c.NumAnim; i++ {
 		c.animOffsets = append(c.animOffsets, b.LE16(data, cursor))
 		cursor += 2
@@ -111,6 +104,7 @@ func NewCostume(data []byte) *Costume {
 			fmt.Printf("Something wrong with limb %d\n", limbNumber)
 			continue
 		}
+		c.AddSection(limbOffset, 1, "LimbOffset", "")
 		fmt.Printf("%x\n", data[limbOffset:limbOffset+30])
 		imgOffset := limbOffset
 		/*
