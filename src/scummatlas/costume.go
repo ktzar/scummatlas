@@ -3,6 +3,7 @@ package scummatlas
 import (
 	"fmt"
 	"image"
+	"image/color"
 	b "scummatlas/binaryutils"
 )
 
