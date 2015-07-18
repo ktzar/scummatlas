@@ -21,6 +21,20 @@
             background: #{{printf "%06x" $colour}};
         }
         {{end}}
+        td.start::before {
+            content: 's';
+            font-size: 12px;
+            position: relative;
+            top: 12px;
+            left: -2px;
+        }
+        td.end::after {
+            content: 'e';
+            font-size: 12px;
+            position: relative;
+            top: 12px;
+            left: 2px;
+        }
         </style>
         <table class="table table-condensed">
         {{range $i, $row := .Rows}}

@@ -29,18 +29,18 @@ func WriteHexMap(hexmap scummatlas.HexMap, outputfile string) {
 
 	colours := []int{
 		/* Nice pastel */
-		0x389090,
+		0x68b0b0,
 		0xf47d7e,
 		0xb5d045,
 		0xfb8335,
 		0x81c0c5,
 		0xe0c7a8,
 		/* Variations */
-		0xffdddd,
-		0xddffdd,
-		0xddddff,
-		0xffffdd,
-		0xddffff,
+		0xee9999,
+		0x99ee99,
+		0x9999ee,
+		0xeeee99,
+		0x99eeee,
 	}
 
 	file, err := os.Create(outputfile)
@@ -85,7 +85,20 @@ func WriteHexMap(hexmap scummatlas.HexMap, outputfile string) {
 		}
 		rows[curRow][curCol] = column
 	}
-	fmt.Println(rows)
+	for _, section := range sections {
+		start := section.Start
+		end := section.Start + section.Length - 1
+
+		row := start / HexDumpRowSize
+		col := start % HexDumpRowSize
+		//fmt.Printf("Start of section %v in [%v,%v]\n", start, row, col)
+		rows[row][col].Class += " start"
+
+		row = end / HexDumpRowSize
+		col = end % HexDumpRowSize
+		//fmt.Printf("End of section %v in [%v,%v]\n", end, row, col)
+		rows[row][col].Class += " end"
+	}
 	data.Rows = rows
 
 	t.Execute(file, data)
