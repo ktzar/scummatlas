@@ -97,22 +97,28 @@ func NewCostume(data []byte) *Costume {
 	}
 
 	for i := 0; i < c.NumAnim; i++ {
-		//limbMask := b.LE16(data, cursor)
-		index := b.LE16(data, cursor+2)
-		length := 0
 		c.AddSection(cursor, 2, "AnimMask", "")
-		c.AddSection(cursor+2, 2, "AnimIndex", "")
-		if index == 0xff {
-			cursor += 4
-		} else {
-			c.AddSection(cursor+4, 1, "AnimLength", "")
-			length = int(data[cursor+4] & 0x7f)
-			fmt.Printf("Animation %v has commands in %x -> %x\n", i, index, index+length)
-			if c.animCmdOffset+index+length < len(data) {
-				c.AddSection(c.animCmdOffset+index, length+1, "Command", "")
+		limbMask := b.LE16(data, cursor)
+		cursor += 2
+		animLength := b.OneBitsInWord(limbMask)
+
+		for j := 0; j < animLength; j++ {
+			c.AddSection(cursor, 2, "AnimIndex", "")
+			index := b.LE16(data, cursor)
+			cursor += 2
+			if index != 0xffff {
+				c.AddSection(cursor, 1, "AnimLength", "")
+				cursor++
+				//length := int(data[cursor+4] & 0x7f)
+
+				//fmt.Printf("Animation %v has commands in %x -> %x\n", i, index, index+length)
+				//if c.animCmdOffset+index+length < len(data) {
+				//c.AddSection(c.animCmdOffset+index, length+1, "Command", "")
+				//}
+				//cursor += 5
 			}
-			cursor += 5
 		}
+
 	}
 
 	/*
