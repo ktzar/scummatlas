@@ -60,7 +60,6 @@ func NewCostume(data []byte) *Costume {
 	c.NumAnim = int(data[cursor])
 	cursor++
 	format := data[cursor]
-	fmt.Printf("Format at cursor: %x, %d\n", format, cursor)
 	c.AddSection(cursor, 1, "Format", "")
 	cursor++
 
@@ -85,27 +84,61 @@ func NewCostume(data []byte) *Costume {
 	cursor += 2
 
 	//There are always 16 limbs
-	c.AddSection(cursor, 32, "LimbsOffsets", "")
+	c.AddSection(cursor, 32, "LimbsOff", "")
 	for i := 0; i < 16; i++ {
 		c.limbOffsets = append(c.limbOffsets, b.LE16(data, cursor))
 		cursor += 2
 	}
 
-	c.AddSection(cursor, 2*c.NumAnim, "AnimOffsets", "")
+	c.AddSection(cursor, 2*c.NumAnim, "DefinitionOff", "")
 	for i := 0; i < c.NumAnim; i++ {
 		c.animOffsets = append(c.animOffsets, b.LE16(data, cursor))
 		cursor += 2
 	}
 
+	for i := 0; i < c.NumAnim; i++ {
+		//limbMask := b.LE16(data, cursor)
+		index := b.LE16(data, cursor+2)
+		length := 0
+		c.AddSection(cursor, 2, "AnimMask", "")
+		c.AddSection(cursor+2, 2, "AnimIndex", "")
+		if index == 0xff {
+			cursor += 4
+		} else {
+			c.AddSection(cursor+4, 1, "AnimLength", "")
+			length = int(data[cursor+4] & 0x7f)
+			fmt.Printf("Animation %v has commands in %x -> %x\n", i, index, index+length)
+			if c.animCmdOffset+index+length < len(data) {
+				c.AddSection(c.animCmdOffset+index, length+1, "Command", "")
+			}
+			cursor += 5
+		}
+	}
+
+	/*
+		for i, animOffset := range c.animOffsets {
+			limbMask := b.LE16(data, animOffset)
+			animLength := b.OneBitsInWord(limbMask)
+			c.AddSection(
+				animOffset,
+				2+animLength*3,
+				fmt.Sprintf("AnimDefinition%d", i),
+				"")
+		}
+	*/
+
+	//Process anim commands
+	c.AddSection(c.animCmdOffset, c.NumAnim, "AnimCmd", "")
+
 	// Process limbs
 	for limbNumber, limbOffset := range c.limbOffsets {
-		fmt.Printf("limbOffset: %v > %v\n", limbOffset, len(data))
+		//fmt.Printf("limbOffset: %v > %v\n", limbOffset, len(data))
 		if limbOffset > len(data) {
 			fmt.Printf("Something wrong with limb %d\n", limbNumber)
 			continue
 		}
-		c.AddSection(limbOffset, 1, "LimbOffset", "")
-		fmt.Printf("%x\n", data[limbOffset:limbOffset+30])
+		//c.AddSection(limbOffset, 1, "LimbOffset", "")
+		//fmt.Printf("%x\n", data[limbOffset:limbOffset+30])
 		imgOffset := limbOffset
 		/*
 			imgOffset := b.LE16(data, limbOffset)
@@ -115,6 +148,7 @@ func NewCostume(data []byte) *Costume {
 				continue
 			}
 		*/
+		c.AddSection(imgOffset, 12, "Limb", "")
 		limb := Limb{
 			Width:  b.LE16(data, imgOffset),
 			Height: b.LE16(data, imgOffset+2),

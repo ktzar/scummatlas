@@ -34,7 +34,7 @@ func main() {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
-	templates.WriteHexMap(costume.HexMap, "bytes.html")
+	templates.WriteHexMap(costume.HexMap, "costume_bytes.html")
 	costume.Debug()
 }
 

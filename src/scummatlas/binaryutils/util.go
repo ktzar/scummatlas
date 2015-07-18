@@ -37,3 +37,14 @@ func ReadXoredFile(fileName string, code byte) (out []byte, err error) {
 	}
 	return out, err
 }
+
+func OneBitsInWord(word int) int {
+	mask := 0x01
+	accum := 0
+	for i := uint8(0); i < 16; i++ {
+		if (mask<<i)&word > 0 {
+			accum++
+		}
+	}
+	return accum
+}
