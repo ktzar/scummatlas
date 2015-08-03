@@ -22,15 +22,15 @@
         }
         {{end}}
         td.start::before {
-            content: 's';
-            font-size: 12px;
+            content: '\\';
+            font-size: 8px;
             position: relative;
             top: 12px;
             left: -2px;
         }
         td.end::after {
-            content: 'e';
-            font-size: 12px;
+            content: '/';
+            font-size: 8px;
             position: relative;
             top: 12px;
             left: 2px;
@@ -40,7 +40,7 @@
         {{range $i, $row := .Rows}}
         <tr>
             <td>{{$root.RowAddress $i}}</td>
-            {{range $row}}<td title="{{.Class}}" class="{{.Class}} text-center">{{printf "%02x" .Value}}</td>{{end}}
+            {{range $row}}<td title="{{.Title}}" class="{{.Class}} text-center">{{printf "%02x" .Value}}</td>{{end}}
         </tr>
         {{end}}
         </table>
