@@ -8,6 +8,7 @@ import "fmt"
 type HexCol struct {
 	Value byte
 	Class string
+	Title string
 }
 
 type HexMapData struct {
@@ -80,6 +81,7 @@ func WriteHexMap(hexmap scummatlas.HexMap, outputfile string) {
 		for _, section := range sections {
 			if section.IncludesOffset(i) {
 				column.Class = section.Type
+				column.Title = section.Type + " " + section.Description
 				break
 			}
 		}
