@@ -21,6 +21,7 @@ var outputdir string
 var singleRoom int
 var noimages bool
 var multicpu bool
+var dumpdecoded bool
 
 func main() {
 	loadOptions()
@@ -37,6 +38,9 @@ func main() {
 	os.MkdirAll(outputdir+"/img_bg", 0755)
 
 	game := scummatlas.NewGame(gamedir)
+	if dumpdecoded {
+		game.DumpDecoded(outputdir)
+	}
 
 	if singleRoom < 1 {
 		game.ProcessAllRooms(outputdir)
@@ -82,6 +86,7 @@ func loadOptions() {
 	flag.IntVar(&singleRoom, "room", 0, "Only parse one room")
 	flag.BoolVar(&noimages, "noimages", false, "Don't create images")
 	flag.BoolVar(&multicpu, "multicpu", false, "Use multiple processes")
+	flag.BoolVar(&dumpdecoded, "dumpdecoded", false, "Dump decoded .000 and .001")
 	flag.StringVar(&logflags, "logflags", "", "Comma separated list of log flags. Available flags: "+strings.Join(logkeys, ", "))
 	flag.Parse()
 
