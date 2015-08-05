@@ -85,7 +85,11 @@ func (self *Game) ProcessAllRooms(outputdir string) {
 			l.Log("game", "Parsing room %d with Id: %x", i, offset.Id)
 			room := self.mainData.ParseRoom(offset.Offset, i)
 			room.Id = offset.Id
-			room.Name = self.RoomNames[i].Name
+			if len(self.RoomNames) > i {
+				room.Name = self.RoomNames[i].Name
+			} else {
+				room.Name = ""
+			}
 			self.Rooms[i] = room
 			roomDone <- room.Id
 		}(i, offset)

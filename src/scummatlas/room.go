@@ -188,6 +188,7 @@ func (r *Room) parsePALS() {
 	offName := b.FourCharString(r.data, r.offset+16)
 	if offName != "OFFS" {
 		l.Log("palette", "Wrong PALS structure. Couldn't find OFFS")
+		return
 	}
 	offSize := b.BE32(r.data, r.offset+20)
 
@@ -195,13 +196,12 @@ func (r *Room) parsePALS() {
 
 	if aPalName != "APAL" {
 		l.Log("palette", "Wrong PALS structure. Couldn't find APAL")
-		fmt.Printf("%x", r.data[r.offset:r.offset+16+offSize+8])
 		return
 	}
-	paletteOffset := r.offset + 28 + 8
+	paletteOffset := r.offset + 16 + offSize + 8
 
 	r.Palette = image.ParsePalette(r.data[paletteOffset : paletteOffset+3*256])
-	l.Log("palette", "Palette length", len(r.Palette))
+	l.Log("palette", "Palette length %d", len(r.Palette))
 }
 
 func (r *Room) parseEPAL() {
