@@ -3,17 +3,34 @@ package scummatlas
 import (
 	"encoding/binary"
 	"errors"
+	"fileutils"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	b "scummatlas/binaryutils"
 	l "scummatlas/condlog"
 	s "scummatlas/script"
-	"strings"
 )
 
+type GameMetaData struct {
+	ScummVersion int
+	Name         string
+	Variant      string
+	Language     string
+}
+
+var GamesHashes = map[string]GameMetaData{
+	"2d1e891fe52df707c30185e52c50cd92": GameMetaData{5, "The Secret of Monkey Island", "CD", "en"},
+	"c0c9de81fb965e6cbe77f6e5631ca705": GameMetaData{5, "The Secret of Monkey Island", "Talkie", "en"},
+	"3686cf8f89e102ececf4366e1d2c8126": GameMetaData{5, "Monkey Island: Lechuck's Revenge", "Floppy", "en"},
+	"182344899c2e2998fca0bebcd82aa81a": GameMetaData{5, "Indiana Jones and the Fate of Atlantis", "CD", "en"},
+	"4167a92a1d46baa4f4127d918d561f88": GameMetaData{6, "The Day of the Tentacle", "CD", "en"},
+	"d917f311a448e3cc7239c31bddb00dd2": GameMetaData{6, "Sam & Max Hit the Road", "CD", "en"},
+	"d8323015ecb8b10bf53474f6e6b0ae33": GameMetaData{7, "The Dig", "CD", "en"},
+}
+
 type Game struct {
-	Name        string
 	RoomOffsets []RoomOffset
 	RoomNames   []RoomName
 	RoomIndexes []int
@@ -24,6 +41,7 @@ type Game struct {
 	indexFile   string
 	mainFile    string
 	mainData    *MainScummData
+	GameMetaData
 }
 
 type Costume interface{}
@@ -47,29 +65,29 @@ func NewGame(gamedir string) *Game {
 		fileName := gamedir + "/" + file.Name()
 		extension := filepath.Ext(fileName)
 
-		if strings.Contains(extension, ".00") {
-			if extension == ".000" {
-				game.indexFile = file.Name()
-			}
+		if extension == ".000" || extension == ".LA0" {
+			game.indexFile = file.Name()
+		}
 
-			if extension == ".001" {
-				game.mainFile = file.Name()
-			}
+		if extension == ".001" || extension == ".LA1" {
+			game.mainFile = file.Name()
 		}
 	}
+
 	game.processIndex()
 	game.processMainFile()
 	return &game
 }
 
 func (self *Game) inferName() {
-	self.Name = "A game"
-	if self.RoomNames[0].Name == "beach" {
-		self.Name = "The Secret of Monkey Island"
-	} else if self.RoomNames[0].Name == "part" {
-		self.Name = "Monkey Island 2: Lechuck's Revenge"
-	} else if self.RoomNames[0].Name == "coloffic" {
-		self.Name = "Indiana Jones and the Fate of Atlantis"
+	md5, _ := fileutils.ComputeMd5(self.gamedir + "/" + self.indexFile)
+	strMd5 := fmt.Sprintf("%x", md5)
+
+	for hash, metaData := range GamesHashes {
+		if hash == strMd5 {
+			self.GameMetaData = metaData
+			break
+		}
 	}
 }
 
@@ -81,7 +99,11 @@ func (self *Game) ProcessAllRooms(outputdir string) {
 			l.Log("game", "Parsing room %d with Id: %x", i, offset.Id)
 			room := self.mainData.ParseRoom(offset.Offset, i)
 			room.Id = offset.Id
-			room.Name = self.RoomNames[i].Name
+			if len(self.RoomNames) > i {
+				room.Name = self.RoomNames[i].Name
+			} else {
+				room.Name = ""
+			}
 			self.Rooms[i] = room
 			roomDone <- room.Id
 		}(i, offset)

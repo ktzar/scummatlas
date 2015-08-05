@@ -42,10 +42,10 @@ func main() {
 		game.DumpDecoded(outputdir)
 	}
 
-	if singleRoom < 1 {
-		game.ProcessAllRooms(outputdir)
-	} else {
+	if singleRoom > 0 {
 		game.ProcessSingleRoom(singleRoom, outputdir)
+	} else {
+		game.ProcessAllRooms(outputdir)
 	}
 
 	templates.WriteGameFiles(*game, outputdir)

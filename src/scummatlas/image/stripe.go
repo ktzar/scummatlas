@@ -31,9 +31,9 @@ type StripeType struct {
 	paletteLength uint8
 }
 
-func drawStripe(img *image.RGBA, stripNumber int, data []byte, pal color.Palette, transpIndex uint8) {
+func drawStripe(img *image.RGBA, stripeNumber int, data []byte, pal color.Palette, transpIndex uint8) {
 
-	stripeType, err := getCompressionMethod(stripNumber, data[0])
+	stripeType, err := getCompressionMethod(stripeNumber, data[0])
 	if err != nil {
 		l.Log("image", "Error getting compression method "+err.Error())
 		return
@@ -56,8 +56,8 @@ func drawStripe(img *image.RGBA, stripNumber int, data []byte, pal color.Palette
 			y = (currentPixel) % height
 			x = (currentPixel) / height
 		}
-		x += 8 * stripNumber
-		if curPal >= 0 {
+		x += 8 * stripeNumber
+		if int(curPal) < len(pal) {
 			if stripeType.transparent == Transp && curPal == transpIndex {
 				img.Set(x, y, transparent)
 			} else {
@@ -113,7 +113,7 @@ func drawStripe(img *image.RGBA, stripNumber int, data []byte, pal color.Palette
 	}
 }
 
-func getCompressionMethod(stripNumber int, code byte) (StripeType, error) {
+func getCompressionMethod(stripeNumber int, code byte) (StripeType, error) {
 	stripe := StripeType{
 		direction:     Horizontal,
 		method:        MethodUnknown,
@@ -155,14 +155,14 @@ func getCompressionMethod(stripNumber int, code byte) (StripeType, error) {
 	return stripe, nil
 }
 
-func printStripeInfo(stripNumber int, code byte) {
-	stripeType, err := getCompressionMethod(stripNumber, code)
+func printStripeInfo(stripeNumber int, code byte) {
+	stripeType, err := getCompressionMethod(stripeNumber, code)
 	if err != nil {
-		l.Log("image", fmt.Sprintf("Error with stripe %d: %v", stripNumber, err.Error()))
+		l.Log("image", fmt.Sprintf("Error with stripe %d: %v", stripeNumber, err.Error()))
 		return
 	}
 
-	out := fmt.Sprintf("%v\t0x%X\t", stripNumber, code)
+	out := fmt.Sprintf("%v\t0x%X\t", stripeNumber, code)
 	if stripeType.method == MethodOne {
 		out += "   1"
 	} else if stripeType.method == MethodTwo {
@@ -173,7 +173,7 @@ func printStripeInfo(stripNumber int, code byte) {
 	} else {
 		out += "\tHoriz"
 	}
-	out += "\t" + string(stripeType.paletteLength)
+	out += "\t" + fmt.Sprintf("%d", stripeType.paletteLength)
 	if stripeType.transparent == Transp {
 		out += "\tYes"
 	} else {

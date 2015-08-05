@@ -98,6 +98,8 @@ func NewRoom(data []byte) *Room {
 			room.parseEXCD()
 		case "ENCD":
 			room.parseENCD()
+		case "PALS":
+			room.parsePALS()
 		case "EPAL":
 			room.parseEPAL()
 		case "CLUT":
@@ -182,10 +184,30 @@ func (r *Room) parseOBCD() {
 	r.Objects[object.Id] = object
 }
 
+func (r *Room) parsePALS() {
+	offName := b.FourCharString(r.data, r.offset+16)
+	if offName != "OFFS" {
+		l.Log("palette", "Wrong PALS structure. Couldn't find OFFS")
+		return
+	}
+	offSize := b.BE32(r.data, r.offset+20)
+
+	aPalName := b.FourCharString(r.data, r.offset+16+offSize)
+
+	if aPalName != "APAL" {
+		l.Log("palette", "Wrong PALS structure. Couldn't find APAL")
+		return
+	}
+	paletteOffset := r.offset + 16 + offSize + 8
+
+	r.Palette = image.ParsePalette(r.data[paletteOffset : paletteOffset+3*256])
+	l.Log("palette", "Palette length %d", len(r.Palette))
+}
+
 func (r *Room) parseEPAL() {
 	l.Log("palette", "EGA palette, not used")
+	//TODO Implement?
 	return
-	//TODO REMOVE
 }
 
 func (r *Room) parseCLUT() {
