@@ -64,6 +64,10 @@ func NewGame(gamedir string) *Game {
 
 func (self *Game) inferName() {
 	self.Name = "A game"
+	if len(self.RoomNames) == 0 {
+		self.Name = "Game with no Rooms"
+		return
+	}
 	if self.RoomNames[0].Name == "beach" {
 		self.Name = "The Secret of Monkey Island"
 	} else if self.RoomNames[0].Name == "part" {
