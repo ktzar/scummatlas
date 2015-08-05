@@ -16,10 +16,10 @@ func TestPrint(t *testing.T) {
 	script = append(script, op)
 	script = append(script, op)
 	result := script.Print()
-	expected := "abcdef(one, two)\n"
+	expected := "abcdef(one, two)\nabcdef(one, two)"
 
-	if result != expected+expected {
-		t.Errorf("Was expecting %v, but got %v", expected+expected, result)
+	if result != expected {
+		t.Errorf("Was expecting %v, but got %v", expected, result)
 	}
 }
 
@@ -69,10 +69,10 @@ func TestPrintingConditionalOperations(t *testing.T) {
 		opType:  OpConditional,
 		condOp1: "Var[1]",
 		condOp2: "Var[2]",
-		condOp:  "==",
+		condOp:  "isEqual",
 		condDst: 0x2345,
 	}
-	if a.String() != "unless (Var[1] == Var[2]) {" {
+	if a.String() != "if (Var[1] == Var[2])" {
 		t.Errorf("conditional operation `%v` is not properly formatted", a.String())
 	}
 
