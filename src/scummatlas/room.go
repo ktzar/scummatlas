@@ -200,7 +200,7 @@ func (r *Room) parsePALS() {
 	}
 	paletteOffset := r.offset + 16 + offSize + 8
 
-	r.Palette = image.ParsePalette(r.data[paletteOffset : paletteOffset+3*256])
+	r.Palette = i.ParsePalette(r.data[paletteOffset : paletteOffset+3*256])
 	l.Log("palette", "Palette length %d", len(r.Palette))
 }
 
