@@ -3,6 +3,7 @@ package scummatlas
 import (
 	"fmt"
 	"image"
+	i "scummatlas/image"
 	b "scummatlas/binaryutils"
 )
 
@@ -13,7 +14,7 @@ type Costume struct {
 	Palette       []byte
 	Animations    []CostumeAnim
 	Limbs         []Limb
-	Commands      []int
+	Commands      []byte
 	frameOffsets  []int
 	animOffsets   []int
 	animCmdOffset int
@@ -21,13 +22,30 @@ type Costume struct {
 }
 
 type Limb struct {
-	Width  int
-	Height int
+	Width  byte
+	Height byte
 	RelX   int
 	RelY   int
 	MoveX  int
 	MoveY  int
-	Image  *image.RGBA
+	Image  *image.Gray
+}
+
+func DecodeLimb(data []byte, offset int, palette []byte)(limb Limb) {
+	limb.Width =  data[offset]
+	limb.Height = data[offset+1]
+	limb.RelX =   b.LE16(data, offset+2)
+	limb.RelY =   b.LE16(data, offset+4)
+	limb.MoveX =  b.LE16(data, offset+6)
+	limb.MoveY =  b.LE16(data, offset+8)
+
+	limb.Image = i.ParseLimb(
+		data[offset+10:],
+		int(limb.Width / 16),
+		int(limb.Height / 16),
+		palette,
+	)
+	return
 }
 
 type CostumeAnim struct {
@@ -48,8 +66,8 @@ func (c Costume) Debug() {
 	fmt.Printf("PaletteSize: %v\n", c.PaletteSize)
 	fmt.Printf("Mirrored: %v\n", c.Mirrored)
 	fmt.Printf("Palette: %v\n", c.Palette)
-	fmt.Printf("limbOffsets: %v\n", c.limbOffsets)
-	fmt.Printf("animOffsets: %v\n", c.animOffsets)
+	fmt.Printf("frameOffsets: %x\n", c.frameOffsets)
+	fmt.Printf("animOffsets: %x\n", c.animOffsets)
 	fmt.Printf("Animations: %v\n", c.Animations)
 	fmt.Printf("Limbs: %v\n", c.Limbs)
 	fmt.Printf("Commands: %v\n", c.Commands)
@@ -168,19 +186,18 @@ func NewCostume(data []byte) *Costume {
 
 	//There are always 16 limbs
 	for i = 0; i < 16; i++ {
-		data := b.LE16(data, cursor)
-		c.frameOffsets = append(c.limbOffsets, data)
+		frameOffset := b.LE16(data, cursor)
+		c.frameOffsets = append(c.frameOffsets, frameOffset)
 		c.AddSection(cursor, 2, "FrameOffset", fmt.Sprintf("FrameOffset %d", i))
-		c.AddSection(data, 1, "Limb", fmt.Sprintf("%d", i))
 		cursor += 2
 	}
 
 	for i = 0; i < c.AnimCount; i++ {
 		data := b.LE16(data, cursor)
+		c.AddSection(cursor, 2, "AnimOffset", fmt.Sprintf("AnimOffset %d", i))
         if data != 0 {
             c.animOffsets = append(c.animOffsets, data)
-            c.AddSection(cursor, 2, "AnimOffset", fmt.Sprintf("AnimOffset %d", i))
-            c.AddSection(data, 2, "AnimMask", fmt.Sprintf("%d", i))
+            //c.AddSection(data, 2, "AnimMask", fmt.Sprintf("%d", i))
         }
 		cursor += 2
 	}
@@ -198,23 +215,6 @@ func NewCostume(data []byte) *Costume {
     */
 
 	/*
-		for i = 0; i < c.AnimCount; i++ {
-			processAnimDefinition()
-		}
-			for i, animOffset := range c.animOffsets {
-				if animOffset == 0 {
-					fmt.Println("Animation offset set to 0")
-					continue
-				} else {
-					fmt.Printf("\n\nAnimation %d at %x \n==========", i, animOffset)
-					c.AddSection(animOffset, 2, "Animation", fmt.Sprintf("Animation %d", i))
-					cursor = animOffset
-					processAnimDefinition()
-				}
-			}
-	*/
-
-	/*
 		for i, animOffset := range c.animOffsets {
 			limbMask := b.LE16(data, animOffset)
 			animLength := b.OneBitsInWord(limbMask)
@@ -228,39 +228,36 @@ func NewCostume(data []byte) *Costume {
 
 	//Process anim commands
 	//c.AddSection(c.animCmdOffset, c.AnimCount, "AnimCmd", "")
-    for i := range c.frameOffsets[0] - c.animCmdOffset) {
-        c.Commands = append(c.Commands, c.data[c.animCmdOffset + i)
+	for i, command := range c.data[c.animCmdOffset : c.frameOffsets[0]] {
+        c.Commands = append(c.Commands, command)
         c.AddSection(
             c.animCmdOffset + i, 1,
+			"Command",
             fmt.Sprintf("Command %d", i))
     }
 
 	// Process limbs
-	/*
-		for limbNumber, limbOffset := range c.limbOffsets {
-			if limbOffset > len(data) {
-				fmt.Printf("Something wrong with limb %d\n", limbNumber)
-				continue
-			}
-			c.AddSection(limbOffset, 2, "Limb", "")
-			imgOffset := b.LE16(data, limbOffset)
-			fmt.Printf("imgOffset: %v > %v\n", imgOffset, len(data))
-			if imgOffset+8 > len(data) {
-				fmt.Printf("Something wrong with limb image %d\n", limbNumber)
-				continue
-			}
-			c.AddSection(imgOffset, 2, "Pict", fmt.Sprintf("%d", limbNumber))
-			limb := Limb{
-				Width:  b.LE16(data, imgOffset),
-				Height: b.LE16(data, imgOffset+2),
-				RelX:   b.LE16(data, imgOffset+4),
-				RelY:   b.LE16(data, imgOffset+6),
-				MoveX:  b.LE16(data, imgOffset+8),
-				MoveY:  b.LE16(data, imgOffset+10),
-			}
-			c.Limbs = append(c.Limbs, limb)
+	for limbNumber, limbOffset := range c.frameOffsets {
+		limbOffset &= 0x7fff
+		c.AddSection(limbOffset, 2, "LimbOffset", fmt.Sprintf("%d", limbNumber))
+		if limbOffset > len(data) {
+			fmt.Printf("Something wrong with limb %d\n", limbNumber)
+			continue
 		}
-	*/
+		imgOffset := b.LE16(data, limbOffset)
+		if imgOffset+8 > len(data) {
+			fmt.Printf("Something wrong with limb image %d\n", limbNumber)
+			continue
+		}
+		c.AddSection(imgOffset, 1, "Pict", "Width")
+		c.AddSection(imgOffset+1, 1, "Pict", "Height")
+		c.AddSection(imgOffset+2, 2, "Pict", "RelX")
+		c.AddSection(imgOffset+4, 2, "Pict", "RelY")
+		c.AddSection(imgOffset+6, 2, "Pict", "MoveX")
+		c.AddSection(imgOffset+8, 2, "Pict", "MoveY")
+		limb := DecodeLimb(data, imgOffset, c.Palette);
+		c.Limbs = append(c.Limbs, limb)
+	}
 
 	return c
 }

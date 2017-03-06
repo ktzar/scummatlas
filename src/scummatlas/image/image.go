@@ -2,10 +2,56 @@ package image
 
 import (
 	"image"
+	"fmt"
 	"image/color"
 	b "scummatlas/binaryutils"
 	l "scummatlas/condlog"
 )
+
+func ParseLimb(data []byte, width int, height int, palette []byte) (*image.Gray) {
+	fmt.Println("Width x Height", width, height)
+	fmt.Println("Palette size", len(palette))
+	shift := uint8(4)
+	mask := byte(0xf)
+	if (len(palette) > 16) {
+		shift = uint8(3)
+		mask = byte(0x7)
+	}
+	im := image.NewGray(image.Rect(0, 0, width, height))
+	cursor := 0
+	pixelCount := 0
+	pixelLimit := width * height
+
+	drawNGrays := func (repetition int, gray byte) {
+		for i := 0 ; i < repetition ; i ++ {
+			im.SetGray(
+				pixelCount/height,
+				pixelCount%height,
+				color.Gray{gray},
+			)
+			pixelCount ++
+		}
+	}
+
+	for pixelCount < pixelLimit {
+		if cursor + 1 > len(data) {
+			break
+		}
+		read := data[cursor]
+		color := read >> shift
+		repetition := int(read & mask)
+		if repetition == 0 {
+			cursor ++
+			repetition = int(data[cursor])
+		}
+		cursor ++
+		if repetition + pixelCount > pixelLimit {
+			break
+		}
+		drawNGrays(repetition, color * 16)
+	}
+	return im 
+}
 
 func ParsePalette(data []byte) color.Palette {
 	var palette = make(color.Palette, 0, 256)

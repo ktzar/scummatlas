@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"image/png"
 	"os"
 	"scummatlas"
 	b "scummatlas/binaryutils"
@@ -33,6 +34,16 @@ func main() {
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
+	}
+	for i, limb := range costume.Limbs {
+		fileName := fmt.Sprintf("limb_%v.png", i)
+		pngFile, err := os.Create(fileName);
+		if err != nil {
+			panic("Error creating " + fileName + ".png")
+		}
+		if limb.Image != nil {
+			png.Encode(pngFile, limb.Image)
+		}
 	}
 	templates.WriteHexMap(costume.HexMap, "costume_bytes.html")
 	costume.Debug()
