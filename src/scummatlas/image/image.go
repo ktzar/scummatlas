@@ -2,10 +2,56 @@ package image
 
 import (
 	"image"
+	"fmt"
 	"image/color"
 	b "scummatlas/binaryutils"
 	l "scummatlas/condlog"
 )
+
+func ParseLimb(data []byte, width int, height int, palette []byte) (*image.Gray) {
+	fmt.Println("Width x Height", width, height)
+	fmt.Println("Palette size", len(palette))
+	shift := uint8(4)
+	mask := byte(0xf)
+	if (len(palette) > 16) {
+		shift = uint8(3)
+		mask = byte(0x7)
+	}
+	im := image.NewGray(image.Rect(0, 0, width, height))
+	cursor := 0
+	pixelCount := 0
+	pixelLimit := width * height
+
+	drawNGrays := func (repetition int, gray byte) {
+		for i := 0 ; i < repetition ; i ++ {
+			im.SetGray(
+				pixelCount/height,
+				pixelCount%height,
+				color.Gray{gray},
+			)
+			pixelCount ++
+		}
+	}
+
+	for pixelCount < pixelLimit {
+		if cursor + 1 > len(data) {
+			break
+		}
+		read := data[cursor]
+		color := read >> shift
+		repetition := int(read & mask)
+		if repetition == 0 {
+			cursor ++
+			repetition = int(data[cursor])
+		}
+		cursor ++
+		if repetition + pixelCount > pixelLimit {
+			break
+		}
+		drawNGrays(repetition, color * 16)
+	}
+	return im 
+}
 
 func ParsePalette(data []byte) color.Palette {
 	var palette = make(color.Palette, 0, 256)
@@ -39,16 +85,16 @@ func ParseImage(data []byte, zBuffers int, width int, height int, pal color.Pale
 	offsets := parseStripeTable(data, 16, stripeCount, 4)
 	image = parseStripesIntoImage(data, offsets, 8, width, height, pal, transpIndex)
 
-	ZPOffset := 8 + blockSize
-	for b.FourCharString(data, ZPOffset)[0:2] == "ZP" {
-		blockName := b.FourCharString(data, ZPOffset)
-		blockSize := b.BE32(data, ZPOffset+4)
+	zpOffset := 8 + blockSize
+	for b.FourCharString(data, zpOffset)[0:2] == "ZP" {
+		blockName := b.FourCharString(data, zpOffset)
+		blockSize := b.BE32(data, zpOffset+4)
 		l.Log("image", blockName+" found")
 
-		offsets = parseStripeTable(data, ZPOffset+8, stripeCount, 2)
-		zplane := parseZplaneStripesIntoImage(data, offsets, ZPOffset, height)
+		offsets = parseStripeTable(data, zpOffset+8, stripeCount, 2)
+		zplane := parseZplaneStripesIntoImage(data, offsets, zpOffset, height)
 		zplanes = append(zplanes, zplane)
-		ZPOffset += blockSize
+		zpOffset += blockSize
 	}
 
 	l.Log("image", "image decoded\n")
@@ -71,21 +117,16 @@ func parseStripesIntoImage(data []byte, offsets []int, initialOffset int, width 
 	l.Log("image", "\n#ID\tCode\tMethod\tDirect\tPalInSz\tTransp")
 
 	img := image.NewRGBA(image.Rect(0, 0, width, height))
-	for i := 0; i < len(offsets); i++ {
-		offset := offsets[i]
+	for i, offset := range offsets {
 		size := len(data) - offset
 		if i < len(offsets)-1 {
-			size = offsets[i+1] - offsets[i]
+			size = offsets[i+1] - offset
 		}
 		if l.Flags["image"] {
 			printStripeInfo(i, data[initialOffset+offset])
 		}
-		drawStripe(
-			img,
-			i,
-			data[initialOffset+offset:initialOffset+offset+size],
-			pal,
-			transpIndex)
+		stripeData := data[initialOffset+offset : initialOffset+offset+size]
+		drawStripe(img, i, stripeData, pal, transpIndex)
 	}
 	return img
 }
