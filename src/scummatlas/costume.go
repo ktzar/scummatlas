@@ -41,8 +41,8 @@ func DecodeLimb(data []byte, offset int, palette []byte)(limb Limb) {
 
 	limb.Image = i.ParseLimb(
 		data[offset+10:],
-		int(limb.Width / 16),
-		int(limb.Height / 16),
+		int(limb.Width),
+		int(43/*limb.Height*/),
 		palette,
 	)
 	return
@@ -239,6 +239,7 @@ func NewCostume(data []byte) *Costume {
 	// Process limbs
 	for limbNumber, limbOffset := range c.frameOffsets {
 		limbOffset &= 0x7fff
+        limbOffset = c.frameOffsets[0] + limbNumber * 2
 		c.AddSection(limbOffset, 2, "LimbOffset", fmt.Sprintf("%d", limbNumber))
 		if limbOffset > len(data) {
 			fmt.Printf("Something wrong with limb %d\n", limbNumber)
