@@ -23,7 +23,7 @@ type RoomName struct {
 
 type IndexItem struct {
 	RoomNumber int
-	RoomOffset int
+	Offset int
 }
 
 type RoomIndex IndexItem

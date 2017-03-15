@@ -137,7 +137,8 @@ func NewCostume(data []byte) *Costume {
 	cursor++
 
 	if format > 0x61 || format < 0x57 {
-		panic("Not a valid costume")
+		fmt.Println("Not a valid costume")
+		return c
 	}
 	c.PaletteSize = 32
 	if format&0x01 == 0 {

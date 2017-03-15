@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"image/png"
+	"image"
 	"io/ioutil"
 	"os"
 	"scummatlas"
@@ -36,6 +37,7 @@ func main() {
 	}
 	os.MkdirAll(outputdir+"/img_obj", 0755)
 	os.MkdirAll(outputdir+"/img_bg", 0755)
+	os.MkdirAll(outputdir+"/img_cost", 0755)
 
 	game := scummatlas.NewGame(gamedir)
 	if dumpdecoded {
@@ -71,6 +73,13 @@ func main() {
 			}
 		}
 		wg.Wait()
+	}
+
+	for costumeId, costume := range game.Costumes {
+		for limbId, limb := range costume.Limbs {
+			writeCostume(costumeId, limbId, limb.Image, outputdir)
+
+		}
 	}
 }
 
@@ -117,6 +126,17 @@ func processRoom(room scummatlas.Room) {
 
 func copyStaticFiles() {
 	fileutils.CopyDir("./static", outputdir+"/static")
+}
+
+func writeCostume(costume int, limb int, img *image.Gray, outputdir string) {
+	fileName := fmt.Sprintf("%v/img_cost/%v_%v.png", outputdir, costume, limb)
+	pngFile, err := os.Create(fileName);
+	if err != nil {
+		panic("Error creating " + fileName + ".png")
+	}
+	if img != nil {
+		png.Encode(pngFile, img)
+	}
 }
 
 func writeRoomBackground(room scummatlas.Room, outputdir string) {
