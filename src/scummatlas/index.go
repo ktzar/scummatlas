@@ -81,7 +81,7 @@ func ParseRoomIndex(data []byte) (index []RoomIndex) {
 	return out
 }
 
-func ParseScriptsIndex(data []byte) (index []IndexItem) {
+func ParseIndexBlock(data []byte) (index []IndexItem) {
 	var out []IndexItem
 	numEntries := b.LE16(data, 8)
 	l.Log("structure", "Num entries: ", numEntries)
@@ -89,7 +89,7 @@ func ParseScriptsIndex(data []byte) (index []IndexItem) {
 	currentIndex := 10
 	for currentIndex < len(data) {
 		roomNumber := int(data[currentIndex])
-		roomOffset := b.LE16(data, 1)
+		roomOffset := b.LE16(data, currentIndex+1)
 		out = append(out, IndexItem{roomNumber, roomOffset})
 		currentIndex += 5
 	}

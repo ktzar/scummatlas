@@ -3,6 +3,7 @@ package scummatlas
 import (
 	"fmt"
 	"image"
+	"image/color"
 	i "scummatlas/image"
 	b "scummatlas/binaryutils"
 )
@@ -11,7 +12,7 @@ type Costume struct {
 	AnimCount       int
 	PaletteSize   int
 	Mirrored      bool
-	Palette       []byte
+	Palette       color.Palette
 	Animations    []CostumeAnim
 	Limbs         []Limb
 	Commands      []byte
@@ -28,10 +29,10 @@ type Limb struct {
 	RelY   int
 	MoveX  int
 	MoveY  int
-	Image  *image.Gray
+	Image  *image.RGBA
 }
 
-func DecodeLimb(data []byte, offset int, palette []byte)(limb Limb, length int) {
+func DecodeLimb(data []byte, offset int, palette color.Palette)(limb Limb, length int) {
 	limb.Width =  b.LE16(data, offset)
 	limb.Height = b.LE16(data, offset+2)
 	limb.RelX =   b.LE16(data, offset+4)
@@ -75,6 +76,7 @@ func (c Costume) Debug() {
 	fmt.Printf("Animations: %v\n", c.Animations)
 	fmt.Printf("Limbs: %v\n", c.Limbs)
 	fmt.Printf("Commands: %v\n", c.Commands)
+	fmt.Printf("First Image: %v\n", c.Limbs[0].Image)
 }
 
 func (c* Costume) ProcessCostumeAnim(i int) {
@@ -121,7 +123,7 @@ func (c* Costume) ProcessCostumeAnim(i int) {
     }
 }
 
-func NewCostume(data []byte) *Costume {
+func NewCostume(data []byte, roomPalette color.Palette) *Costume {
 
 	c := new(Costume)
 	c.data = data
@@ -151,7 +153,7 @@ func NewCostume(data []byte) *Costume {
 	c.AddSection(cursor, c.PaletteSize, "Palette", "")
 
 	for i = 0; i < c.PaletteSize; i++ {
-		c.Palette = append(c.Palette, data[cursor])
+		c.Palette = append(c.Palette, roomPalette[data[cursor]])
 		cursor++
 	}
 

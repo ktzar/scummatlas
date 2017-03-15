@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"image/png"
+	"image/color/palette"
 	"os"
 	"scummatlas"
 	b "scummatlas/binaryutils"
@@ -54,6 +55,7 @@ func parseCostume(data []byte) (*scummatlas.Costume, error) {
 	if blockType != "COST" {
 		return nil, errors.New(blockType + "is not a supported costume block")
 	}
-	costume := scummatlas.NewCostume(data[8:])
+	fmt.Println(palette.Plan9)
+	costume := scummatlas.NewCostume(data[8:], palette.Plan9)
 	return costume, nil
 }

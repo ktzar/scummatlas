@@ -32,6 +32,7 @@ var GamesHashes = map[string]GameMetaData{
 
 type Game struct {
 	RoomOffsets []RoomOffset
+	CostumeIndex []IndexItem
 	RoomNames   []RoomName
 	RoomIndexes []int
 	Rooms       []Room
@@ -73,6 +74,10 @@ func NewGame(gamedir string) *Game {
 	}
 
 	game.processIndex()
+	fmt.Println("Costume\tRoom\tOffset")
+	for i, c := range(game.CostumeIndex) {
+		fmt.Printf("%v\t%v\t%v\n", i, c.RoomNumber, c.Offset)
+	}
 	game.processMainFile()
 	return &game
 }
@@ -198,13 +203,14 @@ func (self *Game) processIndex() error {
 
 		case "DSCR":
 			//fmt.Println("Parse Directory of Scripts")
-			//fmt.Println(len(ParseScriptsIndex(currBlock)), "scripts available")
+			//fmt.Println(len(ParseIndexBlock(currBlock)), "scripts available")
 
 		case "DSOU":
 			//fmt.Println("Parse Directory of Sounds")
 
 		case "DCOS":
 			//fmt.Println("Parse Directory of Costumes")
+			self.CostumeIndex = ParseIndexBlock(currBlock)
 
 		case "DCHR":
 			//fmt.Println("Parse Directory of Charsets")
