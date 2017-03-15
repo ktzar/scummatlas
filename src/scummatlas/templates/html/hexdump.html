@@ -5,11 +5,9 @@
 		<link href="./static/bootstrap.min.css" rel="stylesheet" type="text/css"/>
     </head>
     <body id="index-page">
-    {{template "menu"}}
     {{$root := .}}
     <div class="container">
         <h1 id="top">{{.Title}}</h1>
-        <h2>Hex dump</h2>
         <table class="table"><tr>
         {{range $class, $colour := .Colours}}
             <td class="{{$class}}">{{$class}}</td>

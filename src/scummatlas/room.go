@@ -66,6 +66,15 @@ func (r Room) BoxCount() int {
 	return len(r.Boxes)
 }
 
+func (r Room) PaletteHex() []string {
+	hexes := make([]string, len(r.Palette))
+	for i, c := range r.Palette {
+		r, g, b, _ := c.RGBA()
+		hexes[i] = fmt.Sprintf("%02x%02x%02x", r & 0x00ff, g & 0xff, b & 0xff)
+	}
+	return hexes
+}
+
 func (r Room) LocalScriptCount() int {
 	return len(r.LocalScripts)
 }
