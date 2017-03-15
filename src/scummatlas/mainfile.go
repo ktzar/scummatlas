@@ -73,7 +73,7 @@ func (d *MainScummData) getRoomCount() int {
 }
 
 func (d MainScummData) GetCostumes() (costumes []Costume) {
-	firstRoom := d.ParseRoom(d.GetRoomsOffset()[0].Offset, 0)
+	firstRoom := d.ParseRoom(d.GetRoomsOffset()[3].Offset, 0)
 	for i, offset := range d.sections["COST"] {
 		blockSize := b.BE32(d.data, offset+4)
 		l.Log("structure", "Parsing costume %d", i)

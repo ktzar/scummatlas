@@ -77,7 +77,9 @@ func main() {
 
 	for costumeId, costume := range game.Costumes {
 		for limbId, limb := range costume.Limbs {
-			writeCostume(costumeId, limbId, limb.Image, outputdir)
+			if limb.Image != nil {
+				writeCostume(costumeId, limbId, limb.Image, outputdir)
+			}
 		}
 	}
 }
