@@ -22,8 +22,8 @@ type Costume struct {
 }
 
 type Limb struct {
-	Width  byte
-	Height byte
+	Width  int
+	Height int
 	RelX   int
 	RelY   int
 	MoveX  int
@@ -31,18 +31,22 @@ type Limb struct {
 	Image  *image.Gray
 }
 
-func DecodeLimb(data []byte, offset int, palette []byte)(limb Limb) {
-	limb.Width =  data[offset]
-	limb.Height = data[offset+1]
-	limb.RelX =   b.LE16(data, offset+2)
-	limb.RelY =   b.LE16(data, offset+4)
-	limb.MoveX =  b.LE16(data, offset+6)
-	limb.MoveY =  b.LE16(data, offset+8)
+func DecodeLimb(data []byte, offset int, palette []byte)(limb Limb, length int) {
+	limb.Width =  b.LE16(data, offset)
+	limb.Height = b.LE16(data, offset+2)
+	limb.RelX =   b.LE16(data, offset+4)
+	limb.RelY =   b.LE16(data, offset+6)
+	limb.MoveX =  b.LE16(data, offset+8)
+	limb.MoveY =  b.LE16(data, offset+10)
 
-	limb.Image = i.ParseLimb(
+	if limb.Width > 1024 || limb.Height > 768 {
+		fmt.Println("Image too big")
+		return
+	}
+	limb.Image, length = i.ParseLimb(
 		data[offset+10:],
 		int(limb.Width),
-		int(43/*limb.Height*/),
+		int(limb.Height),
 		palette,
 	)
 	return
@@ -124,38 +128,11 @@ func NewCostume(data []byte) *Costume {
 	cursor := 0
 	i := 0
 
-	/*processAnimDefinition := func() {
-		fmt.Printf("Processing anim %d at %02x\n", i, cursor)
-		c.AddSection(cursor, 2, "AnimMask", fmt.Sprintf("anim %d", i))
-		limbMask := b.LE16(data, cursor)
-		fmt.Println("limbMask", limbMask)
-		if limbMask == 0xffff {
-			fmt.Println("limbMask return ")
-			return
-		}
-		cursor += 2
-		limbs := b.OneBitsInWord(limbMask)
-
-		for j, limb := range limbs {
-			fmt.Println("\nLimb ", limb, "\n------")
-			c.AddSection(cursor, 2, "AnimIndex", fmt.Sprintf("anim %d - lib %d", i, j))
-			index := b.LE16(data, cursor)
-			fmt.Printf("index: %04x\n", index)
-			cursor += 2
-
-			if index != 0xffff {
-				c.AddSection(cursor, 1, "AnimEnd", fmt.Sprintf("anim %d - lib %d", i, j))
-				cursor++
-			}
-		}
-	}
-	*/
-
 	c.AddSection(cursor, 1, "AnimCount", "")
 
 	c.AnimCount = int(data[cursor]) + 1
 	cursor++
-	format := data[cursor]
+	format := data[cursor] & 0x7f
 	c.AddSection(cursor, 1, "Format", "")
 	cursor++
 
@@ -178,15 +155,13 @@ func NewCostume(data []byte) *Costume {
 	}
 
 	//TODO anim cmds offset
-	c.animCmdOffset = b.LE16(data, cursor)
+	c.animCmdOffset = b.LE16(data, cursor) - 6
 	c.AddSection(cursor, 2, "AnimCmdOffset", "")
 	cursor += 2
 
-	c.AddSection(c.animCmdOffset, 10, "AnimCommands", "")
-
 	//There are always 16 limbs
 	for i = 0; i < 16; i++ {
-		frameOffset := b.LE16(data, cursor)
+		frameOffset := b.LE16(data, cursor) -6
 		c.frameOffsets = append(c.frameOffsets, frameOffset)
 		c.AddSection(cursor, 2, "FrameOffset", fmt.Sprintf("FrameOffset %d", i))
 		cursor += 2
@@ -196,7 +171,7 @@ func NewCostume(data []byte) *Costume {
 		data := b.LE16(data, cursor)
 		c.AddSection(cursor, 2, "AnimOffset", fmt.Sprintf("AnimOffset %d", i))
         if data != 0 {
-            c.animOffsets = append(c.animOffsets, data)
+            c.animOffsets = append(c.animOffsets, data - 6)
             //c.AddSection(data, 2, "AnimMask", fmt.Sprintf("%d", i))
         }
 		cursor += 2
@@ -228,6 +203,7 @@ func NewCostume(data []byte) *Costume {
 
 	//Process anim commands
 	//c.AddSection(c.animCmdOffset, c.AnimCount, "AnimCmd", "")
+
 	for i, command := range c.data[c.animCmdOffset : c.frameOffsets[0]] {
         c.Commands = append(c.Commands, command)
         c.AddSection(
@@ -236,27 +212,38 @@ func NewCostume(data []byte) *Costume {
             fmt.Sprintf("Command %d", i))
     }
 
+	numPictures := 0
+	for cmd := range c.Commands {
+		if cmd < 0x71 && cmd > numPictures {
+			numPictures = cmd
+		}
+	}
+
+	fmt.Println("numPictures", numPictures)
+
 	// Process limbs
-	for limbNumber, limbOffset := range c.frameOffsets {
-		limbOffset &= 0x7fff
-        limbOffset = c.frameOffsets[0] + limbNumber * 2
-		c.AddSection(limbOffset, 2, "LimbOffset", fmt.Sprintf("%d", limbNumber))
+	for picNumber := 0 ; picNumber < numPictures ; picNumber ++ {
+		limbOffset := c.frameOffsets[0] + picNumber * 2
+		fmt.Printf("picNumber %v in %x\n", picNumber, limbOffset)
+		c.AddSection(limbOffset, 2, "LimbOffset", fmt.Sprintf("%d", picNumber))
 		if limbOffset > len(data) {
-			fmt.Printf("Something wrong with limb %d\n", limbNumber)
+			fmt.Printf("Something wrong with limb %d\n", picNumber)
 			continue
 		}
-		imgOffset := b.LE16(data, limbOffset)
-		if imgOffset+8 > len(data) {
-			fmt.Printf("Something wrong with limb image %d\n", limbNumber)
+		imgOffset := b.LE16(data, limbOffset) - 6
+		if imgOffset+18 > len(data) || imgOffset < 0 {
+			fmt.Printf("Something wrong with limb image %d\n", picNumber)
 			continue
 		}
-		c.AddSection(imgOffset, 1, "Pict", "Width")
-		c.AddSection(imgOffset+1, 1, "Pict", "Height")
-		c.AddSection(imgOffset+2, 2, "Pict", "RelX")
-		c.AddSection(imgOffset+4, 2, "Pict", "RelY")
-		c.AddSection(imgOffset+6, 2, "Pict", "MoveX")
-		c.AddSection(imgOffset+8, 2, "Pict", "MoveY")
-		limb := DecodeLimb(data, imgOffset, c.Palette);
+		c.AddSection(imgOffset, 2, "Pict", "Width")
+		c.AddSection(imgOffset+2, 2, "Pict", "Height")
+		c.AddSection(imgOffset+4, 2, "Pict", "RelX")
+		c.AddSection(imgOffset+6, 2, "Pict", "RelY")
+		c.AddSection(imgOffset+8, 2, "Pict", "MoveX")
+		c.AddSection(imgOffset+10, 2, "Pict", "MoveY")
+		fmt.Println("Img Offset", imgOffset)
+		limb, length := DecodeLimb(data, imgOffset, c.Palette);
+		c.AddSection(imgOffset+12, length, "Pict", "RLE")
 		c.Limbs = append(c.Limbs, limb)
 	}
 

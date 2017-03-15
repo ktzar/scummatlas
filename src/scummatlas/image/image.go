@@ -8,7 +8,7 @@ import (
 	l "scummatlas/condlog"
 )
 
-func ParseLimb(data []byte, width int, height int, palette []byte) (*image.Gray) {
+func ParseLimb(data []byte, width int, height int, palette []byte) (i *image.Gray, length int) {
 	fmt.Println("Width x Height", width, height)
 	fmt.Println("Palette size", len(palette))
 	shift := uint8(4)
@@ -50,7 +50,7 @@ func ParseLimb(data []byte, width int, height int, palette []byte) (*image.Gray)
 		}
 		drawNGrays(repetition, color * 16)
 	}
-	return im 
+	return im, cursor
 }
 
 func ParsePalette(data []byte) color.Palette {
