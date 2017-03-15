@@ -147,7 +147,7 @@ func (self *Game) processMainFile() {
 	self.RoomOffsets = self.mainData.GetRoomsOffset()
 	self.Rooms = make([]Room, len(self.RoomOffsets))
 	self.Scripts = self.mainData.GetScripts()
-	self.mainData.GetCostumes()
+	self.Costumes = self.mainData.GetCostumes()
 
 	l.Log("structure", "Room count", len(self.RoomOffsets))
 }
