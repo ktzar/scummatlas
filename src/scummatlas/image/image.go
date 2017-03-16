@@ -8,7 +8,7 @@ import (
 	l "scummatlas/condlog"
 )
 
-func ParseLimb(data []byte, width int, height int, palette color.Palette) (i *image.RGBA, length int) {
+func ParseLimb(data []byte, width int, height int, palette color.Palette) (i *image.Paletted, length int) {
 	fmt.Println("Width x Height", width, height)
 	fmt.Println("Palette size", len(palette))
 	shift := uint8(4)
@@ -17,7 +17,7 @@ func ParseLimb(data []byte, width int, height int, palette color.Palette) (i *im
 		shift = uint8(3)
 		mask = byte(0x7)
 	}
-	im := image.NewRGBA(image.Rect(0, 0, width, height))
+	im := image.NewPaletted(image.Rect(0, 0, width, height), palette)
 	cursor := 0
 	pixelCount := 0
 	pixelLimit := width * height
@@ -27,10 +27,10 @@ func ParseLimb(data []byte, width int, height int, palette color.Palette) (i *im
 			return
 		}
 		for i := 0 ; i < repetition ; i ++ {
-			im.Set(
+			im.SetColorIndex(
 				pixelCount/height,
 				pixelCount%height,
-				palette[colour],
+				colour,
 			)
 			pixelCount ++
 		}

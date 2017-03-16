@@ -29,7 +29,7 @@ type Limb struct {
 	RelY   int
 	MoveX  int
 	MoveY  int
-	Image  *image.RGBA
+	Image  *image.Paletted
 }
 
 func DecodeLimb(data []byte, offset int, palette color.Palette)(limb Limb, length int) {

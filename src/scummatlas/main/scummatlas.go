@@ -129,7 +129,7 @@ func copyStaticFiles() {
 	fileutils.CopyDir("./static", outputdir+"/static")
 }
 
-func writeCostume(costume int, limb int, img *image.RGBA, outputdir string) {
+func writeCostume(costume int, limb int, img *image.Paletted, outputdir string) {
 	fileName := fmt.Sprintf("%v/img_cost/%v_%v.png", outputdir, costume, limb)
 	pngFile, err := os.Create(fileName);
 	if err != nil {
