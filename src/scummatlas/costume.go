@@ -184,29 +184,6 @@ func NewCostume(data []byte, roomPalette color.Palette) *Costume {
 		c.ProcessCostumeAnim(i)
     }
 
-    /*
-    // Calculating offset from the actual position
-    // not sure if needed
-	for i, _ := range c.animOffsets {
-		c.animOffsets[i] += cursor
-	}
-    */
-
-	/*
-		for i, animOffset := range c.animOffsets {
-			limbMask := b.LE16(data, animOffset)
-			animLength := b.OneBitsInWord(limbMask)
-			c.AddSection(
-				animOffset,
-				2+animLength*3,
-				fmt.Sprintf("AnimDefinition%d", i),
-				"")
-		}
-	*/
-
-	//Process anim commands
-	//c.AddSection(c.animCmdOffset, c.AnimCount, "AnimCmd", "")
-
 	for i, command := range c.data[c.animCmdOffset : c.frameOffsets[0]] {
         c.Commands = append(c.Commands, command)
         c.AddSection(
@@ -224,7 +201,6 @@ func NewCostume(data []byte, roomPalette color.Palette) *Costume {
 
 	fmt.Println("numPictures", numPictures)
 
-	// Process limbs
 	for picNumber := 0 ; picNumber < numPictures ; picNumber ++ {
 		limbOffset := c.frameOffsets[0] + picNumber * 2
 		fmt.Printf("picNumber %v in %x\n", picNumber, limbOffset)
