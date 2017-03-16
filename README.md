@@ -12,7 +12,7 @@ Build status: https://travis-ci.org/ktzar/scummatlas
 
 TODO
 - Improve parsing local and object scripts
-- Parse costumes
-- Have a game detector
+- ~~Parse costumes~~
+- ~~Have a game detector~~
 - Add ordering capabilities to table view
 - Use c64 font in some places like titles
