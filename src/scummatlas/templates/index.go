@@ -23,6 +23,11 @@ type mapData struct {
 	Edges []MapEdge
 }
 
+type CostumeIndex struct {
+	Title   string
+	Costumes []scummatlas.Costume
+}
+
 type MapNode struct {
 	Id   int
 	Name string
@@ -68,6 +73,25 @@ func WriteGameFiles(game scummatlas.Game, outdir string) {
 	writeTable(game, outdir)
 	writeMap(game, outdir)
 	writeScripts(game, outdir)
+	writeCostumes(game, outdir)
+}
+
+
+func writeCostumes(game scummatlas.Game, outdir string) {
+	filename := outdir + "/costumes.html"
+	file, err := os.Create(filename)
+	l.Log("template", "Create "+filename)
+	if err != nil {
+		panic("Can't create costumes file")
+	}
+
+	t := template.Must(template.ParseFiles(
+		htmlPath+"costumes.html",
+		htmlPath+"partials.html"))
+	t.Execute(file, CostumeIndex{
+		game.Name,
+		game.Costumes,
+	})
 }
 
 func writeIndex(game scummatlas.Game, outdir string) {
