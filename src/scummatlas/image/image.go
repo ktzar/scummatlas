@@ -2,15 +2,12 @@ package image
 
 import (
 	"image"
-	"fmt"
 	"image/color"
 	b "scummatlas/binaryutils"
 	l "scummatlas/condlog"
 )
 
 func ParseLimb(data []byte, width int, height int, palette color.Palette) (i *image.Paletted, length int) {
-	fmt.Println("Width x Height", width, height)
-	fmt.Println("Palette size", len(palette))
 	shift := uint8(4)
 	mask := byte(0xf)
 	if (len(palette) > 16) {
