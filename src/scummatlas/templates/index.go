@@ -4,17 +4,18 @@ import (
 	"html/template"
 	"os"
 	"scummatlas"
+	"scummatlas/blocks"
 	l "scummatlas/condlog"
 )
 
 type indexData struct {
 	Title string
-	Rooms []scummatlas.Room
+	Rooms []blocks.Room
 }
 
 type tableData struct {
 	Title string
-	Rooms []scummatlas.Room
+	Rooms []blocks.Room
 }
 
 type mapData struct {
@@ -25,7 +26,7 @@ type mapData struct {
 
 type CostumeIndex struct {
 	Title   string
-	Costumes []scummatlas.Costume
+	Costumes []blocks.Costume
 }
 
 type MapNode struct {

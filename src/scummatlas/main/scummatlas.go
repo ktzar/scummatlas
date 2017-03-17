@@ -1,7 +1,6 @@
 package main
 
 import (
-	"utils"
 	"flag"
 	"fmt"
 	"image/png"
@@ -9,6 +8,8 @@ import (
 	"io/ioutil"
 	"os"
 	"scummatlas"
+	"scummatlas/utils"
+	"scummatlas/blocks"
 	l "scummatlas/condlog"
 	"scummatlas/templates"
 	"strings"
@@ -61,7 +62,7 @@ func main() {
 		for _, room := range game.Rooms {
 			if multicpu {
 				wg.Add(1)
-				go func(room scummatlas.Room) {
+				go func(room blocks.Room) {
 					processRoom(room)
 					fmt.Printf("Room %v processed\n", room.Id)
 					if multicpu {
@@ -114,7 +115,7 @@ func loadOptions() {
 	}
 }
 
-func processRoom(room scummatlas.Room) {
+func processRoom(room blocks.Room) {
 	templates.WriteRoom(room, outputdir)
 	if noimages {
 		return
@@ -142,7 +143,7 @@ func writeCostumeLimb(costume int, limb int, img *image.Paletted, outputdir stri
 	}
 }
 
-func writeRoomBackground(room scummatlas.Room, outputdir string) {
+func writeRoomBackground(room blocks.Room, outputdir string) {
 	backgroundFile := fmt.Sprintf("%v/img_bg/room%02d_bg", outputdir, room.Id)
 	l.Log("template", "\nWriting room %v background in %v\n", room.Id, backgroundFile+".png")
 	pngFile, err := os.Create(backgroundFile + ".png")
@@ -161,7 +162,7 @@ func writeRoomBackground(room scummatlas.Room, outputdir string) {
 	}
 }
 
-func createRoomObjectImages(r scummatlas.Room) {
+func createRoomObjectImages(r blocks.Room) {
 	for _, object := range r.Objects {
 		if len(object.Image.Frames) == 0 {
 			//fmt.Printf("Obj %v does not have an image\n", object.Id)
