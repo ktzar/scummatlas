@@ -68,7 +68,7 @@ func ParsePalette(data []byte) color.Palette {
 	return palette
 }
 
-func ParseImage(data []byte, zBuffers int, width int, height int, pal color.Palette, transpIndex uint8) (image *image.RGBA, zplanes []*image.RGBA) {
+func ParseImage(data []byte, zBuffers int, width int, height int, pal color.Palette, transpIndex uint8) (image *image.Paletted, zplanes []*image.RGBA) {
 	blockName := string(data[8:12])
 
 	if blockName == "BOMP" {
@@ -111,12 +111,12 @@ func parseZplaneStripesIntoImage(data []byte, offsets []int, initialOffset int, 
 	return img
 }
 
-func parseStripesIntoImage(data []byte, offsets []int, initialOffset int, width int, height int, pal color.Palette, transpIndex uint8) *image.RGBA {
+func parseStripesIntoImage(data []byte, offsets []int, initialOffset int, width int, height int, pal color.Palette, transpIndex uint8) *image.Paletted {
 	l.Log("image", "Decoding image")
 	l.Log("image", "Stripes information")
 	l.Log("image", "\n#ID\tCode\tMethod\tDirect\tPalInSz\tTransp")
 
-	img := image.NewRGBA(image.Rect(0, 0, width, height))
+	img := image.NewPaletted(image.Rect(0, 0, width, height), pal)
 	for i, offset := range offsets {
 		size := len(data) - offset
 		if i < len(offsets)-1 {
@@ -126,7 +126,7 @@ func parseStripesIntoImage(data []byte, offsets []int, initialOffset int, width 
 			printStripeInfo(i, data[initialOffset+offset])
 		}
 		stripeData := data[initialOffset+offset : initialOffset+offset+size]
-		drawStripe(img, i, stripeData, pal, transpIndex)
+		drawStripe(img, i, stripeData, transpIndex)
 	}
 	return img
 }

@@ -29,7 +29,7 @@ type Room struct {
 	ObjCount     int
 	TranspIndex  uint8
 	Palette      color.Palette
-	Image        *image.RGBA
+	Image        *image.Paletted
 	Zplanes      []*image.RGBA
 	Boxes        []Box
 	BoxMatrix    BoxMatrix

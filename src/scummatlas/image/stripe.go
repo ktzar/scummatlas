@@ -31,7 +31,7 @@ type StripeType struct {
 	paletteLength uint8
 }
 
-func drawStripe(img *image.RGBA, stripeNumber int, data []byte, pal color.Palette, transpIndex uint8) {
+func drawStripe(img *image.Paletted, stripeNumber int, data []byte, transpIndex uint8) {
 
 	stripeType, err := getCompressionMethod(stripeNumber, data[0])
 	if err != nil {
@@ -57,11 +57,11 @@ func drawStripe(img *image.RGBA, stripeNumber int, data []byte, pal color.Palett
 			x = (currentPixel) / height
 		}
 		x += 8 * stripeNumber
-		if int(curPal) < len(pal) {
+		if int(curPal) < len(img.Palette) {
 			if stripeType.transparent == Transp && curPal == transpIndex {
-				img.Set(x, y, transparent)
+				img.SetColorIndex(x, y, transpIndex)
 			} else {
-				img.Set(x, y, pal[curPal])
+				img.SetColorIndex(x, y, curPal)
 			}
 		} else {
 			panic("Out of palette")

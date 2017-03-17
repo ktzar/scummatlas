@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fileutils"
+	"utils"
 	"flag"
 	"fmt"
 	"image/png"
@@ -128,7 +128,7 @@ func processRoom(room scummatlas.Room) {
 }
 
 func copyStaticFiles() {
-	fileutils.CopyDir("./static", outputdir+"/static")
+	utils.CopyDir("./static", outputdir+"/static")
 }
 
 func writeCostumeLimb(costume int, limb int, img *image.Paletted, outputdir string) {

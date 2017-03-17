@@ -3,7 +3,7 @@ package scummatlas
 import (
 	"encoding/binary"
 	"errors"
-	"fileutils"
+	"utils"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -83,7 +83,7 @@ func NewGame(gamedir string) *Game {
 }
 
 func (self *Game) inferName() {
-	md5, _ := fileutils.ComputeMd5(self.gamedir + "/" + self.indexFile)
+	md5, _ := utils.ComputeMd5(self.gamedir + "/" + self.indexFile)
 	strMd5 := fmt.Sprintf("%x", md5)
 
 	for hash, metaData := range GamesHashes {
