@@ -1,0 +1,22 @@
+<html>
+    <head>
+        <title>Costume</title>
+		<link href="./static/style.css" rel="stylesheet" type="text/css"/>
+		<link href="./static/bootstrap.min.css" rel="stylesheet" type="text/css"/>
+    </head>
+    <body id="index-page">
+    {{template "menu"}}
+    <div class="container">
+        <h1 id="top">{{.Title}}</h1>
+		{{$c := .CostumeIndex}}
+		{{range $i, $limb := .Limbs}}
+			{{ if $limb.Image }}
+			<img class="pixelart" src="img_cost/{{$c}}_{{$i}}.png"/>
+			{{ end }}
+		{{end}}
+		<div class="row">
+			<a href="#top">Go back to the top</a>
+    	</div>
+    </div>
+    </body>
+</html>
