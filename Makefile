@@ -5,6 +5,7 @@ test:
 	go test scummatlas/image
 	go test scummatlas/script
 	go test scummatlas/templates
+	go test scummatlas/blocks
 
 coverage:
 	./coverage.sh
