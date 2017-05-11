@@ -1,6 +1,7 @@
-# scummatlas
+# ScummAtlas
 
-## how to run this
+## How to run this
+I know the project doesn't follow the standard Golang structure. It's on the todo list :)
 ```bash
 git clone git@github.com:ktzar/scummatlas.git
 cd scummatlas
