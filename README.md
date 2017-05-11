@@ -1,5 +1,13 @@
 # scummatlas
 
+## how to run this
+```bash
+git clone git@github.com:ktzar/scummatlas.git
+cd scummatlas
+export GOPATH=`pwd`
+go run src/scummatlas/main/scummatlas.go -gamedir=/path/to/games/monkey2 -outputdir out
+```
+
 <img src="https://api.travis-ci.org/ktzar/scummatlas.svg?branch=master"/>
 
 Scumm games parser and HTML Atlas generator written in Golang.
