@@ -1,11 +1,10 @@
- package fileutils
+ package utils
 
  import (
    "os"
    "fmt"
    "io"
  )
-
 
  func CopyFile(source string, dest string) (err error) {
      sourcefile, err := os.Open(source)

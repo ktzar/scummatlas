@@ -1,4 +1,4 @@
-package scummatlas
+package blocks
 
 import (
 	b "scummatlas/binaryutils"

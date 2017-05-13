@@ -32,3 +32,4 @@ out
 bin
 src/github.com/*
 coverage/*
+.DS_Store

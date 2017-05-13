@@ -1,4 +1,4 @@
-package scummatlas
+package blocks
 
 import (
 	"fmt"
@@ -40,7 +40,7 @@ func DecodeLimb(data []byte, offset int, palette color.Palette)(limb Limb, lengt
 	limb.MoveX =  b.LE16(data, offset+8)
 	limb.MoveY =  b.LE16(data, offset+10)
 
-	if limb.Width > 1024 || limb.Height > 768 {
+	if limb.Width > 300 || limb.Height > 300 {
 		fmt.Println("Image too big")
 		return
 	}
@@ -80,33 +80,24 @@ func (c Costume) Debug() {
 }
 
 func (c* Costume) ProcessCostumeAnim(i int) {
-
     cursor := c.animOffsets[i]
-
     anim := CostumeAnim{}
-
-    fmt.Printf("Processing anim at %02x\n", cursor)
-
     limbMask := b.LE16(c.data, cursor)
 
     c.AddSection(cursor, 2, "AnimMask", fmt.Sprintf("anim %d", i))
 
-    fmt.Println("limbMask", limbMask)
     if limbMask == 0xffff {
-        fmt.Println("limbMask return ")
         return
     }
     cursor += 2
     anim.LimbMask = b.OneBitsInWord(limbMask)
 
-    for j, limb := range anim.LimbMask {
-        fmt.Println("\nLimb ", limb, "\n------")
+    for j, _ := range anim.LimbMask {
         c.AddSection(cursor, 2, "AnimIndex", fmt.Sprintf("anim %d - lib %d", i, j))
         index := b.LE16(c.data, cursor)
         length := 0
         loop := false
 
-        fmt.Printf("index: %04x\n", index)
         cursor += 2
 
         if index != 0xffff {
@@ -199,11 +190,8 @@ func NewCostume(data []byte, roomPalette color.Palette) *Costume {
 		}
 	}
 
-	fmt.Println("numPictures", numPictures)
-
 	for picNumber := 0 ; picNumber < numPictures ; picNumber ++ {
 		limbOffset := c.frameOffsets[0] + picNumber * 2
-		fmt.Printf("picNumber %v in %x\n", picNumber, limbOffset)
 		c.AddSection(limbOffset, 2, "LimbOffset", fmt.Sprintf("%d", picNumber))
 		if limbOffset > len(data) {
 			fmt.Printf("Something wrong with limb %d\n", picNumber)
@@ -220,7 +208,6 @@ func NewCostume(data []byte, roomPalette color.Palette) *Costume {
 		c.AddSection(imgOffset+6, 2, "Pict", "RelY")
 		c.AddSection(imgOffset+8, 2, "Pict", "MoveX")
 		c.AddSection(imgOffset+10, 2, "Pict", "MoveY")
-		fmt.Println("Img Offset", imgOffset)
 		limb, length := DecodeLimb(data, imgOffset, c.Palette);
 		c.AddSection(imgOffset+12, length, "Pict", "RLE")
 		c.Limbs = append(c.Limbs, limb)

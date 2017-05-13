@@ -1,4 +1,4 @@
-package scummatlas
+package blocks
 
 import (
 	"fmt"
@@ -29,7 +29,7 @@ type ObjectImage struct {
 	States   int
 	Planes   int
 	Hotspots int
-	Frames   []*goimage.RGBA
+	Frames   []*goimage.Paletted
 	Point
 }
 

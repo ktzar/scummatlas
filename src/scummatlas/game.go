@@ -3,14 +3,15 @@ package scummatlas
 import (
 	"encoding/binary"
 	"errors"
-	"fileutils"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"scummatlas/utils"
 	b "scummatlas/binaryutils"
 	l "scummatlas/condlog"
 	s "scummatlas/script"
+	"scummatlas/blocks"
 )
 
 type GameMetaData struct {
@@ -35,9 +36,9 @@ type Game struct {
 	CostumeIndex []IndexItem
 	RoomNames   []RoomName
 	RoomIndexes []int
-	Rooms       []Room
+	Rooms       []blocks.Room
 	Scripts     []s.Script
-	Costumes    []Costume
+	Costumes    []blocks.Costume
 	gamedir     string
 	indexFile   string
 	mainFile    string
@@ -83,7 +84,7 @@ func NewGame(gamedir string) *Game {
 }
 
 func (self *Game) inferName() {
-	md5, _ := fileutils.ComputeMd5(self.gamedir + "/" + self.indexFile)
+	md5, _ := utils.ComputeMd5(self.gamedir + "/" + self.indexFile)
 	strMd5 := fmt.Sprintf("%x", md5)
 
 	for hash, metaData := range GamesHashes {
@@ -150,7 +151,7 @@ func (self *Game) processMainFile() {
 	self.mainData = NewMainScummData(data)
 	self.Scripts = self.mainData.GetScripts()
 	self.RoomOffsets = self.mainData.GetRoomsOffset()
-	self.Rooms = make([]Room, len(self.RoomOffsets))
+	self.Rooms = make([]blocks.Room, len(self.RoomOffsets))
 	self.Scripts = self.mainData.GetScripts()
 	self.Costumes = self.mainData.GetCostumes()
 

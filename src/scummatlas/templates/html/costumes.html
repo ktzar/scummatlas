@@ -1,0 +1,25 @@
+<html>
+    <head>
+        <title>Costume Index</title>
+		<link href="./static/style.css" rel="stylesheet" type="text/css"/>
+		<link href="./static/bootstrap.min.css" rel="stylesheet" type="text/css"/>
+    </head>
+    <body id="index-page">
+    {{template "menu"}}
+    <div class="container">
+        <h1 id="top">{{.Title}}</h1>
+        <h2>List of costumes</h2>
+        <div class="row">
+			{{range $i, $costume := .Costumes}}
+			<div class="col-sm-2">
+				<a href="costume_{{$i}}.html">
+					<img class="pixelart" src="img_cost/{{$i}}_0.png"/><br/>
+					Costume {{$i}}
+				</a>
+			</div>
+			{{end}}
+        </div>
+		<a href="#top">Go back to the top</a>
+    </div>
+    </body>
+</html>

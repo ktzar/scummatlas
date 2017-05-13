@@ -1,4 +1,4 @@
-package scummatlas
+package blocks
 
 import "testing"
 import "io/ioutil"

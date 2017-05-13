@@ -1,10 +1,11 @@
-package fileutils
+package utils
 
 import (
 	"crypto/md5"
 	"io"
 	"os"
 )
+
 
 func ComputeMd5(filePath string) ([]byte, error) {
 	var result []byte

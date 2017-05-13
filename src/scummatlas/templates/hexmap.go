@@ -1,7 +1,7 @@
 package templates
 
 import "html/template"
-import "scummatlas"
+import "scummatlas/blocks"
 import "os"
 import "fmt"
 
@@ -23,7 +23,7 @@ func (h HexMapData) RowAddress(row int) string {
 
 const HexDumpRowSize = 32
 
-func WriteHexMap(hexmap scummatlas.HexMap, outputfile string) {
+func WriteHexMap(hexmap blocks.HexMap, outputfile string) {
 	t := template.Must(template.ParseFiles(
 		htmlPath+"hexdump.html",
 		htmlPath+"partials.html"))

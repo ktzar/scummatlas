@@ -4,23 +4,29 @@ import (
 	"html/template"
 	"os"
 	"scummatlas"
+	"scummatlas/blocks"
 	l "scummatlas/condlog"
 )
 
 type indexData struct {
 	Title string
-	Rooms []scummatlas.Room
+	Rooms []blocks.Room
 }
 
 type tableData struct {
 	Title string
-	Rooms []scummatlas.Room
+	Rooms []blocks.Room
 }
 
 type mapData struct {
 	Title string
 	Nodes []MapNode
 	Edges []MapEdge
+}
+
+type CostumeIndex struct {
+	Title   string
+	Costumes []blocks.Costume
 }
 
 type MapNode struct {
@@ -68,6 +74,25 @@ func WriteGameFiles(game scummatlas.Game, outdir string) {
 	writeTable(game, outdir)
 	writeMap(game, outdir)
 	writeScripts(game, outdir)
+	writeCostumes(game, outdir)
+}
+
+
+func writeCostumes(game scummatlas.Game, outdir string) {
+	filename := outdir + "/costumes.html"
+	file, err := os.Create(filename)
+	l.Log("template", "Create "+filename)
+	if err != nil {
+		panic("Can't create costumes file")
+	}
+
+	t := template.Must(template.ParseFiles(
+		htmlPath+"costumes.html",
+		htmlPath+"partials.html"))
+	t.Execute(file, CostumeIndex{
+		game.Name,
+		game.Costumes,
+	})
 }
 
 func writeIndex(game scummatlas.Game, outdir string) {

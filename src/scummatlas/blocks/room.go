@@ -1,4 +1,4 @@
-package scummatlas
+package blocks
 
 import (
 	"fmt"
@@ -29,7 +29,7 @@ type Room struct {
 	ObjCount     int
 	TranspIndex  uint8
 	Palette      color.Palette
-	Image        *image.RGBA
+	Image        *image.Paletted
 	Zplanes      []*image.RGBA
 	Boxes        []Box
 	BoxMatrix    BoxMatrix
@@ -134,7 +134,7 @@ func (r *Room) parseLSCR() {
 	scriptId := int(r.data[r.offset+8])
 	scriptBlock := r.data[r.offset+9 : r.offset+r.getBlockSize()]
 	l.Log("script", "\nLocal ScriptID %02x, size %d", scriptId, r.getBlockSize())
-	dumpBlock("LSCR_"+fmt.Sprintf("%d", scriptId),
+	DumpBlock("LSCR_"+fmt.Sprintf("%d", scriptId),
 		r.data[r.offset:r.offset+r.getBlockSize()])
 	script := s.ParseScriptBlock(scriptBlock)
 
@@ -149,16 +149,16 @@ func (r *Room) parseLSCR() {
 func (r *Room) parseENCD() {
 	l.Log("script", "\nENCD")
 	r.EntryScript = s.ParseScriptBlock(r.data[r.offset+8 : r.offset+r.getBlockSize()])
-	dumpBlock("ENCD", r.data[r.offset:r.offset+r.getBlockSize()])
+	DumpBlock("ENCD", r.data[r.offset:r.offset+r.getBlockSize()])
 }
 
 func (r *Room) parseEXCD() {
 	l.Log("script", "\nEXCD")
 	r.ExitScript = s.ParseScriptBlock(r.data[r.offset+8 : r.offset+r.getBlockSize()])
-	dumpBlock("EXCD", r.data[r.offset:r.offset+r.getBlockSize()])
+	DumpBlock("EXCD", r.data[r.offset:r.offset+r.getBlockSize()])
 }
 
-func dumpBlock(name string, data []byte) {
+func DumpBlock(name string, data []byte) {
 	f, _ := os.Create("./out/" + name + ".dump")
 	defer f.Close()
 	f.Write(data)

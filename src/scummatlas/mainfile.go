@@ -5,6 +5,7 @@ import (
 	b "scummatlas/binaryutils"
 	l "scummatlas/condlog"
 	s "scummatlas/script"
+	"scummatlas/blocks"
 )
 
 type MainScummData struct {
@@ -72,18 +73,18 @@ func (d *MainScummData) getRoomCount() int {
 	return roomCount
 }
 
-func (d MainScummData) GetCostumes() (costumes []Costume) {
+func (d MainScummData) GetCostumes() (costumes []blocks.Costume) {
 	firstRoom := d.ParseRoom(d.GetRoomsOffset()[3].Offset, 0)
 	for i, offset := range d.sections["COST"] {
 		blockSize := b.BE32(d.data, offset+4)
 		l.Log("structure", "Parsing costume %d", i)
 		costumes = append(costumes,
-			*NewCostume(
+			*blocks.NewCostume(
 				d.data[offset+8:offset+blockSize],
 				firstRoom.Palette,
 			),
 		)
-		dumpBlock(fmt.Sprintf("COST_%d", i), d.data[offset:offset+blockSize])
+		blocks.DumpBlock(fmt.Sprintf("COST_%d", i), d.data[offset:offset+blockSize])
 	}
 	return
 }
@@ -94,12 +95,12 @@ func (d MainScummData) GetScripts() (scripts []s.Script) {
 		l.Log("script", "Parsing global script %d", i)
 		script := s.ParseScriptBlock(d.data[offset+8 : offset+blockSize])
 		scripts = append(scripts, script)
-		dumpBlock(fmt.Sprintf("SCRP_%d", i), d.data[offset:offset+blockSize])
+		blocks.DumpBlock(fmt.Sprintf("SCRP_%d", i), d.data[offset:offset+blockSize])
 	}
 	return
 }
 
-func (d *MainScummData) ParseRoom(offset int, order int) Room {
+func (d *MainScummData) ParseRoom(offset int, order int) blocks.Room {
 	blockName := b.FourCharString(d.data, offset)
 	blockSize := b.BE32(d.data, offset+4)
 	if blockName != "ROOM" {
@@ -108,8 +109,8 @@ func (d *MainScummData) ParseRoom(offset int, order int) Room {
 	l.Log("room", "Room", order)
 
 	data := d.data[offset : offset+blockSize]
-	dumpBlock(fmt.Sprintf("ROOM_%d", order), data)
-	room := NewRoom(data)
+	blocks.DumpBlock(fmt.Sprintf("ROOM_%d", order), data)
+	room := blocks.NewRoom(data)
 	return *room
 }
 

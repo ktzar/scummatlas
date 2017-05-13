@@ -1,4 +1,4 @@
-package scummatlas
+package blocks
 
 type HexMapSection struct {
 	Start       int

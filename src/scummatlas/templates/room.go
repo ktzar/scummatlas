@@ -4,18 +4,18 @@ import (
 	"fmt"
 	"html/template"
 	"os"
-	"scummatlas"
+	"scummatlas/blocks"
 	l "scummatlas/condlog"
 	"strings"
 )
 
 type roomData struct {
 	Background string
-	Boxes      [][4]scummatlas.Point
-	scummatlas.Room
+	Boxes      [][4]blocks.Point
+	blocks.Room
 }
 
-func WriteRoom(room scummatlas.Room, outputdir string) {
+func WriteRoom(room blocks.Room, outputdir string) {
 	t := template.Must(template.ParseFiles(
 		htmlPath+"room.html",
 		htmlPath+"partials.html"))
@@ -28,7 +28,7 @@ func WriteRoom(room scummatlas.Room, outputdir string) {
 		panic("Can't create room file, " + err.Error())
 	}
 
-	var boxes [][4]scummatlas.Point
+	var boxes [][4]blocks.Point
 
 	for _, v := range room.Boxes {
 		boxes = append(boxes, v.Corners())
