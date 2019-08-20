@@ -450,7 +450,7 @@ func (p *ScriptParser) parseNext() (op Operation, err error) {
 		}
 		variable := getWord()
 		op.assignDst = fmt.Sprintf("Var[%d]", variable)
-		op.assignVal = fmt.Sprintf("Var[%d] %v 1", operation, variable)
+		op.assignVal = fmt.Sprintf("Var[%d] %v 1", variable, operation)
 	case "soundKludge":
 		items := getList()
 		op.addParam(fmt.Sprintf("%v", items))

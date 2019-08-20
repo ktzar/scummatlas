@@ -155,7 +155,7 @@ func dumpBlock(name string, data []byte) {
 
 func (r *Room) parseTRNS() {
 	r.TranspIndex = r.data[r.offset+8]
-	l.Log("image", "Transparent index", r.TranspIndex)
+	l.Log("image", "Transparent index %v", r.TranspIndex)
 }
 
 func (r *Room) parseOBIM() {
@@ -190,10 +190,10 @@ func (r *Room) parseEPAL() {
 
 func (r *Room) parseCLUT() {
 	paletteData := r.data[r.offset+8 : r.offset+r.getBlockSize()]
-	l.Log("palette", "Palette data size ", len(paletteData))
+	l.Log("palette", "Palette data size %v", len(paletteData))
 
 	r.Palette = i.ParsePalette(r.data[r.offset+8 : r.offset+8+3*256])
-	l.Log("palette", "Palette length", len(r.Palette))
+	l.Log("palette", "Palette length %v", len(r.Palette))
 
 	for _, color := range r.Palette {
 		r, g, b, _ := color.RGBA()
@@ -209,8 +209,8 @@ func (r *Room) parseRMIM() {
 	}
 	headerSize := b.BE32(r.data, r.offset+12)
 	zBuffers := b.LE16(r.data, r.offset+16)
-	l.Log("image", "headerSize", headerSize)
-	l.Log("image", "zBuffers", zBuffers)
+	l.Log("image", "headerSize %v", headerSize)
+	l.Log("image", "zBuffers %v", zBuffers)
 
 	if b.FourCharString(r.data, r.offset+18) != "IM00" {
 		panic("Not room image found")
@@ -234,7 +234,7 @@ func (r *Room) parseRMIM() {
 func (r *Room) parseBOXD() {
 	boxCount := b.LE16(r.data, r.offset+8)
 	var boxOffset int
-	l.Log("box", "BOXCOUNT", boxCount)
+	l.Log("box", "BOXCOUNT %v", boxCount)
 	for i := 0; i < boxCount; i++ {
 		boxOffset = r.offset + 10 + i*20
 		box := NewBox(r.data[boxOffset : boxOffset+20])
@@ -243,7 +243,7 @@ func (r *Room) parseBOXD() {
 }
 
 func (r *Room) parseRMHD() {
-	l.Log("room", "RMHD offset", r.offset)
+	l.Log("room", "RMHD offset %v", r.offset)
 	r.Width = b.LE16(r.data, r.offset+8)
 	r.Height = b.LE16(r.data, r.offset+10)
 	r.ObjCount = b.LE16(r.data, r.offset+12)

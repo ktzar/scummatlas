@@ -99,7 +99,7 @@ func (d *MainScummData) ParseRoom(offset int, order int) Room {
 	if blockName != "ROOM" {
 		panic("No room block found")
 	}
-	l.Log("room", "Room", order)
+	l.Log("room", "Room %v", order)
 
 	data := d.data[offset : offset+blockSize]
 	dumpBlock(fmt.Sprintf("ROOM_%d", order), data)

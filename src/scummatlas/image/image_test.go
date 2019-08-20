@@ -27,7 +27,7 @@ func TestGetCompressionMethod(t *testing.T) {
 			t.Errorf("Transparency doesn't match for code %x", code)
 		}
 		if stripeType.paletteLength != palette {
-			t.Errorf("Palette size %x doesn't match for code %x", code)
+			t.Errorf("Palette size doesn't match for code %x", code)
 		}
 	}
 

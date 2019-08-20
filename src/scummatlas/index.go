@@ -69,7 +69,7 @@ func ParseRoomNames(data []byte) []RoomName {
 func ParseRoomIndex(data []byte) (index []RoomIndex) {
 	var out []RoomIndex
 	numEntries := b.LE16(data, 8)
-	l.Log("structure", "Num entries: ", numEntries)
+	l.Log("structure", "Num entries %v", numEntries)
 
 	currentIndex := 10
 	for currentIndex < len(data) {
@@ -84,7 +84,7 @@ func ParseRoomIndex(data []byte) (index []RoomIndex) {
 func ParseScriptsIndex(data []byte) (index []IndexItem) {
 	var out []IndexItem
 	numEntries := b.LE16(data, 8)
-	l.Log("structure", "Num entries: ", numEntries)
+	l.Log("structure", "Num entries %v", numEntries)
 
 	currentIndex := 10
 	for currentIndex < len(data) {

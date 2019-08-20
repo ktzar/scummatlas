@@ -127,7 +127,7 @@ func (self *Game) processMainFile() {
 	self.Scripts = self.mainData.GetScripts()
 	self.mainData.GetCostumes()
 
-	l.Log("structure", "Room count", len(self.RoomOffsets))
+	l.Log("structure", "Room count %v", len(self.RoomOffsets))
 }
 
 func (self Game) dumpFile(file string, outputdir string) error {
@@ -162,7 +162,7 @@ func (self *Game) processIndex() error {
 		currBlock := data[currIndex : currIndex+blockSize]
 
 		currIndex += blockSize
-		l.Log("structure", "Parse Block", blockName)
+		l.Log("structure", "Parse Block %v", blockName)
 		switch blockName {
 		case "RNAM":
 			self.RoomNames = ParseRoomNames(currBlock)
